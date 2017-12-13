@@ -1,0 +1,32 @@
+.gray-bg {
+    background-color: #F3F3F4;
+    font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #676a6c;
+}
+
+.content {
+    background-color: #FEFEFE;
+    margin-left: 40px;
+    margin-top: 20px;
+    margin-right: 40px;
+}
+
+.title {
+    text-align: center;
+    padding-top: 40px;
+}
+
+.text {
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-bottom: 40px;
+}
+
+h2 {
+    font-size: 24px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 100;
+}
