@@ -2,3 +2,7 @@
 <link href="{% static '/css/iview.css' %}" rel="stylesheet">
 <script src="{% static '/js/vue.js' %}"></script>
 <script src="{% static '/js/iview.js' %}"></script>
+<script src="{% static '/js/axios.min.js' %}"></script>
+<script>
+    axios.defaults.headers.common['X-CSRFToken'] = '{{csrf_token}}';
+</script>

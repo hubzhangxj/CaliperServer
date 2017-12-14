@@ -84,15 +84,17 @@
             <a href="https://github.com/open-estuary/caliper" target="_blank">View
                 Source
                 Code</a>
-            <Dropdown trigger="click" style="margin-right: 20px">
+            <Dropdown trigger="click" style="margin-right: 20px" @on-click="download">
                 <a style="color: #fff;" href="javascript:void(0)">
                     Download Caliper
                     <icon type="arrow-down-b"></icon>
                 </a>
                 <Dropdown-Menu slot="list">
-                    <Dropdown-Item>Latest version</Dropdown-Item>
-                    <Dropdown-Item>v1.0.0</Dropdown-Item>
-                    <Dropdown-Item>v0.0.0</Dropdown-Item>
+                    <Dropdown-Item :name="v.version" v-for="(v,index) in versions"><a
+                            style="color: #495060;font-size: 12px!important"
+                            :href="'user/download?version=' + v.version ">${index ==0 ? 'Lastest Version':v.version}</a>
+                    </Dropdown-Item>
+                    {#                    <Dropdown-Item ><a style="color: #495060;font-size: 12px!important" href="">dddd</a></Dropdown-Item>#}
                 </Dropdown-Menu>
             </Dropdown>
         </div>
@@ -119,10 +121,36 @@
 
 </div>
 <script>
-    new Vue({
+    vm = new Vue({
         el: "#app",
-        data: {},
-        methods: {}
+        data: {
+            versions:{{ versions|safe }}
+        },
+        methods: {
+            download: function (name) {
+                const url = 'user/download?version=' + name;
+                const link = document.createElement('a');
+                link.href = url;
+                document.body.appendChild(link);
+                link.click();
+
+                {#                data = {"version": name};#}
+                {#                axios.post('user/download', data)#}
+                {#                    .then(function (response) {#}
+                {#                        const url = window.URL.createObjectURL(new Blob([response.data]));#}
+                {#                        const link = document.createElement('a');#}
+                {#                        link.href = url;#}
+                {#                        link.setAttribute('download', 'file.pdf');#}
+                {#                        document.body.appendChild(link);#}
+                {#                        link.click();#}
+                {#                    })#}
+                {#                    .catch(function (error) {#}
+                {#                        console.log(error);#}
+                {#                        vm.$Message.error(error);#}
+                {#                    });#}
+            }
+
+        }
     });
 
 </script>

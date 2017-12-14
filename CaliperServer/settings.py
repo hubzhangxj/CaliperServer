@@ -19,10 +19,23 @@ sys.setdefaultencoding('utf8')
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+# 日志文件路径
 logPath = os.path.join(BASE_DIR, 'log')
+print logPath
 if not os.path.exists(logPath):
     os.mkdir(logPath)
+
+# caliper 下载路径
+parentPath = os.path.abspath(os.path.join(BASE_DIR, os.pardir))
+downloadPath = os.path.join(parentPath, 'data', 'download')
+if not os.path.exists(downloadPath):
+    os.makedirs(downloadPath)
+print downloadPath
+# caliper 上传路径
+upload = os.path.join(parentPath, 'data', 'upload')
+if not os.path.exists(upload):
+    os.makedirs(upload)
+print upload
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -34,7 +47,6 @@ SECRET_KEY = 'x6=vjz#1)p9^$dxl(8_hw5xy&8#2dv=^q(^n!89xh8509@65!d'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -81,7 +93,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'CaliperServer.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
@@ -99,7 +110,6 @@ DATABASES = {
         },
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -119,19 +129,21 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+#TIME_ZONE = 'UTC'
+# 东八区
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+# 不转换成UTC
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -141,34 +153,35 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'filters': {
         'require_debug_true': {
             '()': 'django.utils.log.RequireDebugTrue',
-        }, # 针对 DEBUG = True 的情况
+        },  # 针对 DEBUG = True 的情况
     },
     'formatters': {
         'standard': {
             # 'format': '%(levelname)s %(asctime)s %(pathname)s %(filename)s %(module)s %(funcName)s %(lineno)d: %(message)s'
             'format': '%(levelname)s %(asctime)s %(filename)s  methodName：%(funcName)s %(lineno)d: %(message)s'
-        }, # 对日志信息进行格式化，每个字段对应了日志格式中的一个字段，更多字段参考官网文档，我认为这些字段比较合适，输出类似于下面的内容
+        },  # 对日志信息进行格式化，每个字段对应了日志格式中的一个字段，更多字段参考官网文档，我认为这些字段比较合适，输出类似于下面的内容
         # INFO 2016-09-03 16:25:20,067 /home/ubuntu/mysite/views.py views.py views get 29: some info...
     },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
-             'formatter':'standard'
+            'formatter': 'standard'
         },
         'file_handler': {
-             'level': 'DEBUG',
-             'class': 'logging.handlers.TimedRotatingFileHandler',
-             'filename': os.path.join(BASE_DIR,'log/sys.log'),
-             'formatter':'standard'
-        }, # 用于文件输出
-        'console':{
+            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'log/sys.log'),
+            'formatter': 'standard'
+        },  # 用于文件输出
+        'console': {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
@@ -178,20 +191,20 @@ LOGGING = {
 
     'loggers': {
         'django': {
-            'handlers' :['console'],
-            'level':'DEBUG',
-            'propagate': False # 是否继承父类的log信息(是否显示这一层以上的所有日志）
-        },  #  'django' 是django系统默认的日志输出tag(这边默认不显示系统日志,所以把名字改掉，或者把‘file_handler’去掉)
-            #  handlers 来自于上面的 handlers 定义的内容
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False  # 是否继承父类的log信息(是否显示这一层以上的所有日志）
+        },  # 'django' 是django系统默认的日志输出tag(这边默认不显示系统日志,所以把名字改掉，或者把‘file_handler’去掉)
+        #  handlers 来自于上面的 handlers 定义的内容
         'django.request': {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
             'propagate': False,
         },
-        'custom':{
-            'handlers':['file_handler','console'],
-            'level':'DEBUG',
-            'propagate':False
+        'custom': {
+            'handlers': ['file_handler', 'console'],
+            'level': 'DEBUG',
+            'propagate': False
         }
     }
 }
