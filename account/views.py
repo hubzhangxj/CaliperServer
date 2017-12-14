@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from django.shortcuts import render
 
-# Create your views here.
+from shared.log import logger
+
+
 def main(request):
-    return render(request,"main.html")
+    return render(request, "main.html")

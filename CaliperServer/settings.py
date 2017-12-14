@@ -39,8 +39,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
+    # 'django.contrib.admin',
+    # 'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -72,7 +72,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
+                # 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
@@ -141,7 +141,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -166,11 +165,11 @@ LOGGING = {
         'file_handler': {
              'level': 'DEBUG',
              'class': 'logging.handlers.TimedRotatingFileHandler',
-             'filename': os.path.join(logPath,'sys.log'),
+             'filename': os.path.join(BASE_DIR,'log/sys.log'),
              'formatter':'standard'
         }, # 用于文件输出
         'console':{
-            'level': 'INFO',
+            'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'standard'
@@ -179,9 +178,9 @@ LOGGING = {
 
     'loggers': {
         'django': {
-            'handlers' :['file_handler', 'console'],
+            'handlers' :['console'],
             'level':'DEBUG',
-            'propagate': True # 是否继承父类的log信息
+            'propagate': False # 是否继承父类的log信息(是否显示这一层以上的所有日志）
         },  #  'django' 是django系统默认的日志输出tag(这边默认不显示系统日志,所以把名字改掉，或者把‘file_handler’去掉)
             #  handlers 来自于上面的 handlers 定义的内容
         'django.request': {
@@ -189,10 +188,10 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-        'cmd':{
-            'handlers':['console'],
-            'level':'INFO',
-            'propagate':True
+        'custom':{
+            'handlers':['file_handler','console'],
+            'level':'DEBUG',
+            'propagate':False
         }
     }
 }
