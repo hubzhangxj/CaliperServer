@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-
 from shared.serializers.json import Serializer
 from django.http import HttpResponse
 import json
@@ -10,12 +9,9 @@ import re
 from datetime import datetime
 import os
 from Crypto.PublicKey import RSA
-from users import models as userModels
-from login import models as loginModels
-from Estuary import settings
-import tarfile,zipfile
+import tarfile, zipfile
 import uuid
-import logging
+import logging,hashlib
 
 
 def ChoiceToDic(choice):
@@ -50,6 +46,7 @@ def CustomJsonResponse(code, msg, items, total):
     objJson = json.dumps(objJson)
     objJson = objJson.replace('": "[', '": [').replace(']", "', '], "').decode("unicode-escape")
     return HttpResponse(objJson, content_type="application/json")
+
 
 def getip():
     try:
@@ -100,6 +97,7 @@ def isPhone(value):
 
     return phonematch
 
+
 def enum2Json(value):
     """
     将枚举转换成json 字符串
@@ -131,60 +129,61 @@ def byteify(input):
     else:
         return input
 
-#把datetime转成字符串
+
+# 把datetime转成字符串
 def datetime_toString(dt):
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
-#把字符串转成datetime
+
+# 把字符串转成datetime
 def string_toDatetime(string):
     return datetime.strptime(string, "%Y-%m-%d %H:%M:%S")
 
 
-
-def gen_key(userId,keyName):
+def gen_key(keyName, output):
     try:
         key = RSA.generate(2048)
-        path = os.path.join(settings.MEDIA_ROOT, 'key')
+        path = os.path.join(output, 'key')
         if not os.path.exists(path):
-            os.mkdir(path)
-        priv_key = os.path.join(path, 'priv_'+keyName+'.key')
-        pub_key = os.path.join(path, 'pub_'+keyName+'.key')
+            os.makedirs(path)
+        priv_key = os.path.join(path, 'priv_' + keyName + '.key')
+        pub_key = os.path.join(path, 'pub_' + keyName + '.key')
         with open(priv_key, 'w') as content_file:
             content_file.write(key.exportKey('PEM'))
         pubkey = key.publickey()
         with open(pub_key, 'w') as content_file:
             content_file.write(pubkey.exportKey('OpenSSH'))
-        owner = loginModels.UserProfile.objects.get(id=userId)
-        tarFilePath = zip_key(priv_key, pub_key)
-        ssh = userModels.SshKey(keyName=keyName,owner= owner,publicKey=pubkey.exportKey('OpenSSH'),files=tarFilePath)
-        ssh.save()
+
+        tarFilePath = zip_key(output, priv_key, pub_key)
+
     except Exception as ex:
         logging.error(str(ex))
         return None
-    return os.path.join(settings.MEDIA_URL,tarFilePath)
+    return os.path.join(output, tarFilePath)
+
 
 def make_targz(output_filename, *files):
     tar = tarfile.open(output_filename, "w:gz")
     for f in files:
-        tar.add(f,arcname=os.path.basename(f)) #压缩包内去掉全路径
+        tar.add(f, arcname=os.path.basename(f))  # 压缩包内去掉全路径
     tar.close()
-    for f in files: #删除原始的key文件
+    for f in files:  # 删除原始的key文件
         os.remove(f)
 
 
-def zip_key(*files):
+def zip_key(path, *files):
     '''
     打包key
     :param files:  全路径
     :return:
     '''
-    path = os.path.join(settings.MEDIA_ROOT, 'key')
+    path = os.path.join(path, 'key')
     if not os.path.exists(path):
         os.mkdir(path)
-    fileName = str(uuid.uuid1()) +".tar.gz"
-    output_filename = os.path.join(path,fileName)
-    make_targz(output_filename,*files)
-    return  "key/" + fileName
+    fileName = str(uuid.uuid1()) + ".tar.gz"
+    output_filename = os.path.join(path, fileName)
+    make_targz(output_filename, *files)
+    return "key/" + fileName
 
 
 # 将连接对象中的所有数据转化为数组
@@ -196,3 +195,44 @@ def dictfetchall(cursor):
     ]
 
 
+def calcHash(filepath):
+    '''
+    计算文件的hash 值
+    :param filepath:
+    :return:
+    '''
+    with open(filepath,'rb') as f:
+        sha1obj = hashlib.sha1()
+        sha1obj.update(f.read())
+        hash = sha1obj.hexdigest()
+        print(hash)
+        return hash
+
+def calcMD5(filepath):
+    '''
+    计算文件的MD5值
+    :param filepath:
+    :return:
+    '''
+    with open(filepath,'rb') as f:
+        md5obj = hashlib.md5()
+        md5obj.update(f.read())
+        hash = md5obj.hexdigest()
+        print(hash)
+        return hash
+
+import pyminizip
+
+
+def setTarPwd(filePath,pwd):
+    # f = zipfile.ZipFile('1.tar.gz','w',zipfile.ZIP_DEFLATED)
+    # f.write('/home/qiuqiaohua/Documents/work/caliper/caliper.sql')
+    # f.setpassword(b"123")
+    # f.close()
+    compression_level = 5  # 1-9
+    pyminizip.compress_multiple(['/home/qiuqiaohua/Documents/work/caliper/caliper.sql','ddd.txt'], "file.tar.gz", "1233", compression_level)
+
+
+
+if __name__ == '__main__':
+    setTarPwd('','')

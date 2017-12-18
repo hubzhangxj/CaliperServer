@@ -32,10 +32,10 @@ if not os.path.exists(downloadPath):
     os.makedirs(downloadPath)
 print downloadPath
 # caliper 上传路径
-upload = os.path.join(parentPath, 'data', 'upload')
-if not os.path.exists(upload):
-    os.makedirs(upload)
-print upload
+uploadPath = os.path.join(parentPath, 'data', 'upload')
+if not os.path.exists(uploadPath):
+    os.makedirs(uploadPath)
+print uploadPath
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/

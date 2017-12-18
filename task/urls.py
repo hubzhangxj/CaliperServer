@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from task import views as taskViews
 
 urlpatterns = [
+    url("^list$", taskViews.task)
 ]
