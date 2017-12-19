@@ -11,7 +11,7 @@ import os
 from Crypto.PublicKey import RSA
 import tarfile, zipfile
 import uuid
-import logging,hashlib
+import logging, hashlib
 
 
 def ChoiceToDic(choice):
@@ -201,12 +201,13 @@ def calcHash(filepath):
     :param filepath:
     :return:
     '''
-    with open(filepath,'rb') as f:
+    with open(filepath, 'rb') as f:
         sha1obj = hashlib.sha1()
         sha1obj.update(f.read())
         hash = sha1obj.hexdigest()
         print(hash)
         return hash
+
 
 def calcMD5(filepath):
     '''
@@ -214,25 +215,27 @@ def calcMD5(filepath):
     :param filepath:
     :return:
     '''
-    with open(filepath,'rb') as f:
+    with open(filepath, 'rb') as f:
         md5obj = hashlib.md5()
         md5obj.update(f.read())
         hash = md5obj.hexdigest()
         print(hash)
         return hash
 
-import pyminizip
+
+import subprocess
 
 
-def setTarPwd(filePath,pwd):
+def setTarPwd(filePath, pwd):
     # f = zipfile.ZipFile('1.tar.gz','w',zipfile.ZIP_DEFLATED)
     # f.write('/home/qiuqiaohua/Documents/work/caliper/caliper.sql')
     # f.setpassword(b"123")
     # f.close()
-    compression_level = 5  # 1-9
-    pyminizip.compress_multiple(['/home/qiuqiaohua/Documents/work/caliper/caliper.sql','ddd.txt'], "file.tar.gz", "1233", compression_level)
-
-
+    # compression_level = 5  # 1-9
+    # pyminizip.compress_multiple(['/home/qiuqiaohua/Documents/work/caliper/caliper.sql'], "file.tar.gz", "1233", compression_level)
+    # subprocess.call("cd /home/qiuqiaohua/Downloads/",shell=True)
+    print  subprocess.call("cd /home/qiuqiaohua/Downloads/ && zip -rP 123 111.zip test/",shell=True)
+    subprocess.call("cd /home/qiuqiaohua/Downloads/ && unzip -P 123 111.zip -d test111/", shell=True)
 
 if __name__ == '__main__':
-    setTarPwd('','')
+    setTarPwd('', '')

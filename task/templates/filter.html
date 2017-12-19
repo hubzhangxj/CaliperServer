@@ -1,0 +1,61 @@
+<script src="/static/js/jquery.min.js"></script>
+<link href="/static/js/Fliter.css" rel="stylesheet"/>
+<script src="/static/js/Filter.js"></script>
+
+
+<div style="display: flex;flex-direction: column;align-items: flex-start;padding: 40px">
+
+
+    <div style="width: 100%">
+        <div id="cpu"></div>
+        <div id="os"></div>
+        <div id="kernel"></div>
+    </div>
+</div>
+
+<h4>显示值</h4>
+<input id="demo_value" type="text" value="">
+<script type="text/javascript">
+    var cpu = {{ cpu|safe }};
+    var os = {{ os|safe }};
+    var kernel = {{ kernel|safe }};
+
+
+    $('#cpu').comboboxfilter({
+        url: '',
+        scope: 'FilterQuery3',
+        multiple: true,
+        data: cpu,
+        text: 'CPU Version:',
+        onChange: function (newValue) {
+            $('#demo_value').val(newValue);
+        }
+    });
+    $('#os').comboboxfilter({
+        url: '',
+        scope: 'FilterQuery3',
+        multiple: true,
+        data: os,
+        text: 'OS Version:',
+        onChange: function (newValue) {
+            $('#demo_value').val(newValue);
+        }
+    });
+    $('#kernel').comboboxfilter({
+        url: '',
+        scope: 'FilterQuery3',
+        multiple: true,
+        data: kernel,
+        text: 'Kernel Version:',
+        onChange: function (newValue) {
+            $('#demo_value').val(newValue);
+        }
+    });
+
+</script>
+
+</body>
+</html>
+
+
+

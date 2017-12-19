@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from data import views as dataViews
 
 urlpatterns = [
+    url('^upload$',dataViews.upload)
 ]

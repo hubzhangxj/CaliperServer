@@ -24,17 +24,18 @@ def upload(request):
     原始的数据压缩包Hash值: hash_output
     解析过得工具日志压缩包:hash_log
     '''
+    print "============"
     if request.method == "POST":
-
+        print "------------------"
         if "output" in request.FILES and "log" in request.FILES:
             outputFile = request.FILES.get("output", None)
             logFile = request.FILES.get("log", None)
-            obJson = request.body
-            params = json.loads(obJson)
-            username = params['username']
-            result = params['result']
-            hash_output = params['hash_output']
-            hash_log = params['hash_log']
+            # obJson = request.POST
+            # params = json.loads(obJson)
+            username = request.POST['username']
+            result = request.POST['result']
+            hash_output = request.POST['hash_output']
+            hash_log = request.POST['hash_log']
             outputFileName = str(uuid.uuid1())
             logFileName = str(uuid.uuid1())
             output_path = os.path.join(settings.uploadPath, outputFileName + '.tar.gz')
@@ -56,7 +57,8 @@ def upload(request):
                 return  HttpResponse(status=400)
             else: #存储数据库，解析文件
                 logger.debug("入库操作")
-
+        else:
+            return HttpResponse(status=400)
     return HttpResponse(status=200)
 
 def save_db():

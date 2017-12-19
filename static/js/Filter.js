@@ -36,7 +36,7 @@
                 });
                 listcontainer.append(anyNode);
             }
-            listcontainer.append('<ul class="list"></ul> <span class="J_FilterMore filter-more"><span class="open">更多</span><span class="close">收起</span><i></i></span>');
+            listcontainer.append('<ul class="list"></ul> <span class="J_FilterMore filter-more"><span class="open">More</span><span class="close">Collapse</span><i></i></span>');
             listcontainer.find('.open').unbind('click').bind('click', function() {//绑定点击更多事件
                 $(target).removeClass('hotel-filter-list-min');
             });
@@ -53,7 +53,7 @@
                 if ($('#' + options.scope).length>0) {
                     
                 } else {
-                    var node = $('<div id="' + options.scope + '" class="hotel-filter-list "><strong class="tit">已选</strong><div class="con selected-query"><ul  class="list"><li class="filter-query-clear"><a class="J_FilterQueryClear" href="javascript:;">全部清除</a></li></ul></div></div>');
+                    var node = $('<div id="' + options.scope + '" class="hotel-filter-list "><strong class="tit">Selected:</strong><div class="con selected-query"><ul  class="list"><li class="filter-query-clear"><a class="J_FilterQueryClear" href="javascript:;">Clear All</a></li></ul></div></div>');
                     node.find('.J_FilterQueryClear').unbind('click').bind('click',function() {//全部清除事件
                         $('div[scope="' + options.scope + '"]').comboboxfilter('clear');
                     });
@@ -163,7 +163,7 @@
         //itemData 被选择数据
         addSelected: function (pointTarget, target, itemData, options, targetContain) {
             var $this = this;
-          var anode = $('<a href="javascript:;">' + itemData[options.textField] + '</a>');
+          var anode = $('<a href="javascript:;"><div style="color: #e20400">'+options.text+':</div>' + itemData[options.textField] + '</a>');//Clear All  添加的数据
                 //创建X ,点击则移除选择项
                 var inode = $('<i class="J_FilterQueryDel" data-type="ParentCatelog" data-value="' + itemData[options.idField] + '"></i>').unbind('click').bind('click', function (e) {
                     $(target).trigger("click.selected-tag");//触发事件
@@ -208,12 +208,13 @@
         idField: 'id',
         textField: 'text',
         scope: 'FilterQuery',
+        // scopeTitle:'Selected:',
         text: '',
         multiple: false,
-	data:[],
+	    data:[],
         inputName: '',
         unlimit: true,//是否显示不限，默认显示
-        unlimitText:'不限',
+        unlimitText:'All',
         param:{},
         onClick: function (itemData) { },
         onChange: function (newValue) { },

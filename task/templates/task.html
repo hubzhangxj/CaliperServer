@@ -5,24 +5,152 @@
     <title>Title</title>
     {% include "script.html" %}
     <link href="/static/links/intro.css" rel="stylesheet">
+
 </head>
 <body class="gray-bg">
-    {% include "top.html" %}
-    {% include "test.html" %}
-    <div id="app">
-        vvvvvv
+{% include "top.html" %} {# django 的 include 标签 #}
+{% include "filter.html" %}
+<div id="app">
+    <div style="padding: 40px">
+        <i-table border :columns="columns" :data="data"></i-table>
+
+        <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
+            <div style="display: flex;flex-direction: row;align-items: center">
+                <i-button type="primary" @click="view" style="margin-right: 10px">View</i-button>
+                <i-button type="primary" @click="download" style="margin-right: 10px">Download</i-button>
+                <i-button type="primary" @click="del" style="margin-right: 10px">Delete</i-button>
+                <i-button type="primary" @click="share">Share</i-button>
+            </div>
+
+            <Page :total="100"></Page>
+        </div>
     </div>
-
+</div>
 <script>
+
     var vm = new Vue({
-        el:'#app',
-        data:{
-
+        el: '#app',
+        data: {
+            columns: [
+                {
+                    type: 'selection',
+                    width: 60,
+                    align: 'center'
+                },
+                {
+                    title: 'HostName(Number)',
+                    key: 'name',
+                    render: (h, params) => {
+                        return h('div', [
+                            h('Icon', {
+                                props: {
+                                    type: 'person'
+                                }
+                            }),
+                            h('strong', params.row.name)
+                        ]);
+                    }
+                },
+                {
+                    title: 'CPU',
+                    key: 'cpu'
+                },
+                {
+                    title: 'Product Name',
+                    key: 'pName'
+                },
+                {
+                    title: 'OS Version',
+                    key: 'os',
+                    width: 150,
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', [
+                            h('Button', {
+                                props: {
+                                    type: 'primary',
+                                    size: 'small'
+                                },
+                                style: {
+                                    marginRight: '5px'
+                                },
+                                on: {
+                                    click: () => {
+                                        this.show(params.index)
+                                    }
+                                }
+                            }, 'View'),
+                            h('Button', {
+                                props: {
+                                    type: 'error',
+                                    size: 'small'
+                                },
+                                on: {
+                                    click: () => {
+                                        this.remove(params.index)
+                                    }
+                                }
+                            }, 'Delete')
+                        ]);
+                    }
+                },
+                {
+                    title: 'Kernel Version',
+                    key: 'cpu'
+                },
+                {
+                    title: 'User',
+                    key: 'pName'
+                },
+                {
+                    title: 'DateTime',
+                    key: 'cpu'
+                },
+                {
+                    title: 'Test Profile',
+                    key: 'pName'
+                },
+            ],
+            data: [
+                {
+                    name: 'John Brown',
+                    age: 18,
+                    address: 'New York No. 1 Lake Park'
+                },
+                {
+                    name: 'Jim Green',
+                    age: 24,
+                    address: 'London No. 1 Lake Park'
+                },
+                {
+                    name: 'Joe Black',
+                    age: 30,
+                    address: 'Sydney No. 1 Lake Park'
+                },
+                {
+                    name: 'Jon Snow',
+                    age: 26,
+                    address: 'Ottawa No. 2 Lake Park'
+                }
+            ]
         },
-        methods:{
+        methods: {
+            view: function () {
+                alert("view")
+            },
+            download: function () {
+                alert("download")
+            },
+            del: function () {
 
+            },
+            share: function () {
+
+            }
         }
     });
+
 </script>
 </body>
+
 </html>

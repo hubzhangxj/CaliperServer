@@ -22,7 +22,7 @@ def main(request):
     versions.sort(key=operator.itemgetter('version'), reverse=True)
     logger.debug(versions)
 
-    data = {'versions': json.dumps(versions)}
+    data = {'versions': json.dumps(versions),"yyy":"pppp"}
 
     return render(request, "main.html", data)
 
