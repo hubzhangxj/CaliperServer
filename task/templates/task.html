@@ -40,36 +40,53 @@
                 {
                     title: 'HostName(Number)',
                     key: 'name',
+                    align: 'center',
                     render: (h, params) => {
-                        return h('div', [
-                            h('Icon', {
-                                props: {
-                                    type: 'person'
-                                }
-                            }),
-                            h('strong', params.row.name)
-                        ]);
+                        return h('div',  params.row.name);
                     }
                 },
                 {
                     title: 'CPU',
-                    key: 'cpu'
+                    key: 'cpu',
+                    align: 'center',
                 },
                 {
                     title: 'Product Name',
-                    key: 'pName'
+                    key: 'pName',
+                    align: 'center',
                 },
                 {
                     title: 'OS Version',
                     key: 'os',
-                    width: 150,
+                    align: 'center',
+
+                },
+                {
+                    title: 'Kernel Version',
+                    key: 'cpu',
+                    align: 'center',
+                },
+                {
+                    title: 'User',
+                    key: 'pName',
+                    align: 'center',
+                },
+                {
+                    title: 'DateTime',
+                    key: 'cpu',
+                    align: 'center',
+                },
+                {
+                    title: 'Test Profile',
+                    key: 'pName',
                     align: 'center',
                     render: (h, params) => {
                         return h('div', [
                             h('Button', {
                                 props: {
-                                    type: 'primary',
-                                    size: 'small'
+                                    type: 'text',
+                                    size: 'small',
+                                    icon:'document',
                                 },
                                 style: {
                                     marginRight: '5px'
@@ -80,35 +97,8 @@
                                     }
                                 }
                             }, 'View'),
-                            h('Button', {
-                                props: {
-                                    type: 'error',
-                                    size: 'small'
-                                },
-                                on: {
-                                    click: () => {
-                                        this.remove(params.index)
-                                    }
-                                }
-                            }, 'Delete')
                         ]);
                     }
-                },
-                {
-                    title: 'Kernel Version',
-                    key: 'cpu'
-                },
-                {
-                    title: 'User',
-                    key: 'pName'
-                },
-                {
-                    title: 'DateTime',
-                    key: 'cpu'
-                },
-                {
-                    title: 'Test Profile',
-                    key: 'pName'
                 },
             ],
             data: [

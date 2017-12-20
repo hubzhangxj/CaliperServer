@@ -112,7 +112,7 @@ class Partition(models.Model):  # 分区
 
 
 class Dimension(models.Model):  # 维度表
-    name = models.CharField(max_length=50, null=False)  # 维度名称
+    name = models.CharField(max_length=50, null=False,unique=True)  # 维度名称
     desc = models.CharField(max_length=200, blank=True, null=True)  # 维度描述
 
     class Meta:
@@ -172,7 +172,7 @@ class DimResult(models.Model):  # 维度得分
 class ScenarioResult(models.Model):  # 场景得分
     result = models.FloatField()  # 得分
     dimresult = models.ForeignKey(DimResult)  # 维度得分
-    scenarioid = models.ForeignKey(Scenario)  # 场景
+    scenario = models.ForeignKey(Scenario)  # 场景
 
     class Meta:
         db_table = 'scenarioResult'

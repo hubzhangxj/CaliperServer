@@ -223,6 +223,13 @@ def calcMD5(filepath):
         return hash
 
 
+#########start 获取文件路径、文件名、后缀名############
+def get_filePath_fileName_fileExt(filename):
+    (filepath,tempfilename) = os.path.split(filename);
+    (shotname,extension) = os.path.splitext(tempfilename);
+    return filepath,shotname,extension
+#########end 获取文件路径、文件名、后缀名############
+
 import subprocess
 
 
