@@ -127,12 +127,16 @@ def parseConfig(filePath):
                                          manufacturer=configDict['baseboard']['manufacturer'],
                                          version=configDict['baseboard']['version'])
         baseboard.save()
-        cache = taskModels.Cache(socketdes=configDict['cacheInfo']['socketdes'], size=configDict['cacheInfo']['size'],
-                                 operational=configDict['cacheInfo']['operational'])
-        cache.save()
+
         config = taskModels.Config(hostname=configDict['hostName'], kernel=configDict['kernel'],
-                                   os=configDict['os'], cache=cache, board=baseboard, sys=sys)
+                                   os=configDict['os'], board=baseboard, sys=sys)
         config.save()
+
+        cacheInfos = configDict['cacheInfo']
+        for cacheInfo in cacheInfos:
+            cache = taskModels.Cache(socketdes=cacheInfo['socketdes'], size=cacheInfo['size'],
+                                     operational=cacheInfo['operational'],config=config)
+            cache.save()
 
         cpuInfos = configDict['cpuInfo']
         for cpuInfo in cpuInfos:
@@ -157,7 +161,7 @@ def parseConfig(filePath):
                                         capacity=storageInfo['capacity'], sectorsize=storageInfo['sectorsize'],
                                        config=config)
             storage.save()
-            partitonInfos = storageInfo['storageInfos']
+            partitonInfos = storageInfo['partitons']
             for partitonInfo in partitonInfos:
                 partiton = taskModels.Partition(name=partitonInfo['name'], size=partitonInfo['size'],
                                      storage=storage)

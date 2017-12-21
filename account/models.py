@@ -11,6 +11,8 @@ class User(models.Model):
     createtime = models.DateTimeField(auto_created=True)  #创建时间
     company = models.CharField(max_length=255, blank=True, null=True) #公司名称
     address = models.CharField(max_length=255, blank=True, null=True) #公司地址
+    email=models.CharField(max_length=50,null=True) #邮箱
+    telphone = models.CharField(max_length=50,null=True) #手机
 
     class Meta:
         db_table = 'user'

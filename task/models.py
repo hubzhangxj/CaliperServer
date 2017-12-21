@@ -15,13 +15,6 @@ class Baseboard(models.Model):  # 主板
         db_table = 'baseboard'
 
 
-class Cache(models.Model):  # 缓存
-    socketdes = models.CharField(max_length=255, blank=True, null=True)  # 缓存级别
-    size = models.CharField(max_length=50)  # 缓存大小
-    operational = models.CharField(max_length=255, blank=True, null=True)  # 运作模式
-
-    class Meta:
-        db_table = 'cacheInfo'
 
 
 class System(models.Model):  # 系统
@@ -36,7 +29,7 @@ class System(models.Model):  # 系统
 class Config(models.Model):  # 配置表
     hostname = models.CharField(max_length=50, blank=True, null=True)  # 测试名称
     kernel = models.CharField(max_length=50, blank=True, null=True)  # kernel 名称
-    cache = models.ForeignKey(Cache)  # 缓存
+    # cache = models.ForeignKey(Cache)  # 缓存
     board = models.ForeignKey(Baseboard)  # 主板
     sys = models.ForeignKey(System)  # 系统
     os = models.CharField(max_length=50, null=True, blank=True)  # 系统名称
@@ -44,6 +37,13 @@ class Config(models.Model):  # 配置表
     class Meta:
         db_table = 'config'
 
+class Cache(models.Model):  # 缓存
+    socketdes = models.CharField(max_length=255, blank=True, null=True)  # 缓存级别
+    size = models.CharField(max_length=50)  # 缓存大小
+    operational = models.CharField(max_length=255, blank=True, null=True)  # 运作模式
+    config = models.ForeignKey(Config)  # 配置
+    class Meta:
+        db_table = 'cacheInfo'
 
 class Cpu(models.Model):  # Cpu
     socketdes = models.CharField(max_length=50, blank=True, null=True)  # cpu 几级
@@ -63,7 +63,7 @@ class Cpu(models.Model):  # Cpu
 
 class Memory(models.Model):  # 内存
     manufacturer = models.CharField(max_length=255, blank=True, null=True)  # 制造商
-    size = models.IntegerField()  # 内存大小
+    size = models.CharField(max_length=50,blank=True, null=True)  # 内存大小
     type = models.CharField(max_length=50, blank=True, null=True)  # 类型（DDR3)
     speed = models.CharField(max_length=50, blank=True, null=True)  # 速度
     clockspeed = models.CharField(max_length=50, blank=True, null=True)  # 实际读写速度
@@ -104,7 +104,7 @@ class Storage(models.Model):  # 硬盘
 
 class Partition(models.Model):  # 分区
     name = models.CharField(max_length=255, blank=True, null=True)  # 分区名称
-    size = models.FloatField()  # 分区大小
+    size = models.CharField(max_length=50, blank=True, null=True) # 分区大小
     storage = models.ForeignKey(Storage)  # 硬盘
 
     class Meta:
@@ -150,7 +150,7 @@ class TestCase(models.Model):  # 用例表
 class Task(models.Model):  # 测试任务
     owner = models.ForeignKey(User, related_name="owner")  # 拥有者
     config = models.ForeignKey(Config)  # 测试配置
-    time = models.DateTimeField(auto_created=True)  # 上传日期
+    time = models.DateTimeField(auto_now_add=True,null=True)  # 上传日期
     remark = models.CharField(max_length=50, blank=True, null=True)  # 备注
     delete = models.BooleanField(default=False)  # 是否删除
     name = models.CharField(max_length=50, null=False)  # 测试任务名称
