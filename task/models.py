@@ -22,6 +22,7 @@ class Baseboard(models.Model):  # 主板
 class System(models.Model):  # 系统
     name = models.CharField(max_length=50, null=False)  # 系统名称
     manufacturer = models.CharField(max_length=200, blank=True, null=True)  # 制造商
+    productname = models.CharField(max_length=100, blank=True, null=True)  # 产品名称
     version = models.CharField(max_length=50, blank=True, null=True)  # 系统版本
 
     class Meta:

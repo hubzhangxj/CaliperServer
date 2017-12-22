@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import QuerySet
 from django.shortcuts import render
 from task import models as taskModels
-from shared.serializers.base import Serializer
+from shared.serializers.json import Serializer, DjangoJSONEncoder
 import json
+from shared import Contants
 from shared.serializers.serialize_json import model_to_dict
+from shared.Response import Response
 # Create your views here.
 
-def serialize(data, excluded='password'):
+
+def serialize(data, excluded='avatar'):
     return Serializer().serialize(data, excluded=excluded)
 
 def task(req):
@@ -43,12 +47,90 @@ def task(req):
         }
         cpu_list.append(cpu)
 
-    taskModels.Task.objects.filter()
-    
+    if req.user.role == Contants.ROLE_ADMIN:
+        tasks = taskModels.Task.objects.order_by('-time').all()
+    else:
+        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+    obJson = req.body
+    # params = json.loads(obJson)
+    if obJson != '' and   json.loads(obJson).has_key('page'):
+        page =  json.loads(obJson)['page']
+    else:
+        page = 1
+
+    pageSize = Contants.PAGE_SIZE
+    paginator = Paginator(tasks, pageSize)
+
+    try:
+        consumptionObjs = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        consumptionObjs = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        consumptionObjs = paginator.page(paginator.num_pages)
+
+    # consumptions= Serializer().serialize(consumptionObjs,relations=('cpu',))
+    consumptions = serialize(consumptionObjs)
+    dict  = json.loads(consumptions)
+    for task in dict:
+        cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+        task['config']['cpu'] = json.loads(serialize(cpus))
+        sys = taskModels.System.objects.get(id=task['config']['sys'])
+        task['config']['sys'] = model_to_dict(sys)
     
     data = {
         'cpu':json.dumps(cpu_list),
         'os':json.dumps(os_list),
-        'kernel':json.dumps(kernel_list)
+        'kernel':json.dumps(kernel_list),
+        'tasks': json.dumps(dict),
+        'page': page,
+        'pageSize': pageSize,
+        'total': paginator.count,
     }
+    print consumptionObjs.object_list
+    print "============="
     return render(req,"task.html",data)
+
+def pageChange(req):
+    obJson = req.body
+    # params = json.loads(obJson)
+    if obJson != '' and json.loads(obJson).has_key('page'):
+        page = json.loads(obJson)['page']
+    else:
+        page = 1
+
+    if req.user.role == Contants.ROLE_ADMIN:
+        tasks = taskModels.Task.objects.order_by('-time').all()
+    else:
+        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+    pageSize = Contants.PAGE_SIZE
+    paginator = Paginator(tasks, pageSize)
+
+    try:
+        consumptionObjs = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        consumptionObjs = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        consumptionObjs = paginator.page(paginator.num_pages)
+
+    # consumptions= Serializer().serialize(consumptionObjs,relations=('cpu',))
+    consumptions = serialize(consumptionObjs)
+    dict = json.loads(consumptions)
+    for task in dict:
+        cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+        task['config']['cpu'] = json.loads(serialize(cpus))
+        sys = taskModels.System.objects.get(id=task['config']['sys'])
+        task['config']['sys'] = model_to_dict(sys)
+
+    data = {
+        'tasks': json.dumps(dict),
+        'page': page,
+        'pageSize': pageSize,
+        'total': paginator.count,
+    }
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS,"ok",data)

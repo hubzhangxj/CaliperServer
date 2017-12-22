@@ -22,7 +22,9 @@
                 <i-button type="primary" @click="share">Share</i-button>
             </div>
 
-            <Page :total="100"></Page>
+            <Page :total="total" :page-size="pageSize" :current="page" :show-total="true"
+                  @on-change="pageChange"
+                  :page-size-opts="[1,10, 20, 30, 40]"></Page>
         </div>
     </div>
 </div>
@@ -42,39 +44,57 @@
                     key: 'name',
                     align: 'center',
                     render: (h, params) => {
-                        return h('div',  params.row.name);
+                        return h('div', params.row.config.hostname + " (" + params.row.id + ")");
                     }
                 },
                 {
                     title: 'CPU',
                     key: 'cpu',
                     align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.config.cpu[0].version);
+                    }
                 },
                 {
                     title: 'Product Name',
                     key: 'pName',
                     align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.config.sys.productname);
+                    }
                 },
                 {
                     title: 'OS Version',
                     key: 'os',
                     align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.config.os);
+                    }
 
                 },
                 {
                     title: 'Kernel Version',
                     key: 'cpu',
                     align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.config.kernel);
+                    }
                 },
                 {
                     title: 'User',
                     key: 'pName',
                     align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.owner.name);
+                    }
                 },
                 {
                     title: 'DateTime',
                     key: 'cpu',
                     align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.time);
+                    }
                 },
                 {
                     title: 'Test Profile',
@@ -86,7 +106,7 @@
                                 props: {
                                     type: 'text',
                                     size: 'small',
-                                    icon:'document',
+                                    icon: 'document',
                                 },
                                 style: {
                                     marginRight: '5px'
@@ -101,28 +121,10 @@
                     }
                 },
             ],
-            data: [
-                {
-                    name: 'John Brown',
-                    age: 18,
-                    address: 'New York No. 1 Lake Park'
-                },
-                {
-                    name: 'Jim Green',
-                    age: 24,
-                    address: 'London No. 1 Lake Park'
-                },
-                {
-                    name: 'Joe Black',
-                    age: 30,
-                    address: 'Sydney No. 1 Lake Park'
-                },
-                {
-                    name: 'Jon Snow',
-                    age: 26,
-                    address: 'Ottawa No. 2 Lake Park'
-                }
-            ]
+            data: {{ tasks|safe }},
+            page: {{ page|safe }},
+            pageSize: {{ pageSize|safe }},
+            total:{{ total|safe }}
         },
         methods: {
             view: function () {
@@ -136,7 +138,22 @@
             },
             share: function () {
 
-            }
+            },
+            pageChange: function (page) {
+                vm.cur = page;
+                axios.post('page', {"page": page})
+                    .then(function (response) {
+                        if (response.data.code == 0) {
+                            {# vm.$Message.success("成功");#}
+                            vm.data = JSON.parse(response.data.data.tasks)
+                        } else {
+                            vm.$Message.warning(response.data.msg);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
         }
     });
 
