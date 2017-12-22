@@ -14,7 +14,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.conf.urls import url,include
+from django.conf.urls.static import static
 from django.contrib import admin
+
+from CaliperServer import settings
 from account import urls as userUrl
 from data import urls as dataUrl
 from task import urls as taskUrl
@@ -27,4 +30,4 @@ urlpatterns = [
     url('^user/',include(userUrl)),
     url('^task/',include(taskUrl)),
     url('^data/',include(dataUrl)),
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
