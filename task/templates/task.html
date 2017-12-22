@@ -12,7 +12,7 @@
 {% include "filter.html" %}
 <div id="app">
     <div style="padding-bottom: 40px;padding-right: 40px;padding-left: 40px">
-        <i-table border :columns="columns" :data="data"></i-table>
+        <i-table border :columns="columns" :data="data" @on-select="select" @on-select-cancel="selectCancle"></i-table>
 
         <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
             <div style="display: flex;flex-direction: row;align-items: center">
@@ -125,20 +125,21 @@
             page: {{ page|safe }},
             pageSize: {{ pageSize|safe }},
             total:{{ total|safe }},
-            filter: {}
+            filter: {},
+            selection: [], {#  选中的table 列 #}
         },
         methods: {
             view: function () {
-                alert("view")
+                console.log(vm.selection);
             },
             download: function () {
-                alert("download")
+                console.log(vm.selection);
             },
             del: function () {
-
+                console.log(vm.selection);
             },
             share: function () {
-
+                console.log(vm.selection);
             },
             pageChange: function (page) {
                 if (vm.filter.length == 0) {
@@ -146,7 +147,8 @@
                         .then(function (response) {
                             if (response.data.code == 0) {
                                 {# vm.$Message.success("成功");#}
-                                vm.data = JSON.parse(response.data.data.tasks)
+                                {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                                vm.reChecked(JSON.parse(response.data.data.tasks));
                                 vm.page = response.data.data.page;
                                 vm.total = response.data.data.total;
                             } else {
@@ -161,7 +163,8 @@
                         .then(function (response) {
                             if (response.data.code == 0) {
                                 {# vm.$Message.success("成功");#}
-                                vm.data = JSON.parse(response.data.data.tasks)
+                                {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                                vm.reChecked(JSON.parse(response.data.data.tasks));
                                 vm.page = response.data.data.page;
                                 vm.total = response.data.data.total;
                             } else {
@@ -179,7 +182,8 @@
                     .then(function (response) {
                         if (response.data.code == 0) {
                             {# vm.$Message.success("成功");#}
-                            vm.data = JSON.parse(response.data.data.tasks);
+                            {#                            vm.data = JSON.parse(response.data.data.tasks);#}
+                            vm.reChecked(JSON.parse(response.data.data.tasks));
                             vm.page = response.data.data.page;
                             vm.total = response.data.data.total;
                         } else {
@@ -189,6 +193,38 @@
                     .catch(function (error) {
                         console.log(error);
                     });
+            },
+            select: function (selection, row) {
+                vm.selection.push(row)
+
+                console.log(vm.selection);
+            },
+            selectCancle: function (selection, row) {
+                var removeId = -1;
+                for (i in vm.selection) {
+                    item = vm.selection[i];
+                    if (row.id == item.id) {
+                        removeId = i;
+                    }
+                }
+                if (removeId != -1) {
+                    vm.selection.splice(removeId, 1)
+                }
+                console.log(vm.selection);
+            },
+            reChecked: function (datas) {
+                if (vm.selection.length != 0) {
+                    for (i in vm.selection) {
+                        item = vm.selection[i];
+                        for (j in datas) {
+                            data = datas[j];
+                            if (item.id == data.id) {
+                                data['_checked'] = true;
+                            }
+                        }
+                    }
+                }
+                vm.data = datas;
             }
         }
     });
