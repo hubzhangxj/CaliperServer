@@ -12,7 +12,7 @@
 {% include "filter.html" %}
 <div id="app">
     <div style="padding-bottom: 40px;padding-right: 40px;padding-left: 40px">
-        <i-table border :columns="columns" :data="data" @on-select="select" @on-select-cancel="selectCancle"></i-table>
+        <i-table border :columns="columns" :data="data" @on-select-all="selectAll" @on-select="select" @on-select-cancel="selectCancle"></i-table>
 
         <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
             <div style="display: flex;flex-direction: row;align-items: center">
@@ -195,7 +195,7 @@
                     });
             },
             select: function (selection, row) {
-                vm.selection.push(row)
+                vm.selection.push(row);
 
                 console.log(vm.selection);
             },
@@ -210,6 +210,14 @@
                 if (removeId != -1) {
                     vm.selection.splice(removeId, 1)
                 }
+                console.log(vm.selection);
+            },
+            selectAll:function (selection) {
+                 for (i in selection) {
+                     item = selection[i];
+                    vm.selection.push(item);
+                 }
+
                 console.log(vm.selection);
             },
             reChecked: function (datas) {
