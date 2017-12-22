@@ -6,6 +6,7 @@
     <title>Caliper</title>
 
     {% include "script.html" %}
+    <link href="/static/links/intro.css" rel="stylesheet">
 
 </head>
 
@@ -23,7 +24,7 @@
     }
 
     #person {
-        width: 80%;
+        width: 100%;
         padding-left: 10px;
         padding-right: 10px;
     }
@@ -97,9 +98,10 @@
 
 
 </style>
-<body>
+<body >
+{% include "top.html" %}
 <div id="person">
-
+    <div style="background-color:white;padding-bottom: 40px;padding-right: 40px;padding-left: 40px">
     <div class="header">用户信息</div>
     <hr class="hr-bottom"/>
     <div class="header" style="font-weight: bold">基本资料</div>
@@ -261,7 +263,7 @@
 
     </div>
 
-
+</div>
 </div>
 </body>
 </html>
