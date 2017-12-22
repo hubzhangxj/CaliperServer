@@ -13,8 +13,8 @@
     </div>
 </div>
 
-<h4>显示值</h4>
-<input id="demo_value" type="text" value="">
+{#<h4>显示值</h4>#}
+{#<input id="demo_value" type="text" value="">#}
 <script type="text/javascript">
     var cpu = {{ cpu|safe }};
     var os = {{ os|safe }};
@@ -28,7 +28,13 @@
         data: cpu,
         text: 'CPU Version:',
         onChange: function (newValue) {
-            $('#demo_value').val(newValue);
+            if (newValue === '') {
+                delete vm.filter.cpu
+            } else {
+                vm.filter['cpu'] = newValue.split(',');
+            }
+            {#             vm.filter['cpu']  = newValue;#}
+            vm.filterTask()
         }
     });
     $('#os').comboboxfilter({
@@ -38,7 +44,12 @@
         data: os,
         text: 'OS Version:',
         onChange: function (newValue) {
-            $('#demo_value').val(newValue);
+            if (newValue === '') {
+                delete vm.filter.os
+            } else {
+                vm.filter['os'] = newValue.split(',');
+            }
+            vm.filterTask()
         }
     });
     $('#kernel').comboboxfilter({
@@ -48,7 +59,15 @@
         data: kernel,
         text: 'Kernel Version:',
         onChange: function (newValue) {
-            $('#demo_value').val(newValue);
+            {#            $('#demo_value').val(newValue);#}
+            if (newValue === '') {
+                delete vm.filter.kernel
+            } else {
+                vm.filter['kernel'] = newValue.split(',');
+            }
+
+            {#            vm.filter['kernel']  = newValue;#}
+            vm.filterTask()
         }
     });
 

@@ -11,7 +11,7 @@
 {% include "top.html" %} {# django 的 include 标签 #}
 {% include "filter.html" %}
 <div id="app">
-    <div style="padding: 40px">
+    <div style="padding-bottom: 40px;padding-right: 40px;padding-left: 40px">
         <i-table border :columns="columns" :data="data"></i-table>
 
         <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
@@ -124,7 +124,8 @@
             data: {{ tasks|safe }},
             page: {{ page|safe }},
             pageSize: {{ pageSize|safe }},
-            total:{{ total|safe }}
+            total:{{ total|safe }},
+            filter: {}
         },
         methods: {
             view: function () {
@@ -140,12 +141,47 @@
 
             },
             pageChange: function (page) {
-                vm.cur = page;
-                axios.post('page', {"page": page})
+                if (vm.filter.length == 0) {
+                    axios.post('page', {"page": page})
+                        .then(function (response) {
+                            if (response.data.code == 0) {
+                                {# vm.$Message.success("成功");#}
+                                vm.data = JSON.parse(response.data.data.tasks)
+                                vm.page = response.data.data.page;
+                                vm.total = response.data.data.total;
+                            } else {
+                                vm.$Message.warning(response.data.msg);
+                            }
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                } else {
+                    axios.post('filter', {"page": page, "filter": vm.filter})
+                        .then(function (response) {
+                            if (response.data.code == 0) {
+                                {# vm.$Message.success("成功");#}
+                                vm.data = JSON.parse(response.data.data.tasks)
+                                vm.page = response.data.data.page;
+                                vm.total = response.data.data.total;
+                            } else {
+                                vm.$Message.warning(response.data.msg);
+                            }
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                }
+
+            },
+            filterTask: function () {
+                axios.post('filter', {"page": 1, "filter": vm.filter})
                     .then(function (response) {
                         if (response.data.code == 0) {
                             {# vm.$Message.success("成功");#}
-                            vm.data = JSON.parse(response.data.data.tasks)
+                            vm.data = JSON.parse(response.data.data.tasks);
+                            vm.page = response.data.data.page;
+                            vm.total = response.data.data.total;
                         } else {
                             vm.$Message.warning(response.data.msg);
                         }
@@ -153,7 +189,7 @@
                     .catch(function (error) {
                         console.log(error);
                     });
-            },
+            }
         }
     });
 

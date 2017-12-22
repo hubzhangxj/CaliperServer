@@ -197,11 +197,11 @@ LOGGING = {
     },
 
     'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False  # 是否继承父类的log信息(是否显示这一层以上的所有日志）
-        },  # 'django' 是django系统默认的日志输出tag(这边默认不显示系统日志,所以把名字改掉，或者把‘file_handler’去掉)
+        # 'django': {
+        #     'handlers': ['console'],
+        #     'level': 'DEBUG',
+        #     'propagate': False  # 是否继承父类的log信息(是否显示这一层以上的所有日志）
+        # },  # 'django' 是django系统默认的日志输出tag(这边默认不显示系统日志,所以把名字改掉，或者把‘file_handler’去掉)
         #  handlers 来自于上面的 handlers 定义的内容
         'django.request': {
             'handlers': ['mail_admins'],
