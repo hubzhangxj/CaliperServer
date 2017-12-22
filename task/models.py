@@ -2,10 +2,12 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from account.models import User
 
 
 # Create your models here.
+from account.models import UserProfile
+
+
 class Baseboard(models.Model):  # 主板
     name = models.CharField(max_length=50, null=False)  # 主板名称
     manufacturer = models.CharField(max_length=200, blank=True, null=True)  # 制造商
@@ -148,13 +150,13 @@ class TestCase(models.Model):  # 用例表
 
 
 class Task(models.Model):  # 测试任务
-    owner = models.ForeignKey(User, related_name="owner")  # 拥有者
+    owner = models.ForeignKey(UserProfile, related_name="owner")  # 拥有者
     config = models.ForeignKey(Config)  # 测试配置
     time = models.DateTimeField(auto_now_add=True,null=True)  # 上传日期
     remark = models.CharField(max_length=50, blank=True, null=True)  # 备注
     delete = models.BooleanField(default=False)  # 是否删除
     name = models.CharField(max_length=50, null=False)  # 测试任务名称
-    shareusers = models.ManyToManyField(User, related_name='shareUsers')  # 共享表和用户的多对多关系
+    shareusers = models.ManyToManyField(UserProfile, related_name='shareUsers')  # 共享表和用户的多对多关系
 
     class Meta:
         db_table = 'task'

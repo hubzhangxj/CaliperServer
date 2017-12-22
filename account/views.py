@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.http import StreamingHttpResponse, HttpResponse
+from django.http import StreamingHttpResponse, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 import CaliperServer.settings as settings
 from shared.Response import Response
 from shared.log import logger
 import os, re, json
 import operator
+from django.contrib import auth
+from account.models import UserProfile
 
 
 def main(request):
@@ -60,3 +62,8 @@ def file_iterator(filename, chunk_size=512):
                 yield c
             else:
                 break
+
+def login(req):
+    user = UserProfile.objects.get(username="max")
+    auth.login(req, user)
+    return HttpResponseRedirect("/task/list")

@@ -49,10 +49,11 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # Application definition
+AUTH_USER_MODEL = "account.UserProfile"
 
 INSTALLED_APPS = [
-    # 'django.contrib.admin',
-    # 'django.contrib.auth',
+    'django.contrib.admin',
+    'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -68,7 +69,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -84,7 +85,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                # 'django.contrib.auth.context_processors.auth',
+                'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
@@ -154,6 +155,9 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
 
+# MEDIA_URL = '/upload/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'resources/upload')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -190,11 +194,11 @@ LOGGING = {
     },
 
     'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False  # 是否继承父类的log信息(是否显示这一层以上的所有日志）
-        },  # 'django' 是django系统默认的日志输出tag(这边默认不显示系统日志,所以把名字改掉，或者把‘file_handler’去掉)
+        # 'django': {
+        #     'handlers': ['console'],
+        #     'level': 'DEBUG',
+        #     'propagate': False  # 是否继承父类的log信息(是否显示这一层以上的所有日志）
+        # },  # 'django' 是django系统默认的日志输出tag(这边默认不显示系统日志,所以把名字改掉，或者把‘file_handler’去掉)
         #  handlers 来自于上面的 handlers 定义的内容
         'django.request': {
             'handlers': ['mail_admins'],

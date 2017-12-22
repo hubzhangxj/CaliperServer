@@ -306,7 +306,7 @@ def save_db(userName, result, output_path, log_path,config,hostName,remark=''):
     :return:
     '''
     try:
-        owner = accountModels.User.objects.get(username=userName)
+        owner = accountModels.UserProfile.objects.get(username=userName)
         task = taskModels.Task(owner = owner,config=config,remark=remark,delete=False,name = hostName)
         task.save()
         parseResult(result,task)

@@ -22,7 +22,7 @@ from account import views as accountView
 
 
 urlpatterns = [
-    # url(r'^admin/', admin.site.urls),
+    url(r'^admin/', admin.site.urls),
     url(r'^$',accountView.main),
     url('^user/',include(userUrl)),
     url('^task/',include(taskUrl)),

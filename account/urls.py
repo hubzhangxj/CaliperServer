@@ -17,5 +17,6 @@ from django.conf.urls import url
 from account import views as aViews
 
 urlpatterns = [
-    url('^download$',aViews.download)
+    url('^download$',aViews.download),
+    url('^login$',aViews.login)
 ]
