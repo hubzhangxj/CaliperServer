@@ -20,5 +20,6 @@ from task import views as taskViews
 urlpatterns = [
     url("^list$", taskViews.task),
     url("^page$",taskViews.pageChange),
-    url("^filter$",taskViews.filter)
+    url("^filter$",taskViews.filter),
+    url("^compare$",taskViews.compare)
 ]

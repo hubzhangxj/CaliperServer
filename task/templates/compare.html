@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compare</title>
+
+    {% include "script.html" %}
+    <link href="/static/links/intro.css" rel="stylesheet">
+    <link href="/static/links/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .content {
+            padding-left: 40px;
+            padding-right: 40px;
+            padding-bottom: 40px;
+            background-color: transparent;
+        }
+        .ivu-table .table-info-row-green{
+            color: #18b566;
+        }
+
+        .ivu-table .table-info-row-red{
+            color: #e20400;
+        }
+
+        .ivu-table .table-info-row-black{
+            color: #000;
+        }
+    </style>
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/highcharts/highcharts.js"></script>
+    <script src="/static/js/highcharts/highcharts-more.js"></script>
+    <script src="/static/js/highcharts/exporting.js"></script>
+
+</head>
+<body class="gray-bg">
+{% include "top.html" %} {# django 的 include 标签 #}
+<div id="app">
+    <div class="content">
+        <div class="page-header">
+            <h1> Caliper Benchmarking Report </h1>
+        </div>
+
+        <p>
+            <b>Caliper</b> is a benchmarking framework for <b>server platforms</b>, integrated with industry standard
+            tools
+            and test cases. It provides detailed performance assessments for <b>server platforms</b> based on ARM and
+            x86.
+            The <b>uniqueness</b> of Caliper is a consolidated score based evaluation. The best performance in each test
+            will get a score of 100. All other test scores are calculated relative to this. This provides a clear
+            relative
+            positioning of each target platform. It enables easy analysis of the performance levels and bottlenecks.
+        </p>
+        <p> As the performance testing can depend on system hardware resources at the time of execution, it is bound to
+            vary
+            over repeated testing. In general, this makes it difficult to analyse the performance results. Caliper tries
+            to
+            solve it for the performance analysts by executing at least <b>5 iterations of each test on every platform
+                and
+                ensure low variance</b>. This provides a more believable and stable scores throughout the report.<br>
+
+            This version of report is prepared with:
+            <mark>
+                5 executions each on 8 target platforms. Each execution consists of 27 test suits collecting 2052 test
+                points
+                across all platforms.
+            </mark>
+
+            This gives a measure of variability for the samples with respect to the <b>Mean</b> value.
+            Please click here <a href="{% static 'links/iterative_execution.html' %}" target="_blank"> <b>Caliper
+                Execution</b></a> for more details
+        </p>
+        <h2> 1. Overall Assessment </h2>
+        <h3>1.1 Key Observation</h3>
+        <font size="2" color="purple"> Please click each line below to get further information</font>
+        <ul>
+            <li style="color:red;">
+                <a onClick="MyWindow=window.open('./index.html#Performance Score',width=50,height=50); return false;">
+                    <font color="red">
+                        Add your observation here one by one. Update the onClick parameter.
+                    </font>
+                </a>
+            </li>
+        </ul>
+        <h3>1.2 Tested Platforms</h3>
+        <div id="platform_configuration" class="sensei-grid"></div>
+        <i><b>Attn: </b>Please <b>scroll to right</b> to see the table completely. Same with other tables in this report</i>
+        <br>
+        <i><b>arm_64 Core is ARM-v8, Cortex A72 </b> </i><br><br>
+        <ul>
+            <li><b>Hardware details </b>:</li>
+            Please give link to hardware_info logs of each platform here
+        </ul>
+        <h3> 1.3 Functional Score Summary</h3>
+{#            <h2>Caliper Functional Test Score</h2>#}
+{##}
+{#            <p>Caliper does basic functional verification on the target platforms. It also creates the scores based on#}
+{#                the#}
+{#                pass rate of functional tests on each platform. Currently caliper categorizes the functional tests under#}
+{#                <a#}
+{#                        href="/polls/kernel" target="_blank">KERNEL</a> and <a href="/polls/debug"#}
+{#                                                                               target="_blank">DEBUG</a>(please#}
+{#                click the link for each category details)#}
+{#            </p>#}
+{##}
+{#            <div style="text-align: center;">#}
+{#                <p><img src="{% static 'polls/pictures/Functional_Total_Scores.png' %}" height="400"#}
+{#                        width="600"/></p>#}
+{#            </div>#}
+{##}
+{#            <div id="sum_func_info" class="sensei-grid"></div>#}
+        <h3>1.4 Performance Score Summary</h3>
+        {#    <div id="container" style="min-width:400px;height:400px;margin-top: 20px"></div>#}
+            <i-button type="text"  @click="change" style="font-size: 16px;color: #cb1e4c">You can click this line to switch Chart Type</i-button>
+
+        <div id="container" style="min-width: 400px; height: 400px; margin: 0 auto" v-show="!isSame"></div>
+        <div id="lineContainer" style="min-width: 400px; height: 400px; margin: 0 auto" v-show="isSame"></div>
+
+         <i-table border :columns="columns" :data="data" style="margin-top: 20px"></i-table>
+
+
+
+        <h2>2. Detailed Assessment </h2>
+        <h3>2.1 Performance </h3>
+        <ul>
+
+            <li><b>Test Categories :</b>
+                <i>
+                    <form id="latency" style="display: inline" method="POST" action="/compare/latency/" target="_blank">
+                        {% csrf_token %}
+                        <input type="hidden" name="ids" value="{{ ids }}"/>
+                        <a onclick="submitform($(this))">LATENCY</a>
+                    </form>
+                    ,
+                    <form id="memory" style="display: inline" method="POST" action="/compare/memory/" target="_blank">
+                        {% csrf_token %}
+                        <input type="hidden" name="ids" value="{{ ids }}"/>
+                        <a onclick="submitform($(this))">MEMORY</a>
+                    </form>
+                    ,
+                    <form id="application" style="display: inline" method="POST" action="/compare/application/"
+                          target="_blank">
+                        {% csrf_token %}
+                        <input type="hidden" name="ids" value="{{ ids }}"/>
+                        <a onclick="submitform($(this))">APPLICATION</a>
+                    </form>
+                    ,
+                    <form id="cpu_multicore" style="display: inline" method="POST" action="/compare/cpu_multicore/"
+                          target="_blank">
+                        {% csrf_token %}
+                        <input type="hidden" name="ids" value="{{ ids }}"/>
+                        <a onclick="submitform($(this))">CPU_MULTICORE</a>
+                    </form>
+                    ,
+                    <form id="storage" style="display: inline" method="POST" action="/compare/storage/" target="_blank">
+                        {% csrf_token %}
+                        <input type="hidden" name="ids" value="{{ ids }}"/>
+                        <a onclick="submitform($(this))">STORAGE</a>
+                    </form>
+                    ,
+                    <form id="cpu_sincore" style="display: inline" method="POST" action="/compare/cpu_sincore/"
+                          target="_blank">
+                        {% csrf_token %}
+                        <input type="hidden" name="ids" value="{{ ids }}"/>
+                        <a onclick="submitform($(this))">CPU_SINCORE</a>
+                    </form>
+                    ,
+                    <form id="algorithm" style="display: inline" method="POST" action="/compare/algorithm/"
+                          target="_blank">
+                        {% csrf_token %}
+                        <input type="hidden" name="ids" value="{{ ids }}"/>
+                        <a onclick="submitform($(this))">ALGORITHM</a>
+                    </form>
+                    and
+                    <form id="network" style="display: inline" method="POST" action="/compare/network/" target="_blank">
+                        {% csrf_token %}
+                        <input type="hidden" name="ids" value="{{ ids }}"/>
+                        <a onclick="submitform($(this))">NETWORK</a>
+                    </form>
+                </i>
+            </li>
+
+            <li><b>Consolidated Test Results:</b> <a href="static/TestInfo/Report-Data/Performance-Tests.xlsx"
+                                                     target="_blank">
+                <i>Gives the actual test results from each test cases</i></a>
+
+        </ul>
+        <h2>3. Documentation:</h2>
+        <ul>
+            <li>
+                <a href="https://github.com/open-estuary/caliper/blob/master/docs/Caliper_User_Manual.pdf"> <i>Caliper
+                    user
+                    manuel</i> </a>
+            </li>
+            <li>
+                <a href="./static/polls/pictures/score_Calculation.html" target="_blank"> <i>Caliper Scoring - HowTo</i></a>
+            </li>
+
+            <li><a href="./static/TestInfo/Tool_details.xlsx" target="_blank"> <i>List of tools</i> </a></li>
+
+
+            <li id="Change log">Changelog [ version-yyyymmdd ]</li>
+
+            <ol type="a">
+                <li>
+                    New tools and new test cases has been added as per sailing report:
+                    <a href="./static/polls/pictures/Caliper_Test_Cases.html" target="_blank">Caliper Test Cases</a>
+                </li>
+
+                <li>
+                    Table alignment has been changed to support nginx and redis test cases.
+                </li>
+
+            </ol>
+
+
+        </ul>
+        <h2>4. Disclaimers:</h2>
+        <ul>
+            <li>
+                Caliper scores are not actual test results but they are derived from the actual values using some
+                specific
+                algoritms.
+            <li>
+                Caliper benchmark scores can depend on the system conditions and resources at the time of execution.
+                However
+                Caliper execute atleast 5 iterations of each test to ensure the repeatability and authenticity of the
+                scores.
+            </li>
+        </ul>
+    </div>
+</div>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            categories: {{ categories|safe }},
+            series:{{ series|safe }},
+            lineSeries:{{ lineSeries|safe }},
+            times:{{ times|safe }},
+            isSame:'{{ isSame|safe }}' === 'True', {# 是否同一个平台 #}
+            columns: {{ columns|safe }},
+            data: {{ tableData|safe }},
+        },
+        methods: {
+            change:function () {
+                vm.isSame= !vm.isSame;
+            }
+        }
+    });
+</script>
+
+<script src="/static/js/highcharts/spiderChart.js"></script>
+<script src="/static/js/highcharts/lineChart.js"></script>
+</body>
+</html>

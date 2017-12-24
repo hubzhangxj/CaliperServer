@@ -211,7 +211,7 @@ LOGGING = {
         'custom': {
             'handlers': ['file_handler', 'console'],
             'level': 'DEBUG',
-            'propagate': False
+            'propagate': True
         }
     }
 }
