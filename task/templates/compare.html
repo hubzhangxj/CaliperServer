@@ -126,63 +126,13 @@
 
             <li><b>Test Categories :</b>
                 <i>
-                    <form id="latency" style="display: inline" method="POST" action="/compare/latency/" target="_blank">
-                        {% csrf_token %}
-                        <input type="hidden" name="ids" value="{{ ids }}"/>
-                        <a onclick="submitform($(this))">LATENCY</a>
-                    </form>
-                    ,
-                    <form id="memory" style="display: inline" method="POST" action="/compare/memory/" target="_blank">
-                        {% csrf_token %}
-                        <input type="hidden" name="ids" value="{{ ids }}"/>
-                        <a onclick="submitform($(this))">MEMORY</a>
-                    </form>
-                    ,
-                    <form id="application" style="display: inline" method="POST" action="/compare/application/"
-                          target="_blank">
-                        {% csrf_token %}
-                        <input type="hidden" name="ids" value="{{ ids }}"/>
-                        <a onclick="submitform($(this))">APPLICATION</a>
-                    </form>
-                    ,
-                    <form id="cpu_multicore" style="display: inline" method="POST" action="/compare/cpu_multicore/"
-                          target="_blank">
-                        {% csrf_token %}
-                        <input type="hidden" name="ids" value="{{ ids }}"/>
-                        <a onclick="submitform($(this))">CPU_MULTICORE</a>
-                    </form>
-                    ,
-                    <form id="storage" style="display: inline" method="POST" action="/compare/storage/" target="_blank">
-                        {% csrf_token %}
-                        <input type="hidden" name="ids" value="{{ ids }}"/>
-                        <a onclick="submitform($(this))">STORAGE</a>
-                    </form>
-                    ,
-                    <form id="cpu_sincore" style="display: inline" method="POST" action="/compare/cpu_sincore/"
-                          target="_blank">
-                        {% csrf_token %}
-                        <input type="hidden" name="ids" value="{{ ids }}"/>
-                        <a onclick="submitform($(this))">CPU_SINCORE</a>
-                    </form>
-                    ,
-                    <form id="algorithm" style="display: inline" method="POST" action="/compare/algorithm/"
-                          target="_blank">
-                        {% csrf_token %}
-                        <input type="hidden" name="ids" value="{{ ids }}"/>
-                        <a onclick="submitform($(this))">ALGORITHM</a>
-                    </form>
-                    and
-                    <form id="network" style="display: inline" method="POST" action="/compare/network/" target="_blank">
-                        {% csrf_token %}
-                        <input type="hidden" name="ids" value="{{ ids }}"/>
-                        <a onclick="submitform($(this))">NETWORK</a>
-                    </form>
+                    <a :href='"compare/"+list' v-for="(list,index) in categories">${list|uppercase}${index == categories.length-1 ? "" :", "}</a>
                 </i>
             </li>
 
-            <li><b>Consolidated Test Results:</b> <a href="static/TestInfo/Report-Data/Performance-Tests.xlsx"
-                                                     target="_blank">
-                <i>Gives the actual test results from each test cases</i></a>
+{#            <li><b>Consolidated Test Results:</b> <a href="static/TestInfo/Report-Data/Performance-Tests.xlsx"#}
+{#                                                     target="_blank">#}
+{#                <i>Gives the actual test results from each test cases</i></a>#}
 
         </ul>
         <h2>3. Documentation:</h2>
@@ -202,10 +152,10 @@
             <li id="Change log">Changelog [ version-yyyymmdd ]</li>
 
             <ol type="a">
-                <li>
-                    New tools and new test cases has been added as per sailing report:
-                    <a href="./static/polls/pictures/Caliper_Test_Cases.html" target="_blank">Caliper Test Cases</a>
-                </li>
+{#                <li>#}
+{#                    New tools and new test cases has been added as per sailing report:#}
+{#                    <a href="./static/polls/pictures/Caliper_Test_Cases.html" target="_blank">Caliper Test Cases</a>#}
+{#                </li>#}
 
                 <li>
                     Table alignment has been changed to support nginx and redis test cases.
@@ -246,6 +196,12 @@
             change:function () {
                 vm.isSame= !vm.isSame;
             }
+        },
+        filters:{
+           uppercase:function (value) {
+                value = value.toString();
+               return value.toUpperCase();
+           } 
         }
     });
 </script>

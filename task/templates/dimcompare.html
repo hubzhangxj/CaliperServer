@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    {% include "script.html" %}
+    <link href="/static/links/intro.css" rel="stylesheet">
+    <link href="/static/links/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .content {
+            padding-left: 40px;
+            padding-right: 40px;
+            padding-bottom: 40px;
+            background-color: transparent;
+        }
+         .ivu-table .table-info-row-green{
+            color: #18b566;
+        }
+
+        .ivu-table .table-info-row-red{
+            color: #e20400;
+        }
+
+        .ivu-table .table-info-row-black{
+            color: #000;
+        }
+    </style>
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/highcharts/highcharts.js"></script>
+    <script src="/static/js/highcharts/highcharts-more.js"></script>
+    <script src="/static/js/highcharts/exporting.js"></script>
+
+</head>
+<body class="gray-bg">
+{% include "top.html" %} {# django 的 include 标签 #}
+<div id="app">
+    <div class="content">
+        <div class="page-header">
+            <h1> Caliper Performance Tests: {{ dic_total.aspect| capfirst }} </h1>
+        </div>
+
+        <div style="text-align: left;">
+            {% ifequal param 'latency' %}
+                <p> The test under this section is mainly targetted towards the performance evaluation of Latency in the
+                    sytems
+                    through various benchmarking tests which exercises it.</p>
+            {% endifequal %}
+
+            <h1>
+                <small>Report Layout</small>
+            </h1>
+            <p> The score of each test item is represented as the percentage of performance compared to the highest
+                value
+                obtained across all platform. So a value of <b>x%</b> means that the test case/ scenario performance is
+                <b>
+                    x% </b> compared to the highest scored platform, which is always given <b> 100% </b>.</br>
+                To know the ranking calculation and actual values scored by each platform on specific test cases, please
+                refer
+                to the raw values excel provided along with the report.
+                Please click <a href="{% static 'links/score_Calculation.html' %}" target="_blank"> <b>here</b></a> for
+                more
+                details. </p>
+            The <b>score summary</b> is the percentage of performance of each platform for individual test scenarios.
+            The
+            detailed sections shows the individual test case score(rank) in the same fashion. <br>
+
+            <h1>
+                <small>Test description</small>
+            </h1>
+            {% ifequal param 'latency' %}
+                <p> Tests under this section captures the performace of the system measuring latencies for various
+                    system
+                    operations using following tools: <br>
+                    1. <b>LMBENCH</b>: This is a series of micro benchmarks intended to measure basic operating system
+                    and
+                    hardware system metrics.<br>
+                    All test cases are executed by lmbench tool.
+                </p>
+            {% endifequal %}
+            {% ifequal param 'memory' %}
+                <p> The test under this section is mainly targetted towards the performance evaluation of memory
+                    subsystem
+                    through various benchmarking tests which exercises the same. The tools used are <br>
+                    1. <b>Tinymembench</b>: This is a simple memory benchmark program, which tries to measure the peak
+                    bandwidth
+                    of sequential memory accesses and the latency of random memory accesses.<br>
+                    Test cases executed by this tool: Tiny latency and Tiny bandwidth
+                    <br><br>
+
+                    2. <b>Lmbench</b> : lmbench is a series of micro benchmarks intended to measure basic operating
+                    system
+                    and
+                    hardware system metrics.<br>
+                    Test cases executed by this tool: local_speed, lb_bw_stream_v#, lb_bw_cross_#_core,
+                    lb_bw_local_#_core,
+                    lb_lat_cross_#_core, lb_lat_local_#_core<br><br>
+
+                    3. <b>Cachebench</b> : CacheBench is a benchmark designed to evaluate the performance of the memory
+                    hierarchy.<br>
+                    Test cases executed by this tool: bandwidth<br><br>
+
+                    <i><b>Note</b>: '#' symbol represents the numeric number.</i><br>
+                </p>
+            {% endifequal %}
+            {% ifequal param 'application' %}
+                <p> Tests under this section captures the performace of certain application scenarios. The tools used
+                    are
+                    <br>
+                    1. <b>Compile</b>: Compiling a kernel in multiple threads can evaluate the multi core/multi
+                    threading
+                    capability of the system.This can be used to measure how well the platform is scaling with respect
+                    to
+                    the
+                    number of cores (equivalent to the number threads of compilation) <br>
+                    Test cases executed by this tool: kernel-dev_# <br><br>
+
+                    2. <b>Sysbench</b>: sysbench oltp benchmark evaluate the database performance.<br>
+                    Test cases executed by this tool: max, avg, min and percentile<br><br>
+
+
+                    3. <b>Hadoop</b>: Hibench measures the common hadoop performance parameters like <b>HadoopTerasort,
+                        HadoopWordcount, HadoopBayes, HadoopKmeans, HadoopSort, HadoopDfsioe</b> etc. <br><br>
+
+                    4. <b>JDK</b>: Uses SciMark2 to evaluates the Java performance for scientific and numerical
+                    computing.It
+                    consists of five computational kernels: <b>FFT, Gauss-Seidel relaxation, Sparse matrix-multiply,
+                        Monte
+                        Carlo
+                        integration, and dense LU factorization</b>.Reports a composite score in approximate <b>Mflops
+                        (Millions
+                        of floating point operations per second)</b>.
+                </p>
+
+                5. <b>Nginx</b>: Nginx tool is mainly used to measure the web server performance. <br>
+                Test cases executed by this tool: nginx_32_core_local_wrps, nginx_32_core_cross_wrps and
+                nginx_64_core_wrps
+                <br>
+                <br>
+
+                6. <b>Redis</b>: Redis tool evaluate the performance of database. Redis works with an in-memory dataset.
+                <br>
+                Test cases executed by this tool: redis_Instance_#<br><br>
+
+                <i><b>Note</b>: '#' symbol represent the numeric number.</i><br>
+            {% endifequal %}
+            {% ifequal param 'cpu_multicore' %}
+                <p>
+                    The test under this section evaluate single core performance of the CPU Subsystem. These tests would
+                    impact
+                    mainly CPU and the memory subsystem. Relatively low or nil stress on IO<br>
+                    1. <b>Stress-ng</b>: Measure sthe CPU performance by running some CPU intensive routines.<br><br>
+
+                    2. <b>Unixbench</b>: A system benchmark which test the performance of CPU and memory.<br>
+                    Test cases executed by this tool:<br>
+                <li>
+                    multicore_unixbench<br><br>
+                </li>
+
+                3. <b>Sysbench-CPU</b>: Measure the CPU performance by finding the given number of prime numbers and
+                measuring
+                the time for the same.<br>
+                Test cases executed by this tool:<br>
+                <li>
+                    multicore_misc: sysbench_prime<br><br>
+                </li>
+
+                4. <b>Openblas</b>: This tool is a set of low-level routines for performing common linear algebra
+                operations
+                such as vector addition, scalar multiplication, dot products, linear combinations, and matrix
+                multiplication
+                <br>
+                Test cases executed by this tool:<br>
+                <li>
+                    openblas_value_#_cores and openblas_efficiency_#_cores
+                </li>
+                </p>
+            {% endifequal %}
+            {% ifequal param 'storage' %}
+                <p>
+                    Tests under this section captures the performace of disk and file system.<br>
+                    1. <b>Iozone</b>: This is a filesystem benchmark tool. The benchmark tests file I/O performance for
+                    the
+                    following operations. <b> Read, write, re-read, re-write, read backwards, read strided, fread,
+                    fwrite,
+                    random read/write etc </b> <br>
+                    Test cases executed by this tool:<br>
+                <li>
+                    Iozone-Cached and Iozone-DirectIO<br><br>
+                </li>
+
+                2. <b>Fio</b>: This is the most powerful IO benchmarking tool available today which is very flexible to
+                create
+                various io workloads and to execute them. <br>
+                Test cases executed by this tool:<br><br>
+                <li>
+                    bandwidth and iops
+                </li>
+                </p>
+            {% endifequal %}
+            {% ifequal param 'cpu_sincore' %}
+                <p>
+                    The test under this section evaluate single core performance of the CPU Subsystem. These tests would
+                    impact
+                    mainly CPU and the memory subsystem. Relatively low or nil stress on IO</p>
+                1. <b>Coremark</b>: CoreMark is a benchmark that aims to measure the performance of central processing
+                units
+                (CPU) used in embedded systems<br>
+                2. <b>Linpack</b>: LINPACK is a collection of Fortran subroutines that analyze and solve linear
+                equations
+                and
+                linear least-squares problems.<br>
+                3. <b>Nbench</b>: NBench is a synthetic computing benchmark program developed in the mid-1990s, intended
+                to
+                measure a computer's CPU, FPU, and Memory System speed.<br>
+                4. <b>Dhrystone</b>: Dhrystone is a synthetic computing benchmark program developed in 1984 by Reinhold
+                P.
+                Weicker intended to be representative of system (integer) programming<br>
+                5. <b>Scimark</b>: Measure sthe CPU performance.<br>
+                6. <b>Stress-ng</b>: Measure sthe CPU performance by running some CPU intensive routines.<br>
+                7. <b>unixbench</b>: A system benchmark which test the performance of CPU and memory.<br>
+                8. <b>sysbench-CPU</b>: Measure the CPU performance by finding the given number of prime numbers and
+                measuring
+                the time for the same.<br><br>
+
+
+                <p> To have a very quick reference of the hardware configurations of platforms evaluated, please refer
+                    to <a
+                            href="#" target="_blank"> <b>Platform_Configuration.xlsx </b> </a></p>
+            {% endifequal %}
+            {% ifequal param 'algorithm' %}
+                <p> The test under this section evaluate various algorithm performance. These tests would impact mainly
+                    CPU
+                    and
+                    the memory subsystem, in some cases disk also would be impacted. The tools used are <br>
+                    1. <b>Openssl</b>: OpenSSL is a cryptography toolkit implementing the Secure Sockets Layer ( SSL
+                    v2/v3)
+                    and
+                    Transport Layer Security ( TLS v1) network protocols and related cryptography standards required by
+                    them.<br>
+                    All the test cases described here has been executed by openssl tool (except unzip test case).
+                    <br><br>
+
+                    2. <b>Unzip</b>: This tool is to measure the time required to extract the tar.gz file.
+                </p>
+            {% endifequal %}
+            {% ifequal param 'network' %}
+                <p>
+                    The test under this section is mainly targetted towards the performance evaluation of Network
+                    subsystem
+                    through various benchmarking tests which exercises the same such as <br>
+                    1. <b>Netperf</b> : Netperf is a benchmark that can be used to measure various aspects of networking
+                    performance. <br>
+                    Test cases executed by this tool: <br>
+                <li>
+                    TCP_RR, TCP_stream_r, TCP_CRR, TCP_stream and UDP_RR
+                </li><br>
+
+                2. <b>Iperf </b>:   Iperf is a commonly-used network testing tool that can create Transmission Control
+                Protocol
+                (TCP) and User Datagram Protocol (UDP). <br>
+                Test cases executed by this tool: <br><br>
+                <li>
+                    TCP_s#_RX and TCP_s#_TX
+                </li><br>
+
+                3. <b>Qperf</b>: qperf measures bandwidth and latency between two nodes. It can work over TCP/IP as well
+                as
+                the
+                RDMA transports.<br>
+                Test cases executed by this tool: <br><br>
+                <li>
+                    TCP_bw_#B and TCP_lat_#B
+                </li><br>
+
+                4. <b>Lmbench</b> : lmbench is a series of micro benchmarks intended to measure basic operating system
+                and
+                hardware system metrics. <br>
+                Test cases executed by this tool: <br><br>
+                <li>
+                    Pipe, AF_Unix, UDP, TCP_con and TCP<br><br>
+                </li>
+
+                <i><b>Note</b>: '#' symbol represents the numeric number.</i><br>
+                </p>
+            {% endifequal %}
+        </div>
+        {#        {% if test_point %}#}
+        <h1>
+            <small>{{ param| capfirst }} Score Summary</small>
+        </h1>
+        <div id="container" style="min-width:400px;height:400px"></div>
+        <i-table border :columns="columns" :data="data" style="margin-top: 20px"></i-table>
+        {#        {% endif %}#}
+        <div v-for="(value, key) in case_series">
+            <h2>
+                <small>{{ param| capfirst }} Score Details: ${ key }</small>
+            </h2>
+            <div :id="key" style="min-width:400px;height:400px"></div>
+            <i-table border :columns="columns" :data="sce_table_data[key]" style="margin-top: 20px"></i-table>
+        </div>
+
+
+    </div>
+</div>
+<script src="/static/js/highcharts/sce-lineChart.js"></script>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            sce_title: 'Total Score of Item {{ param }}',
+            categories: {{ categories|safe }},
+            sce_series:{{ sce_series|safe }},
+            {#            case_categories:{{ case_categories|safe }},#}
+            case_series:{{ case_series|safe }},
+            columns: {{ columns|safe }},
+            data: {{ tableData|safe }},
+            sce_table_data:{{ sce_table_data|safe }}
+        },
+        methods: {},
+        mounted: function () {
+            this.$nextTick(function () {
+                $.each(vm.case_series, function (name, value) {
+{#                    console.log(name);#}
+{#                    console.log("=====");#}
+{#                    console.log(value);#}
+                    chart('{{ param }}',name, value)
+
+                });
+            });
+
+        }
+    });
+</script>
+<script src="/static/js/highcharts/sceChart.js"></script>
+</body>
+</html>
