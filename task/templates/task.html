@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Title</title>
     {% include "script.html" %}
-    <script src="/static/js/jquery.min.js"></script>
     <link href="/static/links/intro.css" rel="stylesheet">
 
 </head>
@@ -32,27 +31,30 @@
 </div>
 <script>
 
-    var standardPost = function (url, args) {
-        var form = $("<form method='post'></form>"),
-            input;
-        form.attr({"action": url});
+{#    var standardPost = function (url, args) {#}
+{#        var form = $("<form method='post'></form>"),#}
+{#            input;#}
+{#        form.attr({"action": url});#}
         {#        $.each(args, function (key, value) {#}
-        input = $("<input type='hidden'>");
-        input.attr({"name": 'data'});
-        input.val(args);
-        form.append(input);
+{#        input = $("<input type='hidden'>");#}
+{#        input.attr({"name": 'data'});#}
+{#        input.val(args);#}
+{#        form.append(input);#}
         {#        });#}
-        form.append(document.body).submit();
-    };
-
-    function submitData(url, data) {
-        var form = $("<form method='post' action='" + url + "'>{% csrf_token %}"
-            + "<input type='submit'/>"
-            + "<input type='hidden' name='data' value='" + data + "' /></form>");
-        $(document.body).append(form);
-        form.submit();
+{#        form.append(document.body).submit();#}
+{#    };#}
+{##}
+{#    function submitData(url, data) {#}
+{#        var form = $("<form method='post' action='" + url + "'>{% csrf_token %}"#}
+{#            + "<input type='submit'/>"#}
+{#            + "<input type='hidden' name='data' value='" + data + "' /></form>");#}
+{#        $(document.body).append(form);#}
+{#        form.submit();#}
         {#        $('input[type="submit"]', form).click();#}
-    }
+{#    }#}
+
+
+
 
     var vm = new Vue({
         el: '#app',
@@ -157,9 +159,12 @@
                 console.log(vm.selection);
                 if (vm.selection.length == 1) {
 
-                } else if (vm.selection.length > 1 && vm.selection.length <= 20 ) {
-                    {#                    window.location.href = "compare"#}
-                    submitData('compare', JSON.stringify(vm.selection));
+                } else if (vm.selection.length > 1 && vm.selection.length <= 20) {
+{#                    $.cookie('selection', '',{path:"/"});#}
+                    $.cookie('selection', JSON.stringify(vm.selection),{path:"/"}); {# 必须要加 路径path #}
+
+                    window.location.href = "compare";
+                    {#                    submitData('compare', JSON.stringify(vm.selection));#}
                     {#                    axios.post('compare', )#}
                     {#                        .then(function (response) {#}
                     {#                            if (response.data.code == 0) {#}
@@ -175,7 +180,7 @@
                     {#                        .catch(function (error) {#}
                     {#                            console.log(error);#}
                     {#                        });#}
-                }else if(vm.selection.length >20){
+                } else if (vm.selection.length > 20) {
                     vm.$Message.error('Sorry,Select 20 items at most!')
                 }
 

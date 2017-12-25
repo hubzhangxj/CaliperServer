@@ -239,8 +239,9 @@ def filter(req):
 
 def compare(req):
     try:
+        from urllib import unquote
         obJson = req.POST
-        selection = json.loads(obJson['data'])  # 选中的task 任务
+        selection = json.loads(unquote(req.COOKIES.get("selection")))  # 选中的task 任务
         size = len(selection)
         dims = taskModels.Dimension.objects.all()
 
