@@ -27266,7 +27266,9 @@ exports.default = {
 
             var selection = this.getSelection();
             if (status) {
-                this.$emit('on-select-all', selection);
+                this.$emit('on-select-all', selection,[]);
+            }else{
+                this.$emit('on-select-all', selection,this.data);
             }
             this.$emit('on-selection-change', selection);
         },
