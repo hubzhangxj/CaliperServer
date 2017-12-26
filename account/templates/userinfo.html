@@ -286,7 +286,7 @@
             mail: "{{ request.user.email }}",
             phone: "{{ request.user.telphone }}",
             last_login: "{{ request.user.last_login }}",
-            avatar: "/upload/{{ request.user.avatar }}",
+            avatar: "/static/{{ request.user.avatar }}",
 
             formValidate: {
                 mail: '',

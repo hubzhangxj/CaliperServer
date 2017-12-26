@@ -30,4 +30,5 @@ urlpatterns = [
     url("^boardInfo/filter/?$", taskViews.stateFilter),
     url("^boardInfo/rowdelete/?$", taskViews.rowdelete),
     url("^boardInfo/rowRestore/?$", taskViews.rowRestore),
+    url("^download/?$", taskViews.downloadFile),
 ]

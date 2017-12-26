@@ -662,7 +662,7 @@ def stateSearchUser(req):
     try:
         if not  tasks:
             print tasks
-            return HttpResponse(status=404,data={'tasks':'','page':1,'pageSize':1,'total':1})
+            return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
         try:
@@ -728,7 +728,7 @@ def statePageChange(req):
 
         try:
             if not tasks:
-                return HttpResponse(status=404, data={'tasks': '', 'page': 1, 'pageSize': 1, 'total': 1})
+                return HttpResponse(status=404)
             consumptionObjs = paginator.page(page)
         except PageNotAnInteger:
             # If page is not an integer, deliver first page.
@@ -821,7 +821,7 @@ def stateFilter(req):
                     configs = taskModels.Config.objects.filter(kernel__in=kernels)
                     tasks = tasks.filter(config_id__in=getConfigId(configs))
         if not  tasks:
-            return HttpResponse(status=404,data={'tasks':'','page':1,'pageSize':1,'total':1})
+            return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
         try:
@@ -875,7 +875,7 @@ def rowdelete(req):
     try:
         if not  tasks:
             print tasks
-            return HttpResponse(status=404,data={'tasks':'','page':1,'pageSize':1,'total':1})
+            return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
         try:
@@ -924,7 +924,7 @@ def rowRestore(req):
     try:
         if not  tasks:
             print tasks
-            return HttpResponse(status=404,data={'tasks':'','page':1,'pageSize':1,'total':1})
+            return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
         try:
@@ -951,6 +951,90 @@ def rowRestore(req):
         logger.error(str(e))
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+
+def permanentDelete(req):
+    if not  req.POST:
+        return HttpResponse(status=403)
+    data=req.POST
+    searchState = data.get('searchState')
+    searchState = json.loads(searchState)
+
+    #print searchState
+    if req.user.role == Contants.ROLE_ADMIN:
+        tasks = taskModels.Task.objects.order_by('-time').all()
+    else:
+        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+    for i in range(len(searchState)):
+        tasks.filter(config_id=searchState[i]['id']).delete()
+
+
+    tasks=tasks.filter(delete=0)
+    try:
+        if not  tasks:
+            return HttpResponse(status=404)
+        pageSize = Contants.PAGE_SIZE
+        paginator = Paginator(tasks, pageSize)
+        try:
+            consumptionObjs = paginator.page(1)
+        except EmptyPage:
+            consumptionObjs = paginator.page(paginator.num_pages)
+        consumptions = serialize(consumptionObjs)
+        dict = json.loads(consumptions)
+        for task in dict:
+
+            cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+            task['config']['cpu'] = json.loads(serialize(cpus))
+            sys = taskModels.System.objects.get(id=task['config']['sys'])
+            task['config']['sys'] = model_to_dict(sys)
+
+            data = {
+                'tasks': json.dumps(dict),
+                'page': 1,
+                'pageSize': pageSize,
+                'total': paginator.count,
+            }
+
+    except Exception as e:
+        logger.error(str(e))
+        return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+
+def downloadFile(req):
+    import CaliperServer.settings as settings
+    import os,tempfile,zipfile
+    from wsgiref.util import FileWrapper
+    downloadPath = settings.downloadPath
+    if req.method == 'GET':
+        if req.user.role == Contants.ROLE_ADMIN:
+            tasks = taskModels.Task.objects.order_by('-time').all()
+        else:
+            tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+        if downloadPath[-1] != '/':downloadPath=downloadPath+'/'
+
+        temp = tempfile.TemporaryFile()
+        archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
+        flag=False
+        for task in tasks:
+            path=downloadPath+task.path
+            if os.path.exists(path):
+                flag=True
+
+                archive.write(path)
+        archive.close()
+        if not flag:
+            return HttpResponse(status=404,content='not found')
+        wrapper = FileWrapper(temp)
+        response = HttpResponse(wrapper, content_type='application/zip')
+        # #response['Content-Type'] = 'application/octet-stream'
+        response['Content-Disposition'] = 'attachment;filename="{0}"'.format('{}.zip'.format(req.user))
+        #response['Content-Length'] = temp.tell()
+        # temp.seek(0)
+        return response
+        #return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=403)
 
 def singleTask(req):
     from urllib import unquote

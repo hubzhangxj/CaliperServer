@@ -20,8 +20,15 @@
         <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
             <div style="display: flex;flex-direction: row;align-items: center">
                 <i-button type="primary" @click="view" style="margin-right: 10px">View</i-button>
-                <i-button type="primary" @click="download" style="margin-right: 10px">Download</i-button>
-                <i-button type="primary" @click="del" style="margin-right: 10px">Delete</i-button>
+                <i-button type="primary" @click="download" style="margin-right: 10px"><Icon type="ios-download-outline"></Icon> Download</i-button>
+                <i-button type="primary" @click="modal1 = true" style="margin-right: 10px">Delete</i-button>
+                <Modal
+                        v-model="modal1"
+                        title="删除确认"
+                        @on-ok="okDelete"
+                        @on-cancel="cancel">
+                    <p>你确定要删除此条记录吗？</p>
+                </Modal>
                 <i-button type="primary" @click="share">Share</i-button>
             </div>
 
@@ -59,6 +66,7 @@
     var vm = new Vue({
         el: '#app',
         data: {
+            modal1: false,
             columns: [
                 {
                     type: 'selection',
@@ -187,11 +195,26 @@
                 }
 
             },
-            download: function () {
-                console.log(vm.selection);
-            },
             del: function () {
-                console.log(vm.selection);
+                var params = new URLSearchParams();
+                console.log(vm.selection)
+                params.append('searchState', JSON.stringify(vm.selection));
+                axios.post('boardInfo/rowdelete/', params).then(function (response) {
+                    if (response.data.code == 0) {
+                        {# vm.$Message.success("成功");#}
+                        {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                        vm.reChecked(JSON.parse(response.data.data.tasks));
+                        vm.page = response.data.data.page;
+                        vm.total = response.data.data.total;
+                    } else {
+                        vm.data=[];
+                        vm.total=0;
+                        vm.page=1;
+                    }
+                })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
             },
             share: function () {
                 console.log(vm.selection);
@@ -303,7 +326,21 @@
                     }
                 }
                 vm.data = datas;
+            },
+            okDelete: function () {
+                vm.del();
+                //this.$Message.info('Clicked ok');
+            },
+            cancel : function() {
+                this.$Message.info('您选择了取消操作');
+            },
+
+            download : function () {
+                window.open('download');
+
             }
+
+
         }
     });
 
