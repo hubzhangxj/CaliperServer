@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ toolName }}</title>
+    {% include "script.html" %}
+    <link href="/static/links/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/links/datatable.min.css" rel="stylesheet">
+    <link href="/static/links/intro.css" rel="stylesheet">
+    <style>
+        .titleCell {
+
+        }
+
+        .table {
+            background-color: white;
+
+        }
+    </style>
+</head>
+<body class="gray-bg">
+{% include "top.html" %} {# django 的 include 标签 #}
+<div class="content" >
+    <div class="row" style="background-color: white">
+        {% for result in content %}
+            <pre style="background-color: white;border: none">{{ result.top }}</pre>
+
+            {#            {% if result.tables|length > 0 %}#}
+            {% for table in result.tables %}
+                {% if table.table %}
+                    <pre style="background-color: transparent;border: none">{{ table.centerTop }}</pre>
+                    <table class="table" cellspacing="0" width="100%">
+                        {% for tr in table.table %}
+                            {% if forloop.first %}
+                                <tr class="titleCell">
+                                    {% else %}
+                                <tr class="contentCell">
+                            {% endif %}
+
+                        {% for td in tr %}
+                            {% if forloop.parentloop.first %}
+                                <th>{{ td }}</th>
+                            {% else %}
+                                <td>{{ td }}</td>
+                            {% endif %}
+                        {% endfor %}
+
+                        </tr>
+                        {% endfor %}
+                    </table>
+                {% endif %}
+            {% endfor %}
+
+            {% for table in result.tables %}
+                {% if table.i_table %}
+                    <pre style="background-color: transparent;border: none">{{ table.centerTop }}</pre>
+
+                    <table class="table" cellspacing="0" width="100%">
+                        {% for tr in table.i_table %}
+                            <tr class="contentCell">
+
+                                {% for td in tr %}
+                                    <td>{{ td }}</td>
+                                {% endfor %}
+
+                            </tr>
+                        {% endfor %}
+                    </table>
+                {% endif %}
+            {% endfor %}
+
+            {#            {% endif %}#}
+            {% if result.v_table %}
+                <div>ddddddddd</div>
+            {% endif %}
+            <pre style="background-color: transparent;border: none">{{ result.bottom }}</pre>
+            <hr style="border-color: #cdcdcd"/>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>
+

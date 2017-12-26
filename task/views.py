@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import QuerySet
+from django.db import connection
 from django.shortcuts import render
 from task import models as taskModels
 from shared.serializers.json import Serializer, DjangoJSONEncoder
@@ -1038,6 +1038,47 @@ def downloadFile(req):
     else:
         return HttpResponse(status=403)
 
+def parseTableCols(model):
+    # taskModels.Cpu._meta.fields[0].attname
+    cols=[]
+    for field in model._meta.fields:
+        if field.name != 'id' and field.name != 'config':
+            print field.name
+            col = {
+                'title': str(field.name).upper(),
+                'key': field.name,
+                'align': 'center',
+            }
+            cols.append(col)
+    return cols
+
+def parseTableCols_partitions():
+    # taskModels.Cpu._meta.fields[0].attname
+    cols=[]
+    first_col = {
+        'title': 'Partition DeviceName',
+        'key': 'devicename',
+        'align': 'center',
+    }
+    cols.append(first_col)
+    for field in taskModels.Partition._meta.fields:
+        if field.name != 'id' and field.name != 'config' and field.name != 'storage':
+            print field.name
+            col = {
+                'title': str(field.name).upper(),
+                'key': field.name,
+                'align': 'center',
+            }
+            cols.append(col)
+    return cols
+
+def dictfetchall(cursor):
+    desc = cursor.description
+    return [
+        dict(zip([col[0] for col in desc], row))
+        for row in cursor.fetchall()
+    ]
+
 def singleTask(req):
     from urllib import unquote
     selection = json.loads(unquote(req.COOKIES.get("selection")))  # 选中的task 任务
@@ -1051,22 +1092,109 @@ def singleTask(req):
     sys = taskModels.Config.objects.get(id=task['config']['id']).sys
     caches = taskModels.Cache.objects.filter(config_id=task['config']['id'])
     memorys = taskModels.Memory.objects.filter(config_id=task['config']['id'])
-    net = taskModels.Net.objects.filter(config_id=task['config']['id'])
+    nets = taskModels.Net.objects.filter(config_id=task['config']['id'])
     storages = taskModels.Storage.objects.filter(config_id=task['config']['id'])
     storages = json.loads(serialize(storages))
     for storage in storages:
-        partition = taskModels.Partition.objects.filter(storage_id=storage['id'])
-        partition = serialize(partition)
-        storage['partitions'] = json.loads(partition)
+        partitions = taskModels.Partition.objects.filter(storage_id=storage['id'])
+        partitions = json.loads(serialize(partitions))
+        for p in partitions:
+            p['devicename'] = storage['devicename']
+        # storage['partitions'] = json.loads(partition)
+    syss = []
+    syss.append(model_to_dict(sys))
+    boards = []
+    boards.append(model_to_dict(board))
+
+    # logs = taskModels.Log.objects.filter(task_id = task['id']) #所有的测试工具的日志
+    #
+    # logs = serialize(logs)
+
+    cursor = connection.cursor()
+
+    try:
+        sql = "SELECT a.name as dimName, d.name as toolName, e.content FROM dimension AS a " \
+              "LEFT JOIN scenario AS b ON a.id = b.dim_id " \
+              "LEFT JOIN testCase AS c ON b.id = c.scenario_id " \
+              "LEFT JOIN testTool AS d ON c.tool_id = d.id " \
+              "LEFT JOIN log AS e ON d.id = e.tool_id " \
+              "GROUP BY a.`name`,d.name";
+        print  sql
+        cursor.execute(sql)
+        datas = dictfetchall(cursor)
+
+    finally:
+        cursor.close()
+    dimResults = taskModels.DimResult.objects.filter(task_id= task['id'])
+    dimResults = json.loads(serialize(dimResults))
+    for dimResult in dimResults:
+        tools=[]
+        for data in datas:
+            if dimResult['dim']['name'] == data['dimName']:
+                tool={
+                    "name":data['toolName'],
+                    "content":data['content']
+                }
+                tools.append(tool)
+        dimResult['dim']['name'] = str(dimResult['dim']['name']).upper()
+        dimResult['tools'] = tools
+
+    # dimResults = taskModels.DimResult.objects.filter(task_id= task['id'])
+    # dim_tools=[]
+    # for dimResult in dimResults:
+    #     sces = taskModels.Scenario.objects.filter(dim_id = dimResult.dim_id)
+    #     tools = []
+    #     for sce in sces:
+    #         cases = taskModels.TestCase.objects.filter(scenario_id = sce.id)
+    #         for case in cases:
+    #             log = taskModels.Log.objects.get(task_id=task['id'],tool_id=case.tool.id)
+    #             tool = model_to_dict(case.tool)
+    #             tool['log'] =  model_to_dict(log)
+    #             tools.append(tool)
+    #     dict = {
+    #         "dim": dimResult.dim.name,
+    #         "tools": tools
+    #     }
+    #     dim_tools.append(dict)
+        # sceResults = taskModels.ScenarioResult.objects.filter(dimresult_id = dimResult.id)
+        # for sceResult in sceResults:
+        #     caseResults = taskModels.CaseResult.objects.filter(sceResult_id=sceResult.id)
+
 
     data={
         'dims':dimObjs,
+        'cpu_cols':json.dumps(parseTableCols(taskModels.Cpu)),
         'cpus':serialize(cpus),
-        'board':model_to_dict(board),
-        'sys': model_to_dict(sys),
+        'board_cols': json.dumps(parseTableCols(taskModels.Baseboard)),
+        'board':json.dumps(boards),
+        'sys_cols': json.dumps(parseTableCols(taskModels.System)),
+        'sys': json.dumps(syss),
+        'cache_cols': json.dumps(parseTableCols(taskModels.Cache)),
         'caches': serialize(caches),
+        'memory_cols': json.dumps(parseTableCols(taskModels.Memory)),
         'memorys': serialize(memorys),
-        'net': serialize(net),
+        'net_cols': json.dumps(parseTableCols(taskModels.Net)),
+        'nets': serialize(nets),
+        'storage_cols': json.dumps(parseTableCols(taskModels.Storage)),
         'storages': json.dumps(storages),
+        'partition_cols':json.dumps(parseTableCols_partitions()),
+        'partitions':json.dumps(partitions),
+        'dim_tools':dimResults
     }
     return render(req,"singleTask.html",data)
+
+def tool_result(request,toolName):
+    print toolName
+    toolName = str(toolName).lower()
+    content=[]
+    try:
+        log = taskModels.Log.objects.get(tool__name=toolName)
+        content = log.content
+    except:
+        content = []
+    try:
+        if type(content) == str or type(content) == unicode:
+            content= json.loads(content)
+    except:
+        content = []
+    return render(request, 'tool.html', {"toolName":toolName, "content": content})

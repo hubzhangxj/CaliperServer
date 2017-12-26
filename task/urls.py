@@ -18,17 +18,19 @@ from django.contrib import admin
 from task import views as taskViews
 
 urlpatterns = [
-    url("^list$", taskViews.task),
-    url("^page$",taskViews.pageChange),
-    url("^filter$",taskViews.filter),
-    url("^single$",taskViews.singleTask),
-    url("^compare$",taskViews.compare),
-    url("^compare/(\w+)$", taskViews.dimcompare),
-    url("^boardInfo/?$", taskViews.boardInfo),
-    url("^boardInfo/searchUser/?$", taskViews.stateSearchUser),
-    url("^boardInfo/page/?$", taskViews.statePageChange),
-    url("^boardInfo/filter/?$", taskViews.stateFilter),
-    url("^boardInfo/rowdelete/?$", taskViews.rowdelete),
-    url("^boardInfo/rowRestore/?$", taskViews.rowRestore),
-    url("^download/?$", taskViews.downloadFile),
+    url(r"^list$", taskViews.task),
+    url(r"^page$",taskViews.pageChange),
+    url(r"^filter$",taskViews.filter),
+    url(r"^single$",taskViews.singleTask),
+    url(r"^compare$",taskViews.compare),
+    url(r"^compare/(\w+)$", taskViews.dimcompare),
+    url(r'^single/(\w+)$', taskViews.tool_result),
+    url(r"^boardInfo/?$", taskViews.boardInfo),
+    url(r"^boardInfo/searchUser/?$", taskViews.stateSearchUser),
+    url(r"^boardInfo/page/?$", taskViews.statePageChange),
+    url(r"^boardInfo/filter/?$", taskViews.stateFilter),
+    url(r"^boardInfo/rowdelete/?$", taskViews.rowdelete),
+    url(r"^boardInfo/rowRestore/?$", taskViews.rowRestore),
+    url(r"^download/?$", taskViews.downloadFile),
+
 ]
