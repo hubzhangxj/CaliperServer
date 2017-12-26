@@ -158,6 +158,7 @@ class Task(models.Model):  # 测试任务
     delete = models.BooleanField(default=False)  # 是否删除
     name = models.CharField(max_length=50, null=False)  # 测试任务名称
     shareusers = models.ManyToManyField(UserProfile, related_name='shareUsers')  # 共享表和用户的多对多关系
+    path = models.CharField(max_length=255, null=False)  # 压缩包路径
 
     class Meta:
         db_table = 'task'
@@ -193,8 +194,7 @@ class CaseResult(models.Model):  # 测试用例得分
 
 
 class Log(models.Model):  # 测试工具日志
-    toolid = models.ForeignKey(TestTool)  # 测试工具
-    path = models.CharField(max_length=255, null=False)  # 工具路径
+    tool = models.ForeignKey(TestTool)  # 测试工具
     content = models.TextField(blank=True, null=True)  # 解析后的内容
     task = models.ForeignKey(Task)  # 测试任务
 
