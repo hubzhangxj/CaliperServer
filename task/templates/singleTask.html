@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TaskView</title>
+    {% include "script.html" %}
+    <link href="/static/links/intro.css" rel="stylesheet">
+    <style>
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        .left {
+            overflow: auto;
+            flex: 1;
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 10px;
+            height: 100%;
+        }
+        #left .point{
+
+            color: #676a6c;
+        }
+        #left .point :hover{
+             color: #676a6c;
+        }
+        #left .point :active{
+             color: #676a6c;
+        }
+        #left .point :focus{
+             color: #676a6c;
+        }
+        #left .point :visited{
+             color: #676a6c;
+        }
+    </style>
+</head>
+<body class="gray-bg">
+{% include "top.html" %} {# django 的 include 标签 #}
+<div id="app" style="height: 100%">
+    <div class="content" style="height: 100%">
+        <div style="display: flex;flex-direction: row;height: 100%">
+            <div>
+                <i-menu style="height: 100%;">
+                    <Submenu name="1">
+                        <template slot="title">
+                            <Icon type="ios-paper"></Icon>
+                            Configuration
+                        </template>
+                        <Menu-Item name="cpu">CPU</Menu-Item>
+                        <Menu-Item name="cache">Cache</Menu-Item>
+                        <Menu-Item name="memory">Memory</Menu-Item>
+                        <Menu-Item name="storage">Storage</Menu-Item>
+                        <Menu-Item name="system">System</Menu-Item>
+                        <Menu-Item name="baseboard">Baseboard</Menu-Item>
+                        <Menu-Item name="network">Network</Menu-Item>
+                    </Submenu>
+                    <Submenu name="2">
+                        <template slot="title">
+                            <Icon type="chatbubbles"></Icon>
+                            Performance Report
+                        </template>
+                        <Menu-Item v-for="dim in dims" name="dim.name">${dim.name | uppercase}</Menu-Item>
+                    </Submenu>
+                </i-menu>
+            </div>
+            <div id="left" class="left">
+
+                <a name="cpu" style="color:#676a6c " >
+                    <h1>
+                        <small>CPU Information</small>
+                    </h1>
+
+
+                    <div></div>
+
+                        <div v-for="">{{ cpu.version }}</div>
+
+                </a>
+                <a name="cache" class = "point">
+                    <h1>
+                        <small>Cache Information</small>
+                    </h1>
+                </a>
+                <a name="memory" class = "point">
+                    <h1>
+                        <small>Memory Information</small>
+                    </h1>
+                </a>
+
+                <a name="storage" class = "point">
+                    <h1>
+                        <small>Storage Information</small>
+                    </h1>
+                </a>
+                <a name="system" class = "point">
+                    <h1>
+                        <small>System Information</small>
+                    </h1>
+                </a>
+                <a name="baseboard" class = "point">
+                    <h1>
+                        <small>Baseboard Information</small>
+                    </h1>
+                </a>
+                <a name="network" class = "point">
+                    <h1>
+                        <small>Network Information</small>
+                    </h1>
+                </a>
+
+
+                <h1>
+                    <small>Algorithm</small>
+                </h1>
+
+
+                <p>
+                    {% for tool in tools %}
+                        {% if "cachebench"  in tool.toolName %}
+                            {% if not cachebench %}
+                                <a href="Cachebench">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Cachebench</b></a> : CacheBench is a benchmark designed to evaluate the
+                            performance of the memory hierarchy.<br>
+                            Test cases executed by this tool: bandwidth<br><br>
+                        {% endif %}
+                        {% if "compile"|lower  in tool.toolName %}
+                            {% if not compile %}
+                                <a href="Compile">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Compile</b></a>: Compiling a kernel in multiple threads can evaluate the
+                            multi
+                            core/multi threading capability of the system.This can be used to measure how well the
+                            platform
+                            is
+                            scaling with respect to the number of cores (equivalent to the number threads of
+                            compilation)
+                            <br>
+                            Test cases executed by this tool: kernel-dev_# <br><br>
+                        {% endif %}
+                        {% if "coremark"|lower  in tool.toolName %}
+                            {% if not coremark %}
+                                <a href="Coremark">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Coremark</b></a>: CoreMark is a benchmark that aims to measure the
+                            performance
+                            of
+                            central processing units (CPU) used in embedded systems<br><br>
+                        {% endif %}
+                        {% if "dhrystone"|lower  in tool.toolName %}
+                            {% if not dhrystone %}
+                                <a href="Dhrystone">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Dhrystone</b></a>: Dhrystone is a synthetic computing benchmark program
+                            developed
+                            in 1984 by Reinhold P. Weicker intended to be representative of system (integer) programming
+                            <br>
+                            <br>
+                        {% endif %}
+                        {% if "fio"|lower  in tool.toolName %}
+                            {% if not fio %}
+                                <a href="Fio">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Fio</b></a>: This is the most powerful IO benchmarking tool available today
+                            which
+                            is
+                            very flexible to create various io workloads and to execute them. <br>
+                            Test cases executed by this tool: bandwidth and iops<br><br>
+                        {% endif %}
+                        {% if "hadoop"|lower  in tool.toolName %}
+                            {% if not hadoop %}
+                                <a href="Hadoop">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}
+                        <b>Hadoop</b></a>: Hibench measures the common hadoop performance parameters
+                            like
+                            <b>HadoopTerasort,
+                                HadoopWordcount, HadoopBayes, HadoopKmeans, HadoopSort, HadoopDfsioe</b> etc. <br>
+                            <pre style="background-color: transparent">{{ hadoop }}</pre> <br>
+                        {% endif %}
+                        {% if "iozone"|lower  in tool.toolName %}
+                            {% if not iozone %}
+                                <a href="Iozone">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Iozone</b></a>: This is a filesystem benchmark tool. The benchmark tests
+                            file I/O
+                            performance for the following operations.
+                            <b> Read, write, re-read, re-write, read backwards, read
+                                strided, fread, fwrite, random read/write etc </b> <br>
+                            Test cases executed by this tool:Iozone-Cached and Iozone-DirectIO<br><br>
+                        {% endif %}
+                        {% if "linpack"|lower  in tool.toolName %}
+                            {% if not linpack %}
+                                <a href="Linpack">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Linpack</b></a>: LINPACK is a collection of Fortran subroutines that
+                            analyze and
+                            solve
+                            linear equations and linear least-squares problems.<br><br>
+                        {% endif %}
+                        {% if "lmbench"|lower  in tool.toolName %}
+                            {% if not lmbench %}
+                                <a href="Lmbench">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Lmbench</b></a> : lmbench is a series of micro benchmarks intended to
+                            measure
+                            basic
+                            operating system and hardware system metrics.<br>
+                            Test cases executed by this tool: local_speed, lb_bw_stream_v#, lb_bw_cross_#_core,
+                            lb_bw_local_#_core,
+                            lb_lat_cross_#_core, lb_lat_local_#_core<br><br>
+                        {% endif %}
+                        {% if "nbench"|lower  in tool.toolName %}
+                            {% if not nbench %}
+                                <a href="Nbench">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Nbench</b></a>: NBench is a synthetic computing benchmark program developed
+                            in
+                            the
+                            mid-1990s, intended to measure a computer's CPU, FPU, and Memory System speed.<br><br>
+                        {% endif %}
+                        {% if "openblas"|lower  in tool.toolName %}
+                            {% if not openblas %}
+                                <a href="Openblas">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Openblas</b></a>: This tool is a set of low-level routines for performing
+                            common
+                            linear
+                            algebra operations such as vector addition, scalar multiplication, dot products, linear
+                            combinations,
+                            and matrix multiplication<br>
+                            Test cases executed by this tool: openblas_value_#_cores and openblas_efficiency_#_cores
+                            <br>
+                            <br>
+                        {% endif %}
+
+                        {% if "openssl"|lower  in tool.toolName %}
+                            {% if not openssl %}
+                                <a href="Openssl">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Openssl</b></a>: OpenSSL is a cryptography toolkit implementing the Secure
+                            Sockets
+                            Layer
+                            ( SSL v2/v3) and Transport Layer Security ( TLS v1) network protocols and related
+                            cryptography
+                            standards
+                            required by them.<br>
+                            All the test cases described here has been executed by openssl tool (except unzip test
+                            case).
+                            <br>
+                            <br>
+                        {% endif %}
+                        {% if "scimark"|lower  == tool.toolName %}
+                            {% if not scimark %}
+                                <a href="Scimark">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Scimark</b></a>: Measure sthe CPU performance.<br><br>
+                        {% endif %}
+                        {% if "scimarkjava"|lower  == tool.toolName|lower %}
+                            {% if not scimarkjava %}
+                                <a href="ScimarkJava">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>ScimarkJava</b></a>: Uses SciMark2 to evaluates the Java performance
+                            for scientific and
+                            numerical
+                            computing.It consists of five computational kernels: <b>FFT, Gauss-Seidel relaxation, Sparse
+                            matrix-multiply, Monte Carlo integration, and dense LU factorization</b>.Reports a composite
+                            score
+                            in
+                            approximate <b>Mflops (Millions of floating point operations per second)</b>.<br><br>
+                        {% endif %}
+
+                        {% if "stressng"|lower  in tool.toolName %}
+                            {% if not stressng %}
+                                <a href="stressng">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Stress-ng</b></a>: Measure sthe CPU performance by running some CPU intensive
+                            routines.<br><br>
+                        {% endif %}
+                        {% if "sysbench"|lower  in tool.toolName %}
+                            {% if not sysbench %}
+                                <a href="Sysbench">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Sysbench</b></a>: sysbench oltp benchmark evaluate the database
+                            performance.<br>
+                            Test cases executed by this tool: max, avg, min and percentile<br><br>
+                        {% endif %}
+                        {% if "tinymembench"|lower  in tool.toolName %}
+                            {% if not tinymembench %}
+                                <a href="Tinymembench">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Tinymembench</b></a>: This is a simple memory benchmark program, which
+                            tries to
+                            measure
+                            the peak bandwidth of sequential memory accesses and the latency of random memory accesses.
+                            <br>
+                            Test cases executed by this tool: Tiny latency and Tiny bandwidth
+                            <br><br>
+                        {% endif %}
+                        {% if "unixbench"|lower  in tool.toolName %}
+                            {% if not unixbench %}
+                                <a href="Unixbench">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Unixbench</b></a>: A system benchmark which test the performance of CPU
+                            and
+                            memory.
+                            <br>
+                            Test cases executed by this tool:multicore_unixbench<br><br>
+                        {% endif %}
+                        {% if "unzip"|lower  in tool.toolName %}
+                            {% if not unzip %}
+                                <a href="Unzip">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Unzip</b></a>: This tool is to measure the time required to extract the
+                            tar.gz
+                            file.<br><br>
+                        {% endif %}
+                        {% if "nginx"|lower  in tool.toolName %}
+                            {% if not nginx %}
+                                <a href="Nginx">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Nginx</b></a>: Nginx tool is mainly used to measure the web server
+                            performance.
+                            <br>
+                            Test cases executed by this tool: nginx_32_core_local_wrps, nginx_32_core_cross_wrps and
+                            nginx_64_core_wrps<br><br>
+                        {% endif %}
+                        {% if "redis"|lower  in tool.toolName %}
+                            {% if not redis %}
+                                <a href="Redis">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Redis</b></a>: Redis tool evaluate the performance of database. Redis works
+                            with
+                            an
+                            in-memory dataset.<br>
+                            Test cases executed by this tool: redis_Instance_#<br><br>
+                        {% endif %}
+                        {% if "netperf"|lower  in tool.toolName %}
+                            {% if not netperf %}
+                                <a href="Netperf">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Netperf</b></a> : Netperf is a benchmark that can be used to measure
+                            various
+                            aspects
+                            of
+                            networking performance. <br>
+                            Test cases executed by this tool: TCP_RR, TCP_stream_r, TCP_CRR, TCP_stream and UDP_RR<br>
+                            <br>
+                        {% endif %}
+                        {% if "iperf"|lower  in tool.toolName %}
+
+                            {% if not iperf %}
+                                <a href="Iperf">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Iperf </b></a>: Iperf is a commonly-used network testing tool that can create
+                            Transmission Control Protocol (TCP) and User Datagram Protocol (UDP). <br>
+                            Test cases executed by this tool: TCP_s#_RX and TCP_s#_TX<br><br>
+                        {% endif %}
+                        {% if "qperf"|lower  in tool.toolName %}
+
+                            {% if not qperf %}
+                                <a href="Qperf">
+                            {% else %}
+                                <a href="#">
+                            {% endif %}<b>Qperf</b></a>: qperf measures bandwidth and latency between two nodes. It can
+                            work
+                            over
+                            TCP/IP as well as the RDMA transports.<br>
+                            Test cases executed by this tool: TCP_bw_#B and TCP_lat_#B <br><br>
+                        {% endif %}
+                    {% endfor %}
+
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<script>
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            dims:{{ dims|safe }},
+            cpus:{{ cpus|safe }}
+        },
+        methods: {},
+        filters: {
+            uppercase: function (value) {
+                value = value.toString();
+                return value.toUpperCase();
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

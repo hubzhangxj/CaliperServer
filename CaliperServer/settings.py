@@ -157,7 +157,7 @@ STATICFILES_DIRS = (
 
 MEDIA_URL = '/upload/'
 # MEDIA_ROOT = os.path.join(BASE_DIR, "static"),
-MEDIA_ROOT = os.path.join(BASE_DIR,"static")
+MEDIA_ROOT = os.path.join(parentPath,"data","upload")
 print "============="
 print MEDIA_ROOT
 

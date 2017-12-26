@@ -76,7 +76,7 @@ def upload(request):
                 if config is None:
                     return HttpResponse(status=400)
                 else:
-                    save_db(username,rDict,output_path,sourceDir_log,config,hostName)
+                    save_db(username,rDict,outputFileName + ".zip",sourceDir_log,config,hostName)
                     logger.debug("入库操作成功")
 
         else:
@@ -287,18 +287,50 @@ def parseSce(dim,dimKey,performance,dimResult):
         return False
     return True
 
+def showtree(rootDir):
+    # result_dirs=[]
+    result_files = []
+    list_dirs = os.walk(rootDir)
+    for root, dirs, files in list_dirs:
+        '''
+        for d in dirs: 
+            dirpath=os.path.join(root, d)
+            result_dirs.append(dirpath.split("output\\")[1])    
+        '''
+        for f in files:
+            filepath = os.path.join(root, f)
+            if filepath.endswith("_json.txt"):
+                toolName = os.path.basename(filepath).split("_")[0]
+                tools = {"toolName": toolName, "logPath": filepath}
+                result_files.append(tools)
+    return result_files
 
+def parseLog(logPath,task):
+
+    result_files = showtree(logPath)
+    for tool in result_files:
+        toolName = tool["toolName"]
+        filePath = tool["logPath"]
+        try:
+            tool = taskModels.TestTool.objects.get(name = toolName)
+            json_data = open(filePath, 'r')
+            json_data = json_data.read()
+            log = taskModels.Log(tool=tool, content=json_data, task=task)
+            log.save()
+        except Exception as e:
+            logger.error(str(e))
+            logger.error("toolName:" + toolName)
 
 
 
 
 @transaction.atomic
-def save_db(userName, result, output_path, log_path,config,hostName,remark=''):
+def save_db(userName, result, outputFileName, log_path,config,hostName,remark=''):
     '''
     数据入库
     :param userName: 用户名
     :param result: 得分结果
-    :param output_path: output 压缩包路径
+    :param outputFileName: output 压缩包文件名
     :param log_path:    log 解压后路径
     :param config:      config文件 路径
     :param hostName:    hostName名称
@@ -307,10 +339,10 @@ def save_db(userName, result, output_path, log_path,config,hostName,remark=''):
     '''
     try:
         owner = accountModels.UserProfile.objects.get(username=userName)
-        task = taskModels.Task(owner = owner,config=config,remark=remark,delete=False,name = hostName)
+        task = taskModels.Task(owner = owner,config=config,remark=remark,delete=False,name = hostName,path = outputFileName)
         task.save()
         parseResult(result,task)
-
+        parseLog(log_path,task)
         logger.debug("保存数据库")
     except Exception as e:
         logger.error(str(e))

@@ -951,3 +951,36 @@ def rowRestore(req):
         logger.error(str(e))
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+
+def singleTask(req):
+    from urllib import unquote
+    selection = json.loads(unquote(req.COOKIES.get("selection")))  # 选中的task 任务
+    task = selection[0]
+
+    dims = taskModels.Dimension.objects.all()
+    dimObjs = serialize(dims)
+
+    cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+    board = taskModels.Config.objects.get(id=task['config']['id']).board
+    sys = taskModels.Config.objects.get(id=task['config']['id']).sys
+    caches = taskModels.Cache.objects.filter(config_id=task['config']['id'])
+    memorys = taskModels.Memory.objects.filter(config_id=task['config']['id'])
+    net = taskModels.Net.objects.filter(config_id=task['config']['id'])
+    storages = taskModels.Storage.objects.filter(config_id=task['config']['id'])
+    storages = json.loads(serialize(storages))
+    for storage in storages:
+        partition = taskModels.Partition.objects.filter(storage_id=storage['id'])
+        partition = serialize(partition)
+        storage['partitions'] = json.loads(partition)
+
+    data={
+        'dims':dimObjs,
+        'cpus':serialize(cpus),
+        'board':model_to_dict(board),
+        'sys': model_to_dict(sys),
+        'caches': serialize(caches),
+        'memorys': serialize(memorys),
+        'net': serialize(net),
+        'storages': json.dumps(storages),
+    }
+    return render(req,"singleTask.html",data)

@@ -158,7 +158,8 @@
             view: function () {
                 console.log(vm.selection);
                 if (vm.selection.length == 1) {
-
+                    $.cookie('selection', JSON.stringify(vm.selection), {path: "/"});
+                    window.location.href = "single";
                 } else if (vm.selection.length > 1 && vm.selection.length <= 20) {
                     {#                    $.cookie('selection', '',{path:"/"});#}
                     $.cookie('selection', JSON.stringify(vm.selection), {path: "/"});

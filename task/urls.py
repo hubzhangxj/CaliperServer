@@ -21,6 +21,7 @@ urlpatterns = [
     url("^list$", taskViews.task),
     url("^page$",taskViews.pageChange),
     url("^filter$",taskViews.filter),
+    url("^single$",taskViews.singleTask),
     url("^compare$",taskViews.compare),
     url("^compare/(\w+)$", taskViews.dimcompare),
     url("^boardInfo/?$", taskViews.boardInfo),
