@@ -1020,17 +1020,19 @@ def downloadFile(req):
             path=downloadPath+task.path
             if os.path.exists(path):
                 flag=True
-
-                archive.write(path)
+                filename=os.path.basename(path)
+                archive.write(path,filename)
         archive.close()
+
         if not flag:
             return HttpResponse(status=404,content='not found')
         wrapper = FileWrapper(temp)
-        response = HttpResponse(wrapper, content_type='application/zip')
-        # #response['Content-Type'] = 'application/octet-stream'
+
+        size=temp.tell()
+        temp.seek(0)
+        response = HttpResponse(wrapper, content_type='application/octet-stream')
         response['Content-Disposition'] = 'attachment;filename="{0}"'.format('{}.zip'.format(req.user))
-        #response['Content-Length'] = temp.tell()
-        # temp.seek(0)
+        response['Content-Length'] = size
         return response
         #return HttpResponse(status=200)
     else:
