@@ -296,19 +296,14 @@
                     vm.selection.push(item);
                 }
 
-                var newSelection = [];
-                for (i in vm.selection){
-                    item = vm.selection[i];
-                    for(r in removeObjs){
+                vm.selection.forEach(function (item,index,array) {
+                     for(r in removeObjs){
                         rItem = removeObjs[r];
-                         if(rItem.id !== item.id){
-                             newSelection.push(item)
+                         if(rItem.id === item.id){
+                             array.splice(index,1)
                          }
                     }
-                }
-                if(newSelection.length !=0) {
-                    vm.selection = newSelection;
-                }
+                });
 
                 console.log(vm.selection);
             },
