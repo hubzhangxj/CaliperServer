@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    {% include "script.html" %}
+    <link href="/static/links/intro.css" rel="stylesheet">
+
+</head>
+<body class="gray-bg">
+{% include "top.html" %} {# django 的 include 标签 #}
+<div id="app" style="padding: 40px">
+
+    <div style="display: flex;flex-direction: row;justify-content: space-between;margin-left: 1%">
+        <div style="display: flex;flex-direction: row;">
+
+            <div style="display: flex;flex-direction: row;">
+
+                <div>
+                    <i-input v-model="formValidate.searchName" placeholder="Enter username"></i-input>
+                </div>
+
+                <div>
+                    <i-button type="primary" @click="searchUser" style="margin-left: 6%">Search</i-button>
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+        <div>
+            <i-select v-model="modelSelect" size="large" style="width:100px"  @on-change="searchUser">
+                <i-option v-for="item in selectList" :value="item.value" :key="item.value">${ item.label }</i-option>
+            </i-select>
+        </div>
+
+    </div>
+
+    <div style="margin-top: 10px">
+        <i-table border :columns="columns" :data="data"  @on-selection-change="selectChange"  @on-select-all="selectAll" @on-select="select" @on-select-cancel="selectCancle"></i-table>
+        <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
+            <div style="display: flex;flex-direction: row;align-items: center">
+                <i-button type="primary" @click="modal2 = true" style="margin-left: 5%">Restore</i-button>
+                <Modal
+                        v-model="modal2"
+                        title="恢复确认"
+                        @on-ok="okRestore"
+                        @on-cancel="cancel">
+                    <p>你确定要恢复此条记录吗？</p>
+                </Modal>
+                <i-button type="primary" @click="modal1 = true" style="margin-left: 10%">Delete</i-button>
+                <Modal
+                        v-model="modal1"
+                        title="删除确认"
+                        @on-ok="okDelete"
+                        @on-cancel="cancel">
+                    <p>你确定要删除此条记录吗？</p>
+                </Modal>
+            </div>
+
+            <Page :total="total" :page-size="pageSize" :current="page" :show-total="true"
+                  @on-change="pageChange"
+                  :page-size-opts="[1,10, 20, 30, 40]"></Page>
+        </div>
+    </div>
+
+</div>
+<script>
+
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            formValidate:{
+                searchName:'',
+            },
+            modal1: false,
+            modal2: false,
+            selection: [],
+            selectList: [
+                {
+                    value: 'allRow',
+                    label: '全部'
+                },
+                {
+                    value: 'delRow',
+                    label: '删除'
+                },
+                {
+                    value: 'normal',
+                    label: '正常'
+                },
+            ],
+            modelSelect: '',
+            columns: [
+                {
+                    type: 'selection',
+                    width: 60,
+                    align: 'center'
+                },
+                {
+                    title: 'HostName(Number)',
+                    key: 'name',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.config.hostname + " (" + params.row.id + ")");
+                    }
+                },
+                {
+                    title: 'CPU',
+                    key: 'cpu',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.config.cpu[0].version);
+                    }
+                },
+                {
+                    title: 'Product Name',
+                    key: 'pName',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.config.sys.productname);
+                    }
+                },
+                {
+                    title: 'OS Version',
+                    key: 'os',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.config.os);
+                    }
+
+                },
+                {
+                    title: 'Kernel Version',
+                    key: 'cpu',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.config.kernel);
+                    }
+                },
+                {
+                    title: 'User',
+                    key: 'pName',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.owner.name);
+                    }
+                },
+                {
+                    title: 'DateTime',
+                    key: 'cpu',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.time);
+                    }
+                },
+                {
+                    title: 'Status',
+                    key: 'pName',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', [
+                            h('Button', {
+                                props: {
+                                    type: 'text',
+                                    size: 'small',
+                                    icon: 'document',
+                                },
+                                style: {
+                                    marginRight: '5px'
+                                },
+                                on: {
+                                    click: () => {
+                                        this.show(params.index)
+                                    }
+                                }
+                            }, 'View'),
+                        ]);
+                    }
+                },
+            ],
+            data: {{ tasks|safe }},
+            page: {{ page|safe }},
+            pageSize: {{ pageSize|safe }},
+            total:{{ total|safe }},
+        },
+        methods: {
+            restore: function () {
+                var params = new URLSearchParams();
+                console.log(vm.selection)
+                params.append('searchState', JSON.stringify(vm.selection));
+                axios.post('boardInfo/rowRestore/', params).then(function (response) {
+                    if (response.data.code == 0) {
+                        {# vm.$Message.success("成功");#}
+                        {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                        vm.reChecked(JSON.parse(response.data.data.tasks));
+                        vm.page = response.data.data.page;
+                        vm.total = response.data.data.total;
+                    } else {
+                        vm.data=[];
+                        vm.total=0;
+                        vm.page=1;
+                    }
+                })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+
+            del: function () {
+
+
+                var params = new URLSearchParams();
+                console.log(vm.selection)
+                params.append('searchState', JSON.stringify(vm.selection));
+                axios.post('boardInfo/rowdelete/', params).then(function (response) {
+                    if (response.data.code == 0) {
+                        {# vm.$Message.success("成功");#}
+                        {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                        vm.reChecked(JSON.parse(response.data.data.tasks));
+                        vm.page = response.data.data.page;
+                        vm.total = response.data.data.total;
+                    } else {
+                        vm.data=[];
+                        vm.total=0;
+                        vm.page=1;
+                    }
+                })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+
+
+            },
+
+            searchUser: function (searchState) {
+                searchState=searchState||''
+                //  console.log(this.formValidate.searchName)
+                var params = new URLSearchParams();
+                params.append('searchUserName', this.formValidate.searchName);
+                // console.log(vm.searchState)
+                params.append('searchState', searchState);
+                axios.post('boardInfo/searchUser', params)
+                    .then(function (response) {
+                        if (response.data.code == 0) {
+                            {# vm.$Message.success("成功");#}
+                            {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                            vm.reChecked(JSON.parse(response.data.data.tasks));
+                            vm.page = response.data.data.page;
+                            vm.total = response.data.data.total;
+                        } else {
+                            vm.data=[];
+                            vm.total=0;
+                            vm.page=1;
+                            //vm.$Message.warning(response.data.msg);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+
+
+            },
+
+            selectCancle: function (selection, row) {
+                var removeId = -1;
+                for (i in vm.selection) {
+                    item = vm.selection[i];
+                    if (row.id == item.id) {
+                        removeId = i;
+                    }
+                }
+                if (removeId != -1) {
+                    vm.selection.splice(removeId, 1)
+                }
+                console.log(vm.selection);
+            },
+
+            select: function (selection, row) {
+                //vm.selection=[];
+                vm.selection.push(row)
+                console.log(vm.selection);
+
+            },
+            selectAll:function (selection) {
+                vm.selection=[];
+                for (i in selection) {
+                    item = selection[i];
+                    vm.selection.push(item);
+                }
+
+                console.log(vm.selection);
+            },
+            selectChange:function (selection) {
+                vm.selection=[];
+                for (i in selection) {
+                    item = selection[i];
+                    vm.selection.push(item);
+                }
+                console.log(vm.selection);
+
+
+
+            },
+
+            pageChange: function (page) {
+                if (vm.filter.length == 0) {
+                    axios.post('boardInfo/page', {"page": page})
+                        .then(function (response) {
+                            if (response.data.code == 0) {
+                                {# vm.$Message.success("成功");#}
+                                {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                                vm.reChecked(JSON.parse(response.data.data.tasks));
+                                vm.page = response.data.data.page;
+                                vm.total = response.data.data.total;
+                            } else {
+                                vm.data=[];
+                                vm.total=0;
+                                vm.page=1;
+                            }
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                } else {
+                    axios.post('boardInfo/filter', {"page": page, "filter": vm.filter})
+                        .then(function (response) {
+                            if (response.data.code == 0) {
+                                {# vm.$Message.success("成功");#}
+                                {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                                vm.reChecked(JSON.parse(response.data.data.tasks));
+                                vm.page = response.data.data.page;
+                                vm.total = response.data.data.total;
+                            } else {
+                                vm.data=[];
+                                vm.total=0;
+                                vm.page=1;
+                            }
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                }
+
+            },
+            reChecked: function (datas) {
+                if (vm.selection.length != 0) {
+                    for (i in vm.selection) {
+                        item = vm.selection[i];
+                        for (j in datas) {
+                            data = datas[j];
+                            if (item.id == data.id) {
+                                data['_checked'] = true;
+                            }
+                        }
+                    }
+                }
+                vm.data = datas;
+            },
+
+            okDelete () {
+                vm.del();
+                //this.$Message.info('Clicked ok');
+            },
+            cancel () {
+                this.$Message.info('您选择了取消操作');
+            },
+            okRestore () {
+                vm.restore();
+                //this.$Message.info('Clicked ok');
+            },
+        }
+    });
+
+</script>
+</body>
+
+</html>

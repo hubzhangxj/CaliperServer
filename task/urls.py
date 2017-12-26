@@ -22,5 +22,11 @@ urlpatterns = [
     url("^page$",taskViews.pageChange),
     url("^filter$",taskViews.filter),
     url("^compare$",taskViews.compare),
-    url("^compare/(\w+)$", taskViews.dimcompare)
+    url("^compare/(\w+)$", taskViews.dimcompare),
+    url("^boardInfo/?$", taskViews.boardInfo),
+    url("^boardInfo/searchUser/?$", taskViews.stateSearchUser),
+    url("^boardInfo/page/?$", taskViews.statePageChange),
+    url("^boardInfo/filter/?$", taskViews.stateFilter),
+    url("^boardInfo/rowdelete/?$", taskViews.rowdelete),
+    url("^boardInfo/rowRestore/?$", taskViews.rowRestore),
 ]

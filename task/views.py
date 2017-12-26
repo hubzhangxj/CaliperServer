@@ -11,10 +11,8 @@ from shared import Contants
 from shared.serializers.serialize_json import model_to_dict
 from shared.Response import Response
 from shared.log import logger
-
-
 # Create your views here.
-
+from django.http import StreamingHttpResponse, HttpResponse, HttpResponseRedirect
 
 def serialize(data, excluded='avatar'):
     return Serializer().serialize(data, excluded=excluded)
@@ -29,13 +27,13 @@ def task(req):
     # cpu_list=[{'id':1,'text':'Hi1612'},{'id':2,'text':'Hi1616'},{'id':3,'text':'Hi1620'},{'id':4,'text':'E5-2695'},{'id':5,'text':'E5-2697A'}]
     # os_list =[{'id':1,'text':'CentOS'},{'id':2,'text':'Ubuntu'},{'id':3,'text':'Suse'},{'id':4,'text':'Redhat'}]
     # kernel_list=[{'id':1,'text':'4.7'},{'id':2,'text':'4.8'},{'id':3,'text':'4.9'}]
-    os_list = []
-    cpu_list = []
-    kernel_list = []
+    os_list=[]
+    cpu_list=[]
+    kernel_list=[]
     for osObj in oss:
         os = {
-            "id": osObj.os,
-            "text": osObj.os
+            "id":osObj.os,
+            "text":osObj.os
         }
         os_list.append(os)
     for kernelObj in kernels:
@@ -567,3 +565,389 @@ def isSame(data):
                 break
 
     return isSame
+
+def boardInfo(req):
+    oss = taskModels.Config.objects.raw('select id,os from config GROUP by os')
+    kernels = taskModels.Config.objects.raw('select id,kernel from config GROUP by kernel')
+    cpus = taskModels.Cpu.objects.raw('select id,version from cpu GROUP  by version')
+
+    # cpu_list=[{'id':1,'text':'Hi1612'},{'id':2,'text':'Hi1616'},{'id':3,'text':'Hi1620'},{'id':4,'text':'E5-2695'},{'id':5,'text':'E5-2697A'}]
+    # os_list =[{'id':1,'text':'CentOS'},{'id':2,'text':'Ubuntu'},{'id':3,'text':'Suse'},{'id':4,'text':'Redhat'}]
+    # kernel_list=[{'id':1,'text':'4.7'},{'id':2,'text':'4.8'},{'id':3,'text':'4.9'}]
+    os_list = []
+    cpu_list = []
+    kernel_list = []
+    for osObj in oss:
+        os = {
+            "id": osObj.os,
+            "text": osObj.os
+        }
+        os_list.append(os)
+    for kernelObj in kernels:
+        kernel = {
+            "id": kernelObj.kernel,
+            "text": kernelObj.kernel
+        }
+        kernel_list.append(kernel)
+    for cpuObj in cpus:
+        cpu = {
+            "id": cpuObj.version,
+            "text": cpuObj.version
+        }
+        cpu_list.append(cpu)
+
+    if req.user.role == Contants.ROLE_ADMIN:
+        tasks = taskModels.Task.objects.order_by('-time').all()
+    else:
+        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+    obJson = req.body
+    # params = json.loads(obJson)
+    if obJson != '' and json.loads(obJson).has_key('page'):
+        page = json.loads(obJson)['page']
+    else:
+        page = 1
+
+    pageSize = Contants.PAGE_SIZE
+    paginator = Paginator(tasks, pageSize)
+
+    try:
+        consumptionObjs = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        consumptionObjs = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        consumptionObjs = paginator.page(paginator.num_pages)
+
+    # consumptions= Serializer().serialize(consumptionObjs,relations=('cpu',))
+    consumptions = serialize(consumptionObjs)
+    dict = json.loads(consumptions)
+    for task in dict:
+        cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+        task['config']['cpu'] = json.loads(serialize(cpus))
+        sys = taskModels.System.objects.get(id=task['config']['sys'])
+        task['config']['sys'] = model_to_dict(sys)
+
+    data = {
+        'cpu': json.dumps(cpu_list),
+        'os': json.dumps(os_list),
+        'kernel': json.dumps(kernel_list),
+        'tasks': json.dumps(dict),
+        'page': page,
+        'pageSize': pageSize,
+        'total': paginator.count,
+    }
+    print data['total']
+    #print consumptionObjs.object_list
+    return render(req, "boardInfo.html", data)
+def stateSearchUser(req):
+    if not  req.POST:
+        return HttpResponse(status=403)
+    data=req.POST
+    searchUserName = data.get('searchUserName')
+    searchState = data.get('searchState')
+    if req.user.role == Contants.ROLE_ADMIN:
+        tasks = taskModels.Task.objects.order_by('-time').all()
+    else:
+        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+    if searchUserName:
+        tasks=tasks.filter(owner__username=searchUserName)
+    if searchState == "delRow":
+        tasks=tasks.filter(delete=1)
+    elif  searchState == "normal":
+        tasks = tasks.filter(delete=0)
+    else:
+        pass
+    try:
+        if not  tasks:
+            print tasks
+            return HttpResponse(status=404,data={'tasks':'','page':1,'pageSize':1,'total':1})
+        pageSize = Contants.PAGE_SIZE
+        paginator = Paginator(tasks, pageSize)
+        try:
+            consumptionObjs = paginator.page(1)
+        except EmptyPage:
+            consumptionObjs = paginator.page(paginator.num_pages)
+        consumptions = serialize(consumptionObjs)
+        dict = json.loads(consumptions)
+        for task in dict:
+
+            cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+            task['config']['cpu'] = json.loads(serialize(cpus))
+            sys = taskModels.System.objects.get(id=task['config']['sys'])
+            task['config']['sys'] = model_to_dict(sys)
+
+            data = {
+                'tasks': json.dumps(dict),
+                'page': 1,
+                'pageSize': pageSize,
+                'total': paginator.count,
+            }
+
+    except Exception as e:
+        logger.error(str(e))
+        return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+
+
+
+
+def statePageChange(req):
+    try:
+        obJson = req.body
+        # params = json.loads(obJson)
+        if obJson != '' and json.loads(obJson).has_key('page'):
+            page = json.loads(obJson)['page']
+        else:
+            page = 1
+        searchUserName = json.loads(obJson)['searchUserName']
+        searchState = json.loads(obJson)['searchState']
+
+        if req.user.role == Contants.ROLE_ADMIN:
+            tasks = taskModels.Task.objects.order_by('-time').all()
+        else:
+            tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+        if searchUserName:
+            tasks = tasks.filter(owner__username=searchUserName)
+
+        if searchState == "delRow":
+            tasks = tasks.filter(delete=1)
+        elif searchState == "normal":
+            tasks = tasks.filter(delete=0)
+
+        #
+        # if req.user.role == Contants.ROLE_ADMIN:
+        #     tasks = taskModels.Task.objects.order_by('-time').all()
+        # else:
+        #     tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+        pageSize = Contants.PAGE_SIZE
+        paginator = Paginator(tasks, pageSize)
+
+        try:
+            if not tasks:
+                return HttpResponse(status=404, data={'tasks': '', 'page': 1, 'pageSize': 1, 'total': 1})
+            consumptionObjs = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            consumptionObjs = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            consumptionObjs = paginator.page(paginator.num_pages)
+
+        # consumptions= Serializer().serialize(consumptionObjs,relations=('cpu',))
+        consumptions = serialize(consumptionObjs)
+        dict = json.loads(consumptions)
+        for task in dict:
+            cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+            task['config']['cpu'] = json.loads(serialize(cpus))
+            sys = taskModels.System.objects.get(id=task['config']['sys'])
+            task['config']['sys'] = model_to_dict(sys)
+
+        data = {
+            'tasks': json.dumps(dict),
+            'page': page,
+            'pageSize': pageSize,
+            'total': paginator.count,
+        }
+    except Exception as e:
+        logger.error(str(e))
+        return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+
+def stateFilter(req):
+    try:
+        obJson = req.body
+        page = json.loads(obJson)['page']
+        filter = json.loads(obJson)['filter']
+        searchUserName = json.loads(obJson)['searchUserName']
+        searchState = json.loads(obJson)['searchState']
+        cmd = '''tasks = taskModels.Task.objects'''
+
+        if filter == None or len(filter) == 0 or filter == '':
+            if req.user.role == Contants.ROLE_ADMIN:
+                tasks = taskModels.Task.objects.order_by('-time').all()
+            else:
+                tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+            if searchUserName:
+                tasks = tasks.filter(owner__username=searchUserName)
+
+            if searchState == "delRow":
+                tasks = tasks.filter(delete=1)
+            elif searchState == "normal":
+                tasks = tasks.filter(delete=0)
+        else:
+
+            if not filter.has_key('kernel') and not filter.has_key('os') and not filter.has_key('cpu'):
+                if req.user.role == Contants.ROLE_ADMIN:
+                    tasks = taskModels.Task.objects.order_by('-time').all()
+                else:
+                    tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+                if searchUserName:
+                    tasks = tasks.filter(owner__username=searchUserName)
+
+                if searchState == "delRow":
+                    tasks = tasks.filter(delete=1)
+                elif searchState == "normal":
+                    tasks = tasks.filter(delete=0)
+            else:
+                if req.user.role == Contants.ROLE_ADMIN:
+                    tasks = taskModels.Task.objects.order_by('-time').all()
+                else:
+                    tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+                if searchUserName:
+                    tasks = tasks.filter(owner__username=searchUserName)
+
+                if searchState == "delRow":
+                    tasks = tasks.filter(delete=1)
+                elif searchState == "normal":
+                    tasks = tasks.filter(delete=0)
+
+                if filter.has_key('cpu') and filter['cpu'] != '' and len(filter['cpu']) != 0:
+                    cpus = filter['cpu']
+                    cpuObjs = taskModels.Cpu.objects.filter(version__in=cpus)
+                    tasks = tasks.filter(config_id__in=getCpuConfigId(cpuObjs))
+                if filter.has_key('os') and filter['os'] != '' and len(filter['os']) != 0:
+                    oss = filter['os']
+                    configs = taskModels.Config.objects.filter(os__in=oss)
+                    tasks = tasks.filter(config_id__in=getConfigId(configs))
+                if filter.has_key('kernel') and filter['kernel'] != '' and len(filter['kernel']) != 0:
+                    kernels = filter['kernel']
+                    configs = taskModels.Config.objects.filter(kernel__in=kernels)
+                    tasks = tasks.filter(config_id__in=getConfigId(configs))
+        if not  tasks:
+            return HttpResponse(status=404,data={'tasks':'','page':1,'pageSize':1,'total':1})
+        pageSize = Contants.PAGE_SIZE
+        paginator = Paginator(tasks, pageSize)
+        try:
+            consumptionObjs = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            consumptionObjs = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            consumptionObjs = paginator.page(paginator.num_pages)
+
+        # consumptions= Serializer().serialize(consumptionObjs,relations=('cpu',))
+        consumptions = serialize(consumptionObjs)
+        dict = json.loads(consumptions)
+        for task in dict:
+            cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+            task['config']['cpu'] = json.loads(serialize(cpus))
+            sys = taskModels.System.objects.get(id=task['config']['sys'])
+            task['config']['sys'] = model_to_dict(sys)
+
+        data = {
+            'tasks': json.dumps(dict),
+            'page': page,
+            'pageSize': pageSize,
+            'total': paginator.count,
+        }
+    except Exception as e:
+        logger.error(str(e))
+        return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+
+def rowdelete(req):
+    if not  req.POST:
+        return HttpResponse(status=403)
+    data=req.POST
+    searchState = data.get('searchState')
+    searchState = json.loads(searchState)
+
+    #print searchState
+    if req.user.role == Contants.ROLE_ADMIN:
+        tasks = taskModels.Task.objects.order_by('-time').all()
+    else:
+        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+    for i in range(len(searchState)):
+
+        tasks.filter(config_id=searchState[i]['id']).update(delete=1)
+
+
+    tasks=tasks.filter(delete=0)
+    try:
+        if not  tasks:
+            print tasks
+            return HttpResponse(status=404,data={'tasks':'','page':1,'pageSize':1,'total':1})
+        pageSize = Contants.PAGE_SIZE
+        paginator = Paginator(tasks, pageSize)
+        try:
+            consumptionObjs = paginator.page(1)
+        except EmptyPage:
+            consumptionObjs = paginator.page(paginator.num_pages)
+        consumptions = serialize(consumptionObjs)
+        dict = json.loads(consumptions)
+        for task in dict:
+
+            cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+            task['config']['cpu'] = json.loads(serialize(cpus))
+            sys = taskModels.System.objects.get(id=task['config']['sys'])
+            task['config']['sys'] = model_to_dict(sys)
+
+            data = {
+                'tasks': json.dumps(dict),
+                'page': 1,
+                'pageSize': pageSize,
+                'total': paginator.count,
+            }
+
+    except Exception as e:
+        logger.error(str(e))
+        return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+
+def rowRestore(req):
+    if not  req.POST:
+        return HttpResponse(status=403)
+    data=req.POST
+    searchState = data.get('searchState')
+    searchState = json.loads(searchState)
+
+    #print searchState
+    if req.user.role == Contants.ROLE_ADMIN:
+        tasks = taskModels.Task.objects.order_by('-time').all()
+    else:
+        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+    for i in range(len(searchState)):
+
+        tasks.filter(config_id=searchState[i]['id']).update(delete=0)
+
+    tasks = tasks.filter(delete=1)
+    try:
+        if not  tasks:
+            print tasks
+            return HttpResponse(status=404,data={'tasks':'','page':1,'pageSize':1,'total':1})
+        pageSize = Contants.PAGE_SIZE
+        paginator = Paginator(tasks, pageSize)
+        try:
+            consumptionObjs = paginator.page(1)
+        except EmptyPage:
+            consumptionObjs = paginator.page(paginator.num_pages)
+        consumptions = serialize(consumptionObjs)
+        dict = json.loads(consumptions)
+        for task in dict:
+
+            cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+            task['config']['cpu'] = json.loads(serialize(cpus))
+            sys = taskModels.System.objects.get(id=task['config']['sys'])
+            task['config']['sys'] = model_to_dict(sys)
+
+            data = {
+                'tasks': json.dumps(dict),
+                'page': 1,
+                'pageSize': pageSize,
+                'total': paginator.count,
+            }
+
+    except Exception as e:
+        logger.error(str(e))
+        return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
