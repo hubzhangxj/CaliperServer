@@ -348,7 +348,8 @@ def compare(req):
             'times': json.dumps(times),
             'isSame': isSame(selection),  # 是否同一个系统平台
             'columns': json.dumps(columns),
-            'tableData': json.dumps(tableData)
+            'tableData': json.dumps(tableData),
+            'isShowBack': True
         }
     except Exception as e:
         logger.error(str(e))
@@ -531,7 +532,8 @@ def dimcompare(req, param):
         'tableData': json.dumps(tableData),
         # 'case_categories':json.dumps(case_categories),
         'case_series': json.dumps(case_series),
-        'sce_table_data': json.dumps(sce_table_data)
+        'sce_table_data': json.dumps(sce_table_data),
+        'isShowBack': True
     }
     return render(req, "dimcompare.html", data)
 
@@ -684,6 +686,7 @@ def boardInfo(req):
         'page': page,
         'pageSize': pageSize,
         'total': paginator.count,
+        'isShowBack': True
     }
     print data['total']
     # print consumptionObjs.object_list
@@ -1187,27 +1190,6 @@ def singleTask(req):
         dimResult['dim']['name'] = str(dimResult['dim']['name']).upper()
         dimResult['tools'] = tools
 
-        # dimResults = taskModels.DimResult.objects.filter(task_id= task['id'])
-        # dim_tools=[]
-        # for dimResult in dimResults:
-        #     sces = taskModels.Scenario.objects.filter(dim_id = dimResult.dim_id)
-        #     tools = []
-        #     for sce in sces:
-        #         cases = taskModels.TestCase.objects.filter(scenario_id = sce.id)
-        #         for case in cases:
-        #             log = taskModels.Log.objects.get(task_id=task['id'],tool_id=case.tool.id)
-        #             tool = model_to_dict(case.tool)
-        #             tool['log'] =  model_to_dict(log)
-        #             tools.append(tool)
-        #     dict = {
-        #         "dim": dimResult.dim.name,
-        #         "tools": tools
-        #     }
-        #     dim_tools.append(dict)
-        # sceResults = taskModels.ScenarioResult.objects.filter(dimresult_id = dimResult.id)
-        # for sceResult in sceResults:
-        #     caseResults = taskModels.CaseResult.objects.filter(sceResult_id=sceResult.id)
-
     data = {
         'dims': dimObjs,
         'cpu_cols': json.dumps(parseTableCols(taskModels.Cpu)),
@@ -1226,7 +1208,8 @@ def singleTask(req):
         'storages': json.dumps(storages),
         'partition_cols': json.dumps(parseTableCols_partitions()),
         'partitions': json.dumps(partitions),
-        'dim_tools': dimResults
+        'dim_tools': dimResults,
+        'isShowBack':True
     }
     return render(req, "singleTask.html", data)
 
@@ -1245,7 +1228,7 @@ def tool_result(request, toolName):
             content = json.loads(content)
     except:
         content = []
-    return render(request, 'tool.html', {"toolName": toolName, "content": content})
+    return render(request, 'tool.html', {"toolName": toolName, "content": content,'isShowBack':True})
 
 
 def showtree(rootDir):
@@ -1278,12 +1261,14 @@ def folder(req, taskId):
         print "--------------------------------------"
         datas = gci(folderPath)
         data = {
-            "datas": json.dumps(datas)
+            "datas": json.dumps(datas),
+            'isShowBack': True
         }
     except Exception as e:
         logger.error('can not found task')
         data = {
-            "datas": []
+            "datas": [],
+            'isShowBack': True
         }
     return render(req, 'folder.html', data)
 

@@ -82,7 +82,7 @@ def getuserinfo(req):
     #     return HttpResponse(status=404, content='未找到')
 
     #return HttpResponse(status=200)
-    return render(req,"userinfo.html")
+    return render(req,"userinfo.html",{'isShowBack':True})
 
 @csrf_exempt
 def setuserinfo(req):
