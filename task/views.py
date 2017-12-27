@@ -14,6 +14,7 @@ from shared.log import logger
 # Create your views here.
 from django.http import StreamingHttpResponse, HttpResponse, HttpResponseRedirect
 
+
 def serialize(data, excluded='avatar'):
     return Serializer().serialize(data, excluded=excluded)
 
@@ -27,13 +28,13 @@ def task(req):
     # cpu_list=[{'id':1,'text':'Hi1612'},{'id':2,'text':'Hi1616'},{'id':3,'text':'Hi1620'},{'id':4,'text':'E5-2695'},{'id':5,'text':'E5-2697A'}]
     # os_list =[{'id':1,'text':'CentOS'},{'id':2,'text':'Ubuntu'},{'id':3,'text':'Suse'},{'id':4,'text':'Redhat'}]
     # kernel_list=[{'id':1,'text':'4.7'},{'id':2,'text':'4.8'},{'id':3,'text':'4.9'}]
-    os_list=[]
-    cpu_list=[]
-    kernel_list=[]
+    os_list = []
+    cpu_list = []
+    kernel_list = []
     for osObj in oss:
         os = {
-            "id":osObj.os,
-            "text":osObj.os
+            "id": osObj.os,
+            "text": osObj.os
         }
         os_list.append(os)
     for kernelObj in kernels:
@@ -352,6 +353,19 @@ def compare(req):
         return render(req, "compare.html", {})
     return render(req, "compare.html", data)
 
+def variance(values):
+    '''
+    计算方差
+    :param values:
+    :param v2:
+    :return:
+    '''
+    import numpy as np
+    if type(values) == list and 0 not in values:
+        return np.var(values)
+    else:
+        return 0
+
 
 def dimcompare(req, param):
     '''
@@ -408,22 +422,30 @@ def dimcompare(req, param):
             'align': 'center',
         }
         columns.append(singleCol)
-
+    endCol = {
+        'title': 'variance', #方差
+        'key': 'variance',
+        'align': 'center',
+    }
+    columns.append(endCol)
     tableData = []  # table column 对应的数据值
 
     for sce in sces:
         tableSingle = {}
         tableSingle['name'] = sce.name
+        values = []
         for task in selection:
             try:
                 dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
                 sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id, scenario_id=sce.id)
                 tableSingle[task['id']] = sceResult.result
-
+                values.append(sceResult.result)
             except:
                 tableSingle[task['id']] = 0
+                values.append(0)
+        tableSingle['variance'] = variance(values)
         tableData.append(tableSingle)
-    tableData = highlight2(tableData, selection[0]['id'], ['name'])
+    tableData = highlight2(tableData, selection[0]['id'], ['name','variance'])
     # table 数据构造  end
 
     #  维度下的场景下的testcase 折线图 数据构造  start
@@ -478,17 +500,20 @@ def dimcompare(req, param):
         for casename in values:  # case名称的集合
             tableSingle = {}
             tableSingle['name'] = casename
+            values = []
             for task in selection:
                 try:
                     dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
                     sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id, scenario__name=scename)
                     caseResult = taskModels.CaseResult.objects.get(sceResult_id=sceResult.id, case__name=casename)
                     tableSingle[task['id']] = caseResult.result
-
+                    values.append(caseResult.result)
                 except:
                     tableSingle[task['id']] = 0
+                    values.append(0)
+            tableSingle['variance'] = variance(values)
             case_table_data.append(tableSingle)
-        sce_table_data[scename] = highlight2(case_table_data, selection[0]['id'], ['name'])
+        sce_table_data[scename] = highlight2(case_table_data, selection[0]['id'], ['name','variance'])
 
     # table 数据构造  end
 
@@ -508,7 +533,7 @@ def dimcompare(req, param):
     return render(req, "dimcompare.html", data)
 
 
-def highlight(tableData, exclude=[]):
+def highlight(tableData, exclude=[],hl=5):
     for index, td in enumerate(tableData):
         if index != 0:
             cellClassName = {}
@@ -516,10 +541,10 @@ def highlight(tableData, exclude=[]):
                 if key in exclude:
                     continue
                 firstValue = tableData[0][key]
-                if value > firstValue * 1.05:
+                if value > firstValue + hl:
                     cellClassName[key] = 'table-info-row-green'
                     print '绿色'
-                elif value < firstValue * 0.95:
+                elif value < firstValue -hl:
                     cellClassName[key] = 'table-info-row-red'
                     print '红色'
                 else:
@@ -529,23 +554,24 @@ def highlight(tableData, exclude=[]):
     return tableData
 
 
-def highlight2(tableData, compareKey, exclude=[]):
+def highlight2(tableData, compareKey,  exclude=[],hl=5):
     '''
     左右 去对比是否高亮
     :param tableData:
     :param exclude:
     :return:
     '''
+    print hl
     for index, td in enumerate(tableData):
         cellClassName = {}
         for key, value in td.items():
             if key in exclude or key == compareKey:
                 continue
             firstValue = td[compareKey]
-            if value > firstValue * 1.05:
+            if value > firstValue + hl:
                 cellClassName[key] = 'table-info-row-green'
                 print '绿色'
-            elif value < firstValue * 0.95:
+            elif value < firstValue - hl:
                 cellClassName[key] = 'table-info-row-red'
                 print '红色'
             else:
@@ -553,6 +579,23 @@ def highlight2(tableData, compareKey, exclude=[]):
                 cellClassName[key] = 'table-info-row-black'
         td['cellClassName'] = cellClassName
     return tableData
+
+
+def highlightChange(req):
+    obJson = req.body
+    if obJson is not  None and obJson !="":
+        obj = json.loads(obJson)
+        hl = obj['highlight']
+        tableData = json.loads(obj['tableData'])
+        from urllib import unquote
+        selection = json.loads(unquote(req.COOKIES.get("selection")))  # 选中的task 任务
+        tableData = highlight2(tableData,str(selection[0]['id']),['name','variance','cellClassName'],hl)
+        data={
+            "tableData": tableData
+        }
+        return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+    else:
+        return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
 
 
 def isSame(data):
@@ -565,6 +608,7 @@ def isSame(data):
                 break
 
     return isSame
+
 
 def boardInfo(req):
     oss = taskModels.Config.objects.raw('select id,os from config GROUP by os')
@@ -639,12 +683,14 @@ def boardInfo(req):
         'total': paginator.count,
     }
     print data['total']
-    #print consumptionObjs.object_list
+    # print consumptionObjs.object_list
     return render(req, "boardInfo.html", data)
+
+
 def stateSearchUser(req):
-    if not  req.POST:
+    if not req.POST:
         return HttpResponse(status=403)
-    data=req.POST
+    data = req.POST
     searchUserName = data.get('searchUserName')
     searchState = data.get('searchState')
     if req.user.role == Contants.ROLE_ADMIN:
@@ -652,15 +698,15 @@ def stateSearchUser(req):
     else:
         tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
     if searchUserName:
-        tasks=tasks.filter(owner__username=searchUserName)
+        tasks = tasks.filter(owner__username=searchUserName)
     if searchState == "delRow":
-        tasks=tasks.filter(delete=1)
-    elif  searchState == "normal":
+        tasks = tasks.filter(delete=1)
+    elif searchState == "normal":
         tasks = tasks.filter(delete=0)
     else:
         pass
     try:
-        if not  tasks:
+        if not tasks:
             print tasks
             return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
@@ -672,7 +718,6 @@ def stateSearchUser(req):
         consumptions = serialize(consumptionObjs)
         dict = json.loads(consumptions)
         for task in dict:
-
             cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
             task['config']['cpu'] = json.loads(serialize(cpus))
             sys = taskModels.System.objects.get(id=task['config']['sys'])
@@ -689,8 +734,6 @@ def stateSearchUser(req):
         logger.error(str(e))
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
-
-
 
 
 def statePageChange(req):
@@ -757,6 +800,7 @@ def statePageChange(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
+
 def stateFilter(req):
     try:
         obJson = req.body
@@ -820,7 +864,7 @@ def stateFilter(req):
                     kernels = filter['kernel']
                     configs = taskModels.Config.objects.filter(kernel__in=kernels)
                     tasks = tasks.filter(config_id__in=getConfigId(configs))
-        if not  tasks:
+        if not tasks:
             return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
@@ -853,27 +897,26 @@ def stateFilter(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
+
 def rowdelete(req):
-    if not  req.POST:
+    if not req.POST:
         return HttpResponse(status=403)
-    data=req.POST
+    data = req.POST
     searchState = data.get('searchState')
     searchState = json.loads(searchState)
 
-    #print searchState
+    # print searchState
     if req.user.role == Contants.ROLE_ADMIN:
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
         tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
 
     for i in range(len(searchState)):
-
         tasks.filter(config_id=searchState[i]['id']).update(delete=1)
 
-
-    tasks=tasks.filter(delete=0)
+    tasks = tasks.filter(delete=0)
     try:
-        if not  tasks:
+        if not tasks:
             print tasks
             return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
@@ -885,7 +928,6 @@ def rowdelete(req):
         consumptions = serialize(consumptionObjs)
         dict = json.loads(consumptions)
         for task in dict:
-
             cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
             task['config']['cpu'] = json.loads(serialize(cpus))
             sys = taskModels.System.objects.get(id=task['config']['sys'])
@@ -903,26 +945,26 @@ def rowdelete(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
+
 def rowRestore(req):
-    if not  req.POST:
+    if not req.POST:
         return HttpResponse(status=403)
-    data=req.POST
+    data = req.POST
     searchState = data.get('searchState')
     searchState = json.loads(searchState)
 
-    #print searchState
+    # print searchState
     if req.user.role == Contants.ROLE_ADMIN:
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
         tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
 
     for i in range(len(searchState)):
-
         tasks.filter(config_id=searchState[i]['id']).update(delete=0)
 
     tasks = tasks.filter(delete=1)
     try:
-        if not  tasks:
+        if not tasks:
             print tasks
             return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
@@ -934,7 +976,6 @@ def rowRestore(req):
         consumptions = serialize(consumptionObjs)
         dict = json.loads(consumptions)
         for task in dict:
-
             cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
             task['config']['cpu'] = json.loads(serialize(cpus))
             sys = taskModels.System.objects.get(id=task['config']['sys'])
@@ -952,14 +993,15 @@ def rowRestore(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
+
 def permanentDelete(req):
-    if not  req.POST:
+    if not req.POST:
         return HttpResponse(status=403)
-    data=req.POST
+    data = req.POST
     searchState = data.get('searchState')
     searchState = json.loads(searchState)
 
-    #print searchState
+    # print searchState
     if req.user.role == Contants.ROLE_ADMIN:
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
@@ -968,10 +1010,9 @@ def permanentDelete(req):
     for i in range(len(searchState)):
         tasks.filter(config_id=searchState[i]['id']).delete()
 
-
-    tasks=tasks.filter(delete=0)
+    tasks = tasks.filter(delete=0)
     try:
-        if not  tasks:
+        if not tasks:
             return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
@@ -982,7 +1023,6 @@ def permanentDelete(req):
         consumptions = serialize(consumptionObjs)
         dict = json.loads(consumptions)
         for task in dict:
-
             cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
             task['config']['cpu'] = json.loads(serialize(cpus))
             sys = taskModels.System.objects.get(id=task['config']['sys'])
@@ -1000,9 +1040,10 @@ def permanentDelete(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
+
 def downloadFile(req):
     import CaliperServer.settings as settings
-    import os,tempfile,zipfile
+    import os, tempfile, zipfile
     from wsgiref.util import FileWrapper
     downloadPath = settings.downloadPath
     if req.method == 'GET':
@@ -1011,36 +1052,37 @@ def downloadFile(req):
         else:
             tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
 
-        if downloadPath[-1] != '/':downloadPath=downloadPath+'/'
+        if downloadPath[-1] != '/': downloadPath = downloadPath + '/'
 
         temp = tempfile.TemporaryFile()
         archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
-        flag=False
+        flag = False
         for task in tasks:
-            path=downloadPath+task.path
+            path = downloadPath + task.path
             if os.path.exists(path):
-                flag=True
-                filename=os.path.basename(path)
-                archive.write(path,filename)
+                flag = True
+                filename = os.path.basename(path)
+                archive.write(path, filename)
         archive.close()
 
         if not flag:
-            return HttpResponse(status=404,content='not found')
+            return HttpResponse(status=404, content='not found')
         wrapper = FileWrapper(temp)
 
-        size=temp.tell()
+        size = temp.tell()
         temp.seek(0)
         response = HttpResponse(wrapper, content_type='application/octet-stream')
         response['Content-Disposition'] = 'attachment;filename="{0}"'.format('{}.zip'.format(req.user))
         response['Content-Length'] = size
         return response
-        #return HttpResponse(status=200)
+        # return HttpResponse(status=200)
     else:
         return HttpResponse(status=403)
 
+
 def parseTableCols(model):
     # taskModels.Cpu._meta.fields[0].attname
-    cols=[]
+    cols = []
     for field in model._meta.fields:
         if field.name != 'id' and field.name != 'config':
             print field.name
@@ -1052,9 +1094,10 @@ def parseTableCols(model):
             cols.append(col)
     return cols
 
+
 def parseTableCols_partitions():
     # taskModels.Cpu._meta.fields[0].attname
-    cols=[]
+    cols = []
     first_col = {
         'title': 'Partition DeviceName',
         'key': 'devicename',
@@ -1072,12 +1115,14 @@ def parseTableCols_partitions():
             cols.append(col)
     return cols
 
+
 def dictfetchall(cursor):
     desc = cursor.description
     return [
         dict(zip([col[0] for col in desc], row))
         for row in cursor.fetchall()
     ]
+
 
 def singleTask(req):
     from urllib import unquote
@@ -1100,7 +1145,7 @@ def singleTask(req):
         partitions = json.loads(serialize(partitions))
         for p in partitions:
             p['devicename'] = storage['devicename']
-        # storage['partitions'] = json.loads(partition)
+            # storage['partitions'] = json.loads(partition)
     syss = []
     syss.append(model_to_dict(sys))
     boards = []
@@ -1125,48 +1170,47 @@ def singleTask(req):
 
     finally:
         cursor.close()
-    dimResults = taskModels.DimResult.objects.filter(task_id= task['id'])
+    dimResults = taskModels.DimResult.objects.filter(task_id=task['id'])
     dimResults = json.loads(serialize(dimResults))
     for dimResult in dimResults:
-        tools=[]
+        tools = []
         for data in datas:
             if dimResult['dim']['name'] == data['dimName']:
-                tool={
-                    "name":data['toolName'],
-                    "content":data['content']
+                tool = {
+                    "name": data['toolName'],
+                    "content": data['content']
                 }
                 tools.append(tool)
         dimResult['dim']['name'] = str(dimResult['dim']['name']).upper()
         dimResult['tools'] = tools
 
-    # dimResults = taskModels.DimResult.objects.filter(task_id= task['id'])
-    # dim_tools=[]
-    # for dimResult in dimResults:
-    #     sces = taskModels.Scenario.objects.filter(dim_id = dimResult.dim_id)
-    #     tools = []
-    #     for sce in sces:
-    #         cases = taskModels.TestCase.objects.filter(scenario_id = sce.id)
-    #         for case in cases:
-    #             log = taskModels.Log.objects.get(task_id=task['id'],tool_id=case.tool.id)
-    #             tool = model_to_dict(case.tool)
-    #             tool['log'] =  model_to_dict(log)
-    #             tools.append(tool)
-    #     dict = {
-    #         "dim": dimResult.dim.name,
-    #         "tools": tools
-    #     }
-    #     dim_tools.append(dict)
+        # dimResults = taskModels.DimResult.objects.filter(task_id= task['id'])
+        # dim_tools=[]
+        # for dimResult in dimResults:
+        #     sces = taskModels.Scenario.objects.filter(dim_id = dimResult.dim_id)
+        #     tools = []
+        #     for sce in sces:
+        #         cases = taskModels.TestCase.objects.filter(scenario_id = sce.id)
+        #         for case in cases:
+        #             log = taskModels.Log.objects.get(task_id=task['id'],tool_id=case.tool.id)
+        #             tool = model_to_dict(case.tool)
+        #             tool['log'] =  model_to_dict(log)
+        #             tools.append(tool)
+        #     dict = {
+        #         "dim": dimResult.dim.name,
+        #         "tools": tools
+        #     }
+        #     dim_tools.append(dict)
         # sceResults = taskModels.ScenarioResult.objects.filter(dimresult_id = dimResult.id)
         # for sceResult in sceResults:
         #     caseResults = taskModels.CaseResult.objects.filter(sceResult_id=sceResult.id)
 
-
-    data={
-        'dims':dimObjs,
-        'cpu_cols':json.dumps(parseTableCols(taskModels.Cpu)),
-        'cpus':serialize(cpus),
+    data = {
+        'dims': dimObjs,
+        'cpu_cols': json.dumps(parseTableCols(taskModels.Cpu)),
+        'cpus': serialize(cpus),
         'board_cols': json.dumps(parseTableCols(taskModels.Baseboard)),
-        'board':json.dumps(boards),
+        'board': json.dumps(boards),
         'sys_cols': json.dumps(parseTableCols(taskModels.System)),
         'sys': json.dumps(syss),
         'cache_cols': json.dumps(parseTableCols(taskModels.Cache)),
@@ -1177,16 +1221,17 @@ def singleTask(req):
         'nets': serialize(nets),
         'storage_cols': json.dumps(parseTableCols(taskModels.Storage)),
         'storages': json.dumps(storages),
-        'partition_cols':json.dumps(parseTableCols_partitions()),
-        'partitions':json.dumps(partitions),
-        'dim_tools':dimResults
+        'partition_cols': json.dumps(parseTableCols_partitions()),
+        'partitions': json.dumps(partitions),
+        'dim_tools': dimResults
     }
-    return render(req,"singleTask.html",data)
+    return render(req, "singleTask.html", data)
 
-def tool_result(request,toolName):
+
+def tool_result(request, toolName):
     print toolName
     toolName = str(toolName).lower()
-    content=[]
+    content = []
     try:
         log = taskModels.Log.objects.get(tool__name=toolName)
         content = log.content
@@ -1194,7 +1239,7 @@ def tool_result(request,toolName):
         content = []
     try:
         if type(content) == str or type(content) == unicode:
-            content= json.loads(content)
+            content = json.loads(content)
     except:
         content = []
-    return render(request, 'tool.html', {"toolName":toolName, "content": content})
+    return render(request, 'tool.html', {"toolName": toolName, "content": content})

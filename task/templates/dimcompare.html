@@ -15,15 +15,16 @@
             padding-bottom: 40px;
             background-color: transparent;
         }
-         .ivu-table .table-info-row-green{
+
+        .ivu-table .table-info-row-green {
             color: #18b566;
         }
 
-        .ivu-table .table-info-row-red{
+        .ivu-table .table-info-row-red {
             color: #e20400;
         }
 
-        .ivu-table .table-info-row-black{
+        .ivu-table .table-info-row-black {
             color: #000;
         }
     </style>
@@ -38,10 +39,16 @@
 <div id="app">
     <div class="content">
         <div class="page-header">
-            <h1> Caliper Performance Tests: {{ dic_total.aspect| capfirst }} </h1>
+            <h1> Caliper Performance Tests: {{ param | capfirst }} </h1>
         </div>
 
         <div style="text-align: left;">
+            <p>
+                You can change highlight value in below input!
+            </p>
+            <Input-Number :max="100" :min="1" :step="1" v-model="highlight" @on-change="highlightChange"></Input-Number>
+            {#            <i-input v-model="highlight" :number="true"#}
+            {#                     placeholder="Change highlight proportion..." style="width: 300px" @on-enter="modifyHighlight"></i-input>#}
             {% ifequal param 'latency' %}
                 <p> The test under this section is mainly targetted towards the performance evaluation of Latency in the
                     sytems
@@ -316,16 +323,34 @@
             case_series:{{ case_series|safe }},
             columns: {{ columns|safe }},
             data: {{ tableData|safe }},
-            sce_table_data:{{ sce_table_data|safe }}
+            sce_table_data:{{ sce_table_data|safe }},
+            highlight: 5
         },
-        methods: {},
+        methods: {
+            highlightChange: function (value) {
+                console.log(value);
+                axios.post('/task/highlight', {"highlight": value, "tableData": JSON.stringify(vm.data)})
+                    .then(function (response) {
+                        if (response.data.code == 0) {
+                            {# vm.$Message.success("成功");#}
+                            vm.data = response.data.data.tableData;
+                            console.log("=======")
+                        } else {
+                            vm.$Message.warning('');
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            }
+        },
         mounted: function () {
             this.$nextTick(function () {
                 $.each(vm.case_series, function (name, value) {
-{#                    console.log(name);#}
-{#                    console.log("=====");#}
-{#                    console.log(value);#}
-                    chart('{{ param }}',name, value)
+                    {#                    console.log(name);#}
+                    {#                    console.log("=====");#}
+                    {#                    console.log(value);#}
+                    chart('{{ param }}', name, value)
 
                 });
             });
