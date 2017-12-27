@@ -80,7 +80,7 @@
     }
 
     .titleText {
-        flex: 1px;
+        flex: 1;
         font-size: 14px;
         color: #333333;
 
@@ -119,7 +119,7 @@
                         :on-format-error="handleFormatError"
                         :on-exceeded-size="handleMaxSize"
                         action="/user/userinfo/upload">
-                    <i-button type="ghost" icon="ios-cloud-upload-outline">修改头像</i-button>
+                    <i-button type="ghost" icon="ios-cloud-upload-outline" style="margin-top: 5px">修改头像</i-button>
                 </Upload>
 
             </div>
@@ -170,7 +170,8 @@
                     <div class="titleText">上次登录：</div>
                     <div class="contentText" style="color:#FF9900">${ last_login }</div>
                 </div>
-
+                <div class="right">
+                </div>
             </div>
         </div>
     </div>
@@ -282,10 +283,10 @@
             userid:  "{{ request.user.username }}",
             address: "{{ request.user.address }}",
             role: "{{ request.user.role }}",
-            time: "{{ request.user.time }}",
+            time: "{{ request.user.date_joined | date:"Y-m-d H:i:s" }}",
             mail: "{{ request.user.email }}",
             phone: "{{ request.user.telphone }}",
-            last_login: "{{ request.user.last_login }}",
+            last_login: "{{ request.user.last_login| date:"Y-m-d H:i:s" }}",
             avatar: "/static/{{ request.user.avatar }}",
 
             formValidate: {

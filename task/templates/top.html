@@ -10,7 +10,11 @@
             </div>
         </div>
         <div style="display: flex;flex-direction: row;">
-            <div style="display: flex;flex-direction: row;align-items: center;cursor: pointer" @click="person">
+             <div style="display: flex;flex-direction: row;align-items: center;cursor: pointer"  @click="taskManage" v-if="role">
+                <Icon type="android-person" color="#1492B4" size="20"></Icon>
+                <div style="margin-left: 10px;font-size: 16px">任务管理</div>
+            </div>
+            <div style="margin-left: 40px;display: flex;flex-direction: row;align-items: center;cursor: pointer" @click="person">
                 <Icon type="android-person" color="#1492B4" size="20"></Icon>
                 <div style="margin-left: 10px;font-size: 16px">{{ request.user.name }}</div>
             </div>
@@ -26,10 +30,14 @@
 </div>
 
 <script>
+    var ADMIN = "0";
+    var USER = "1";
     new Vue({
         el: "#top",
         data: {
+            role:"{{ request.user.role|safe }}" === ADMIN,
             isShowBack: !('{{ isShowBack|safe }}' === '' || '{{ isShowBack|safe }}' === 'undefined'),
+
         },
         methods: {
             person: function () {
@@ -41,6 +49,9 @@
             },
             back: function () {
                 history.back(-1);
+            },
+            taskManage:function () {
+                window.location.href = "/task/boardInfo"
             }
         }
     });
