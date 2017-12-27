@@ -147,7 +147,8 @@
                                 },
                                 on: {
                                     click: () => {
-                                        this.show(params.index)
+{#                                        this.show(params.index)#}
+                                         window.location.href = "folder/"+params.row.id;
                                     }
                                 }
                             }, 'View'),

@@ -26,6 +26,7 @@ urlpatterns = [
     url(r"^compare/(\w+)$", taskViews.dimcompare),
     url(r"^single/(\w+)$", taskViews.tool_result),
     url(r"^highlight$",taskViews.highlightChange),
+    url(r"^folder/(\d+)$", taskViews.folder),
     url(r"^boardInfo/?$", taskViews.boardInfo),
     url(r"^boardInfo/searchUser/?$", taskViews.stateSearchUser),
     url(r"^boardInfo/page/?$", taskViews.statePageChange),

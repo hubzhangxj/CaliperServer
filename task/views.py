@@ -7,10 +7,12 @@ from django.shortcuts import render
 from task import models as taskModels
 from shared.serializers.json import Serializer, DjangoJSONEncoder
 import json
-from shared import Contants
+from shared import Contants, Utils
 from shared.serializers.serialize_json import model_to_dict
 from shared.Response import Response
 from shared.log import logger
+from django.db.models import Q
+import os
 # Create your views here.
 from django.http import StreamingHttpResponse, HttpResponse, HttpResponseRedirect
 
@@ -51,9 +53,9 @@ def task(req):
         cpu_list.append(cpu)
 
     if req.user.role == Contants.ROLE_ADMIN:
-        tasks = taskModels.Task.objects.order_by('-time').all()
+        tasks = taskModels.Task.objects.order_by('-time').filter(delete=False)
     else:
-        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+        tasks = taskModels.Task.objects.order_by('-time').filter(Q(owner_id=req.user.id,delete=False) | Q(shareusers__id__contains=req.user.id))
 
     obJson = req.body
     # params = json.loads(obJson)
@@ -353,6 +355,7 @@ def compare(req):
         return render(req, "compare.html", {})
     return render(req, "compare.html", data)
 
+
 def variance(values):
     '''
     计算方差
@@ -423,7 +426,7 @@ def dimcompare(req, param):
         }
         columns.append(singleCol)
     endCol = {
-        'title': 'variance', #方差
+        'title': 'variance',  # 方差
         'key': 'variance',
         'align': 'center',
     }
@@ -445,7 +448,7 @@ def dimcompare(req, param):
                 values.append(0)
         tableSingle['variance'] = variance(values)
         tableData.append(tableSingle)
-    tableData = highlight2(tableData, selection[0]['id'], ['name','variance'])
+    tableData = highlight2(tableData, selection[0]['id'], ['name', 'variance'])
     # table 数据构造  end
 
     #  维度下的场景下的testcase 折线图 数据构造  start
@@ -513,7 +516,7 @@ def dimcompare(req, param):
                     values.append(0)
             tableSingle['variance'] = variance(values)
             case_table_data.append(tableSingle)
-        sce_table_data[scename] = highlight2(case_table_data, selection[0]['id'], ['name','variance'])
+        sce_table_data[scename] = highlight2(case_table_data, selection[0]['id'], ['name', 'variance'])
 
     # table 数据构造  end
 
@@ -533,7 +536,7 @@ def dimcompare(req, param):
     return render(req, "dimcompare.html", data)
 
 
-def highlight(tableData, exclude=[],hl=5):
+def highlight(tableData, exclude=[], hl=5):
     for index, td in enumerate(tableData):
         if index != 0:
             cellClassName = {}
@@ -544,7 +547,7 @@ def highlight(tableData, exclude=[],hl=5):
                 if value > firstValue + hl:
                     cellClassName[key] = 'table-info-row-green'
                     print '绿色'
-                elif value < firstValue -hl:
+                elif value < firstValue - hl:
                     cellClassName[key] = 'table-info-row-red'
                     print '红色'
                 else:
@@ -554,7 +557,7 @@ def highlight(tableData, exclude=[],hl=5):
     return tableData
 
 
-def highlight2(tableData, compareKey,  exclude=[],hl=5):
+def highlight2(tableData, compareKey, exclude=[], hl=5):
     '''
     左右 去对比是否高亮
     :param tableData:
@@ -583,14 +586,14 @@ def highlight2(tableData, compareKey,  exclude=[],hl=5):
 
 def highlightChange(req):
     obJson = req.body
-    if obJson is not  None and obJson !="":
+    if obJson is not None and obJson != "":
         obj = json.loads(obJson)
         hl = obj['highlight']
         tableData = json.loads(obj['tableData'])
         from urllib import unquote
         selection = json.loads(unquote(req.COOKIES.get("selection")))  # 选中的task 任务
-        tableData = highlight2(tableData,str(selection[0]['id']),['name','variance','cellClassName'],hl)
-        data={
+        tableData = highlight2(tableData, str(selection[0]['id']), ['name', 'variance', 'cellClassName'], hl)
+        data = {
             "tableData": tableData
         }
         return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
@@ -1243,3 +1246,69 @@ def tool_result(request, toolName):
     except:
         content = []
     return render(request, 'tool.html', {"toolName": toolName, "content": content})
+
+
+def showtree(rootDir):
+    # result_dirs=[]
+    result_files = []
+    list_dirs = os.walk(rootDir)
+    for root, dirs, files in list_dirs:
+        '''
+        for d in dirs: 
+            dirpath=os.path.join(root, d)
+            result_dirs.append(dirpath.split("output\\")[1])    
+        '''
+        for f in files:
+            filepath = os.path.join(root, f)
+            if filepath.endswith("_json.txt"):
+                toolName = os.path.basename(filepath).split("_")[0]
+                tools = {"toolName": toolName, "logPath": filepath}
+                result_files.append(tools)
+    return result_files
+
+
+def folder(req, taskId):
+    try:
+        import CaliperServer.settings as s
+        task = taskModels.Task.objects.get(id=taskId)
+        filepath, outputShotname, extension = Utils.get_filePath_fileName_fileExt(task.path)
+        print outputShotname
+        folderPath = os.path.join(s.uploadPath, outputShotname)
+
+        print "--------------------------------------"
+        datas = gci(folderPath)
+        data = {
+            "datas": json.dumps(datas)
+        }
+    except Exception as e:
+        logger.error('can not found task')
+        data = {
+            "datas": []
+        }
+    return render(req, 'folder.html', data)
+
+
+def gci(path):
+    """this is a statement"""
+    datas = []
+    parents = os.listdir(path)
+    for parent in parents:
+        child = os.path.join(path, parent)
+        # print(child)
+
+        if os.path.isdir(child):
+            data = {
+                "title": parent,
+                "expand": True,
+                "children": gci(child)
+            }
+
+            datas.append(data)
+        # print(child)
+        else:
+            data = {
+                "title": parent,
+                "content": open(child, 'r').read()
+            }
+            datas.append(data)
+    return datas
