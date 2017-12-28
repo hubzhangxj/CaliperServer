@@ -20,7 +20,10 @@
         <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
             <div style="display: flex;flex-direction: row;align-items: center">
                 <i-button type="primary" @click="view" style="margin-right: 10px">View</i-button>
-                <i-button type="primary" @click="download" style="margin-right: 10px"><Icon type="ios-download-outline"></Icon> Download</i-button>
+                <i-button type="primary" @click="download" style="margin-right: 10px">
+                    <Icon type="ios-download-outline"></Icon>
+                    Download
+                </i-button>
                 <i-button type="primary" @click="modal1 = true" style="margin-right: 10px">Delete</i-button>
                 <Modal
                         v-model="modal1"
@@ -29,9 +32,6 @@
                         @on-cancel="cancel">
                     <p>你确定要删除此条记录吗？</p>
                 </Modal>
-
-
-
 
 
                 <i-button type="primary" @click="share">Share</i-button>
@@ -45,24 +45,24 @@
                         <div style="color: #e20400;font-size: 22px">${machinaryCode}</div>
                     </div>
                     <div style="display: flex;flex-direction: row; margin-top: 10px">
-                        <div >
-                            <i-button type="success" size="small"  @click="adduser" style="margin-right: 5px">添加成员</i-button>
+                        <div>
+                            <i-button type="success" size="small" @click="adduser" style="margin-right: 5px">添加成员
+                            </i-button>
                         </div>
                         <div>
-                            <i-button type="success" size="small" @click="allDelete" style="margin-right: 20px">全部删除</i-button>
+                            <i-button type="success" size="small" @click="allDelete" style="margin-right: 20px">全部删除
+                            </i-button>
                         </div>
                     </div>
                     <div style="margin-top: 10px">
                         <i-table border :columns="columns1" :data="data1"></i-table>
                     </div>
-                    <div style="margin-top: 10px;margin-left: 60%">
+                    <div style="margin-top: 10px;display: flex;flex-direction: row;justify-content: flex-end">
                         <Page :total="total1" :page-size="pageSize1" :current="page1" :show-total="true"
                               @on-change="pageChange1"
                               :page-size-opts="[1,10, 20, 30, 40]"></Page>
                     </div>
                 </Modal>
-
-
 
 
                 <Modal
@@ -71,9 +71,9 @@
                         @on-ok="addUserSubmit"
                         @on-cancel="cancel">
                     <div style="display: flex;flex-direction: row;">
-                        <div style="font-size: 15px">你将为编号为 </div>
+                        <div style="font-size: 15px">你将为编号为</div>
                         <div style="color: #e20400;font-size: 20px">${machinaryCode}</div>
-                        <div style="font-size: 15px"> 的机器添加新的成员,当前已有成员 </div>
+                        <div style="font-size: 15px"> 的机器添加新的成员,当前已有成员</div>
                         <div style="color: #e20400;font-size: 20px">${usercounts}</div>
                         <div style="font-size: 15px"> 人</div>
                     </div>
@@ -81,7 +81,8 @@
                         请输入用户ID，多个ID请用","分隔
                     </div>
                     <div style="margin-top: 10px">
-                        <i-input v-model="tenandID" type="textarea" :rows="4" placeholder="例如:10010,10011,10012"></i-input>
+                        <i-input v-model="tenandID" type="textarea" :rows="4"
+                                 placeholder="例如:10010,10011,10012"></i-input>
                     </div>
 
                 </Modal>
@@ -124,9 +125,9 @@
             modal1: false,
             modal2: false,
             modal3: false,
-            machinaryCode:'',
-            usercounts:'',
-            tenandID:'',
+            machinaryCode: '',
+            usercounts: '',
+            tenandID: '',
             columns: [
                 {
                     type: 'selection',
@@ -208,7 +209,7 @@
                                 on: {
                                     click: () => {
                                         {#                                        this.show(params.index)#}
-                                        window.location.href = "folder/"+params.row.id;
+                                        window.location.href = "folder/" + params.row.id;
                                     }
                                 }
                             }, 'View'),
@@ -255,8 +256,8 @@
                                 },
                                 on: {
                                     click: () => {
-                                        console.log( params)
-                                        vm.remove(params.index)
+                                        console.log(params.row.userID);
+                                        vm.remove(params.row.userID, params.row.taskId)
                                     }
                                 }
                             }, 'Delete')
@@ -267,7 +268,7 @@
             data1: [],
             page1: 1,
             pageSize1: 1,
-            total1:1,
+            total1: 1,
 
         },
         methods: {
@@ -307,7 +308,7 @@
                 var params = new URLSearchParams();
                 console.log(vm.selection)
                 params.append('searchState', JSON.stringify(vm.selection));
-                vm.selection=[]
+                vm.selection = []
                 axios.post('boardInfo/rowdelete/', params).then(function (response) {
                     if (response.data.code == 0) {
                         {# vm.$Message.success("成功");#}
@@ -316,9 +317,9 @@
                         vm.page = response.data.data.page;
                         vm.total = response.data.data.total;
                     } else {
-                        vm.data=[];
-                        vm.total=0;
-                        vm.page=1;
+                        vm.data = [];
+                        vm.total = 0;
+                        vm.page = 1;
                     }
                 })
                     .catch(function (error) {
@@ -326,12 +327,12 @@
                     });
             },
             share: function () {
-                if (vm.selection.length < 1){
+                if (vm.selection.length < 1) {
                     vm.$Message.warning('请选中指定操作的一行或多行记录');
-                }else if (vm.selection.length == 1){
+                } else if (vm.selection.length == 1) {
                     //this.$Modal.confirm({})
                     vm.userlist()
-                }else{
+                } else {
                     vm.adduser()
                 }
 
@@ -407,17 +408,17 @@
                 }
                 console.log(vm.selection);
             },
-            selectAll: function (selection,removeObjs) {
+            selectAll: function (selection, removeObjs) {
                 for (i in selection) {
                     item = selection[i];
                     vm.selection.push(item);
                 }
 
-                vm.selection.forEach(function (item,index,array) {
-                    for(r in removeObjs){
+                vm.selection.forEach(function (item, index, array) {
+                    for (r in removeObjs) {
                         rItem = removeObjs[r];
-                        if(rItem.id === item.id){
-                            array.splice(index,1)
+                        if (rItem.id === item.id) {
+                            array.splice(index, 1)
                         }
                     }
                 });
@@ -441,40 +442,40 @@
             },
             userlist: function () {
 
-                var params = new URLSearchParams();
-                params.append('searchState', JSON.stringify(vm.selection));
-                axios.post('list/userlist/', params).then(function (response) {
+                {#                var params = new URLSearchParams();#}
+                {#                params.append('searchState', JSON.stringify(vm.selection));#}
+                axios.post('list/userlist/').then(function (response) {
                     if (response.status == 200) {
-                        var  resData=response.data.data
-                        vm.data1=resData.data1;
-                        vm.machinaryCode=resData.machinaryCode
-                        vm.usercounts=resData.usercounts
-                        vm.total1=resData.total;
-                        vm.page1=resData.page;
-                        vm.pageSize=resData.pageSize;
+                        var resData = response.data.data
+                        vm.data1 = resData.data1;
+                        vm.machinaryCode = resData.machinaryCode
+                        vm.usercounts = resData.usercounts
+                        vm.total1 = resData.total;
+                        vm.page1 = resData.page;
+                        vm.pageSize = resData.pageSize;
 
                         // console.log(resData)
                     } else {
                         vm.$Message.warning(response.data.msg);
                     }
                 }).catch(function (error) {
-                    vm.data1=[];
-                    vm.machinaryCode='';
-                    vm.usercounts='';
-                    vm.total1=0;
-                    vm.page1=1;
+                    vm.data1 = [];
+                    vm.machinaryCode = '';
+                    vm.usercounts = '';
+                    vm.total1 = 0;
+                    vm.page1 = 1;
                 });
 
-                vm.modal2=true
+                vm.modal2 = true
             },
             adduser: function () {
                 //this.$Message.info('Clicked ok');
                 var params = new URLSearchParams();
                 params.append('searchState', JSON.stringify(vm.selection));
-                axios.post('list/adduser', params ).then(function (response) {
+                axios.post('list/adduser', params).then(function (response) {
                     if (response.status == 200) {
-                        vm.machinaryCode=response.data.data.machinaryCode
-                        vm.usercounts=response.data.data.usercounts
+                        vm.machinaryCode = response.data.data.machinaryCode
+                        vm.usercounts = response.data.data.usercounts
 
                     } else {
                         vm.$Message.warning(response.data.msg);
@@ -484,7 +485,7 @@
                 });
 
 
-                vm.modal3=true
+                vm.modal3 = true
             },
 
 
@@ -496,13 +497,13 @@
                 var params = new URLSearchParams();
                 params.append('tenandID', JSON.stringify(vm.tenandID));
                 params.append('searchState', JSON.stringify(vm.selection));
-                vm.tenandID=''
+                vm.tenandID = ''
                 axios.post('list/addusersubmit', params).then(function (response) {
                     if (response.status == 200) {
-                        var  resData=response.data.data.fail
+                        var resData = response.data.data.fail
                         console.log(resData.length)
-                        if (resData.length != 0){
-                            vm.$Message.error('用户ID:'+resData.toString()+' not found');
+                        if (resData.length != 0) {
+                            vm.$Message.error('用户ID:' + resData.toString() + ' not found');
 
                         }
 
@@ -512,7 +513,7 @@
                 }).catch(function (error) {
 
                 });
-                vm.modal2=false
+                vm.modal2 = false
 
             },
             okDelete: function () {
@@ -521,17 +522,12 @@
             },
 
             allDelete: function () {
-                var params = new URLSearchParams();
-                params.append('searchState', JSON.stringify(vm.selection));
-                params.append('delete', 'all');
-                axios.post('list/delete', params ).then(function (response) {
-                    if (response.status == 200) {
-                        var  resData=response.data.data
-                        console.log(resData)
-                        vm.data1=[];
-                        vm.usercounts=0;
-                        vm.total1=0;
-                        vm.page1=1;
+
+                axios.post('list/allDelete', {'taskId':vm.selection[0]['id']}).then(function (response) {
+                    if (response.data.code == 0) {
+
+                        vm.userlist()
+
                     } else {
                         vm.$Message.warning(response.data.msg);
                     }
@@ -541,23 +537,20 @@
 
             },
 
-            cancel : function() {
+            cancel: function () {
                 this.$Message.info('您选择了取消操作');
             },
 
-            download : function () {
+            download: function () {
                 window.open('download');
 
             },
-            remove(index) {
-                var params = new URLSearchParams();
-                params.append('searchState', JSON.stringify(vm.selection));
-                params.append('delete', index);
-                params.append('page1', vm.page1);
-                axios.post('list/delete', params ).then(function (response) {
-                    if (response.status == 200) {
-                        var  resData=response.data.data
-                        console.log(resData)
+            remove(userId, taskId) {
+                var data = {'userId': userId, "taskId": taskId};
+                axios.post('list/delete', data).then(function (response) {
+                    if (response.data.code == 0) {
+
+                        vm.userlist()
 
                     } else {
                         vm.$Message.warning(response.data.msg);
@@ -567,35 +560,26 @@
                 });
             },
 
-            pageChange1: function (page1) {
-                if (vm.filter.length == 0) {
-                    axios.post('list/page/', {"page1": page1})
-                        .then(function (response) {
-                            if (response.data.code == 0) {
-                                var  resData=response.data.data
-                                console.log(resData)
+            pageChange1: function (page) {
+                axios.post('list/userlist/', {"page": page})
+                    .then(function (response) {
+                        if (response.data.code == 0) {
+                            var resData = response.data.data
+                            vm.data1 = resData.data1;
+                            vm.machinaryCode = resData.machinaryCode
+                            vm.usercounts = resData.usercounts
+                            vm.total1 = resData.total;
+                            vm.page1 = resData.page;
+                            vm.pageSize = resData.pageSize;
 
-                            } else {
-                                vm.$Message.warning(response.data.msg);
-                            }
-                        })
-                        .catch(function (error) {
-                            console.log(error);
-                        });
-                } else {
-                    axios.post('list/filter', {"page1": page1, "filter1": vm.filter1})
-                        .then(function (response) {
-                            if (response.data.code == 0) {
-                                var  resData=response.data.data
-                                console.log(resData)
-                            } else {
-                                vm.$Message.warning(response.data.msg);
-                            }
-                        })
-                        .catch(function (error) {
-                            console.log(error);
-                        });
-                }
+
+                        } else {
+                            vm.$Message.warning(response.data.msg);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
 
             },
 

@@ -36,7 +36,7 @@
         el: "#top",
         data: {
             role:"{{ request.user.role|safe }}" === ADMIN,
-            isShowBack: !('{{ isShowBack|safe }}' === '' || '{{ isShowBack|safe }}' === 'undefined'),
+            isShowBack: !('{{ isShowBack|safe }}' === '' || '{{ isShowBack|safe }}' === 'undefined' || '{{ isShowBack|safe }}' === 'False'),
 
         },
         methods: {
