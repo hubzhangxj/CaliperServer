@@ -24,7 +24,7 @@
                     <Icon type="ios-download-outline"></Icon>
                     Download
                 </i-button>
-                <i-button type="primary" @click="del"  style="margin-right: 10px">Delete</i-button>
+                <i-button type="primary" @click="del" style="margin-right: 10px">Delete</i-button>
                 <Modal
                         v-model="modal1"
                         title="删除确认"
@@ -305,33 +305,58 @@
 
             },
             del: function () {
-                    if(vm.selection.length != 0) {
-                        var canDelete = true;
-                        for (index in vm.selection) {
-                            item = vm.selection[index];
-                            if (item.owner.id != {{ request.user.id }}) {
-                                canDelete = false;
-                            }
+                if (vm.selection.length != 0) {
+                    var canDelete = true;
+                    for (index in vm.selection) {
+                        item = vm.selection[index];
+                        if (item.owner.id != {{ request.user.id }}) {
+                            canDelete = false;
                         }
-
-                        if (canDelete) {
-                            vm.modal1 = true;
-                        } else {
-                            vm.$Message.warning("Some select  task is not belong You!");
-                        }
-                    }else{
-                        vm.$Message.warning("Please select some task!");
                     }
+
+                    if (canDelete) {
+                        vm.modal1 = true;
+                    } else {
+                        vm.$Message.warning("Some select  task is not belong You!");
+                    }
+                } else {
+                    vm.$Message.warning("Please select some task!");
+                }
             }
             ,
             share: function () {
+
                 if (vm.selection.length < 1) {
                     vm.$Message.warning('请选中指定操作的一行或多行记录');
                 } else if (vm.selection.length == 1) {
                     //this.$Modal.confirm({})
-                    vm.userlist()
+                    var canShare = true;
+                    for (index in vm.selection) {
+                        item = vm.selection[index];
+                        if (item.owner.id != {{ request.user.id }}) {
+                            canShare = false;
+                        }
+                    }
+                    if (canShare) {
+                        vm.userlist()
+                    } else {
+                        vm.$Message.warning("Some select  task is not belong You!");
+                    }
+
                 } else {
-                    vm.adduser()
+                    var canShare = true;
+                    for (index in vm.selection) {
+                        item = vm.selection[index];
+                        if (item.owner.id != {{ request.user.id }}) {
+                            canShare = false;
+                        }
+                    }
+                    if (canShare) {
+                        vm.adduser()
+                    } else {
+                        vm.$Message.warning("Some select  task is not belong You!");
+                    }
+
                 }
 
             }
@@ -526,30 +551,30 @@
             }
             ,
             okDelete: function () {
-               axios.post('rowdelete',{"selection":JSON.stringify(vm.selection)}).then(function (response) {
-                        if (response.data.code == 0) {
-{#                            $.cookie('selection', "", {path: "/"});#}
-                            axios.post('page', {"page": 1})
-                                .then(function (response) {
-                                    if (response.data.code == 0) {
-                                        {# vm.$Message.success("成功");#}
-                                        {#                                vm.data = JSON.parse(response.data.data.tasks);#}
-                                        vm.reChecked(JSON.parse(response.data.data.tasks));
-                                        vm.page = response.data.data.page;
-                                        vm.total = response.data.data.total;
-                                    } else {
-                                        vm.$Message.warning(response.data.msg);
-                                    }
-                                })
-                                .catch(function (error) {
-                                    console.log(error);
-                                });
-                        } else {
+                axios.post('rowdelete', {"selection": JSON.stringify(vm.selection)}).then(function (response) {
+                    if (response.data.code == 0) {
+                        {#                            $.cookie('selection', "", {path: "/"});#}
+                        axios.post('page', {"page": 1})
+                            .then(function (response) {
+                                if (response.data.code == 0) {
+                                    {# vm.$Message.success("成功");#}
+                                    {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                                    vm.reChecked(JSON.parse(response.data.data.tasks));
+                                    vm.page = response.data.data.page;
+                                    vm.total = response.data.data.total;
+                                } else {
+                                    vm.$Message.warning(response.data.msg);
+                                }
+                            })
+                            .catch(function (error) {
+                                console.log(error);
+                            });
+                    } else {
 
-                        }
-                    }).catch(function (error) {
-                        console.log(error);
-                    });
+                    }
+                }).catch(function (error) {
+                    console.log(error);
+                });
             }
             ,
 
