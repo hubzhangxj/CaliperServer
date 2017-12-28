@@ -16,6 +16,7 @@ from django.db.models import Q, Count, QuerySet
 import os
 from account.permission import login_required
 from django.http import HttpResponse
+import numpy as np
 
 
 def serialize(data, excluded='avatar'):
@@ -257,6 +258,26 @@ def filter(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
+def calculate(list):
+    max  = np.max(list)
+    newList = []
+    for i in list:
+        if max == 0:
+            newList.append(0)
+        else:
+            value = i/float(max)*100
+            value = round(value,3)
+            newList.append(value)
+    return newList
+
+def calculate_single(value,max):
+    newValue = 0
+    if max == 0:
+        newValue = 0
+    else:
+        newValue = value / float(max) * 100
+        newValue = round(newValue, 3)
+    return newValue
 
 @login_required
 def compare(req):
@@ -285,7 +306,7 @@ def compare(req):
 
             single = {
                 'name': task['name'],
-                'data': data,
+                'data': calculate(data),
                 'visible': index == 0
                 # 'pointPlacement': 'on'
             }
@@ -314,7 +335,7 @@ def compare(req):
 
             single = {
                 'name': categorie,
-                'data': data,
+                'data': calculate(data),
                 'visible': index == 0
                 # 'pointPlacement': 'on'
             }
@@ -344,6 +365,18 @@ def compare(req):
                 'align': 'center',
             }
             columns.append(singleCol)
+
+        data_total = {}
+        for cache in dims:
+            vv = []
+            for task in selection:
+                try:
+                    dimResult = taskModels.DimResult.objects.get(task_id=task['id'], dim_id=cache.id)
+                    vv.append(dimResult.result)
+                except:
+                    vv.append(0)
+            data_total[cache.id] = vv
+
         tableData = []  # table column 对应的数据值
         for task in selection:
             tableSingle = {}
@@ -352,7 +385,7 @@ def compare(req):
             for dim in dims:
                 try:
                     dimResult = taskModels.DimResult.objects.get(task_id=task['id'], dim_id=dim.id)
-                    tableSingle[dim.name] = dimResult.result
+                    tableSingle[dim.name] = calculate_single(dimResult.result,np.max(data_total[dim.id]))
                 except:
                     logger.error('find dimresult none')
                     tableSingle[dim.name] = 0
@@ -385,9 +418,8 @@ def variance(values):
     :param v2:
     :return:
     '''
-    import numpy as np
     if type(values) == list and 0 not in values:
-        return np.var(values)
+        return round(np.var(values),3)
     else:
         return 0
 
@@ -426,7 +458,7 @@ def dimcompare(req, param):
 
         single = {
             'name': task['name'],
-            'data': data,
+            'data': calculate(data),
             # 'pointPlacement': 'on'
         }
         sce_series.append(single)
@@ -454,21 +486,36 @@ def dimcompare(req, param):
         'align': 'center',
     }
     columns.append(endCol)
+
+    data_total = {}
+    for cache in sces:
+        vv = []
+        for task in selection:
+            try:
+                dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
+                sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id, scenario_id=cache.id)
+                vv.append(sceResult.result)
+            except:
+                vv.append(0)
+        data_total[cache.id] = vv
+
+
     tableData = []  # table column 对应的数据值
 
     for sce in sces:
         tableSingle = {}
         tableSingle['name'] = sce.name
+
         values = []
         for task in selection:
             try:
                 dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
                 sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id, scenario_id=sce.id)
-                tableSingle[task['id']] = sceResult.result
-                values.append(sceResult.result)
+                tableSingle[task['id']] = calculate_single(sceResult.result,np.max(data_total[sce.id]))
+                values.append(calculate_single(sceResult.result,np.max(data_total[sce.id])))
             except:
-                tableSingle[task['id']] = 0
                 values.append(0)
+                tableSingle[task['id']] = 0
         tableSingle['variance'] = variance(values)
         tableData.append(tableSingle)
     tableData = highlight2(tableData, selection[0]['id'], ['name', 'variance'])
@@ -504,7 +551,7 @@ def dimcompare(req, param):
 
             case_signle = {
                 'name': task['name'],
-                'data': case_data,
+                'data': calculate(case_data),
             }
             task_case_data.append(case_signle)
         case_obj = {
@@ -520,20 +567,39 @@ def dimcompare(req, param):
 
     # table 数据构造  start
 
-    sce_table_data = {}
+    data_total = {}
     for scename, values in case_categories.items():  # 场景的集合
-        case_table_data = []
+        caseDatas ={}
         for casename in values:  # case名称的集合
-            tableSingle = {}
-            tableSingle['name'] = casename
-            values = []
+            vv = []
             for task in selection:
                 try:
                     dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
                     sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id, scenario__name=scename)
                     caseResult = taskModels.CaseResult.objects.get(sceResult_id=sceResult.id, case__name=casename)
-                    tableSingle[task['id']] = caseResult.result
-                    values.append(caseResult.result)
+                    vv.append(caseResult.result)
+                except:
+                    vv.append(0)
+            caseDatas[casename]= vv
+        data_total[scename] = caseDatas
+
+    sce_table_data = {}
+    for scename, values in case_categories.items():  # 场景的集合
+        case_table_data = []
+        caseDatas = data_total[scename]
+        for casename in values:  # case名称的集合
+            tableSingle = {}
+            tableSingle['name'] = casename
+            print casename
+            print caseDatas[casename]
+            values =[]
+            for task in selection:
+                try:
+                    dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
+                    sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id, scenario__name=scename)
+                    caseResult = taskModels.CaseResult.objects.get(sceResult_id=sceResult.id, case__name=casename)
+                    tableSingle[task['id']] = calculate_single(caseResult.result,np.max(caseDatas[casename]))
+                    values.append(calculate_single(caseResult.result,np.max(caseDatas[casename])))
                 except:
                     tableSingle[task['id']] = 0
                     values.append(0)
