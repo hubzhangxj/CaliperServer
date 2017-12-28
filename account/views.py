@@ -10,12 +10,21 @@ import os, re, json
 import operator
 from django.contrib import auth
 from account.models import UserProfile
-
+from sso.apiclient import client
+import urllib
 from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
+from .sso import REMOTE_SSO_LOGIN_URL, REMOTE_SSO_CHANGEPWD_URL, REMOTE_SSO_LOGOUT_URL, REMOTE_SSO_SIGNUP_URL, logined_users
+from sso.authbackend import SSOAuthBackend
+from sso.utility import form_redirect
+
 from account.permission import login_required
 
 def main(request):
-    downloadPath = settings.downloadPath
+    from CaliperServer.settings import downloadPath
     versions = []
     for path in os.listdir(downloadPath):
         if path.endswith('.zip'):
@@ -64,16 +73,12 @@ def file_iterator(filename, chunk_size=512):
                 yield c
             else:
                 break
-def login(req):
-    user = UserProfile.objects.get(username="max")
+def login0(req):
+    user = UserProfile.objects.get(username="admin")
     auth.login(req, user)
     return HttpResponseRedirect("/task/list")
 
-def logout(req):
-    auth.logout(req)
-    return HttpResponseRedirect('/')
 
-@login_required
 def getuserinfo(req):
     # username=req.GET.get('username')
     # if not username :
@@ -89,7 +94,6 @@ def getuserinfo(req):
     #return HttpResponse(status=200)
     return render(req,"userinfo.html",{'isShowBack':True})
 
-@login_required
 @csrf_exempt
 def setuserinfo(req):
     if req.method == 'POST':
@@ -139,7 +143,6 @@ def setuserinfo(req):
     else:
         return HttpResponse(status=403,content='forbidden')
 
-@login_required
 @csrf_exempt
 def upload(req):
     try:
@@ -151,3 +154,185 @@ def upload(req):
     item.avatar = file
     item.save()
     return HttpResponse(status=200)
+
+
+################sso
+
+def check_login(fun):
+    """
+    检查是否登录
+    :param fun:
+    :return:
+    """
+    def wapper(request, *args, **kwargs):
+        auth_token_session = request.session.get("auth_token", None)
+        if not auth_token_session:
+            print "auth_token not exist"
+            if request.user and not request.user.is_anonymous():  # 登录用户
+                auth.logout(request)
+            return HttpResponseRedirect('/')
+        else:
+            if auth_token_session not in logined_users.keys():
+                auth.logout(request)
+                return HttpResponseRedirect('/')
+            else:
+                if request.user is None or request.user.is_anonymous():  # 未登录用户
+                    return HttpResponseRedirect('/')
+                else:  # 已登录用户
+                    return fun(request, *args, **kwargs)
+    return wapper
+
+
+@csrf_exempt
+def auth_callback(request):
+    """
+    单点登录后的回调（由SSO服务器发起）
+    :param request:
+    :return:
+    """
+    auth_token = request.POST.get("auth_token")
+    redirect = request.GET.get("redirect", settings.LOGIN_REDIRECT_URL)
+
+    error, user, user_info = SSOAuthBackend.authenticate(auth_token)
+    if not error:
+        if not user:  # 这种情况表明用户在其他site注册，并且首次登陆本site
+            user = UserProfile(username=user_info['username'], email=user_info['email'], role=1)
+            user.save()
+        auth.login(request, user)  # create session, write cookies
+        logined_users[auth_token] = user  # 存入全局变量中
+        request.session["auth_token"] = auth_token  # 存入session
+        return HttpResponseRedirect(redirect)
+    else:
+        raise PermissionDenied
+
+
+@csrf_exempt
+def signup_callback(request):
+    """
+    注册成功后的回调（由SSO服务器发起）
+    :param request:
+    :return:
+    """
+    auth_token = request.POST.get("auth_token")
+    redirect = request.GET.get("redirect", settings.LOGIN_REDIRECT_URL)
+
+    error, user, user_info = SSOAuthBackend.authenticate(auth_token)
+    if error or user or not user_info:
+        raise PermissionDenied
+    else:
+        user = UserProfile(username=user_info['username'], email=user_info['email'])
+        user.save()
+
+        auth.login(request, user)  # create session, write cookies
+        logined_users[auth_token] = user  # 存入全局变量中
+        request.session["auth_token"] = auth_token  # 存入session
+        return HttpResponseRedirect(redirect)
+
+
+def logout_notify(request):
+    """
+    单点登出的回调（由SSO服务器发起）
+    :param request:
+    :return:
+    """
+    auth_token = request.GET.get("auth_token")
+    print "logout_notify:"+auth_token, auth_token in logined_users.keys()
+    if auth_token in logined_users.keys():
+        logined_users.pop(auth_token)  # 从全局删除
+        auth.logout(request)
+        if request.session.exists("auth_token"):
+            del request.session['auth_token']
+    else:
+        print auth_token+' not in logined_users.keys().'
+    return JsonResponse({"msg": "ok"})
+
+
+@csrf_exempt
+def changepwd_callback(request):
+    """
+    修改密码后的回调（由SSO服务器发起）
+    :param request:
+    :return:
+    """
+    auth_token = request.POST.get("auth_token")
+    redirect = request.GET.get("redirect", settings.LOGIN_REDIRECT_URL)
+
+    error, user, user_info = SSOAuthBackend.authenticate(auth_token)
+    if not error:
+        if not user:  # 这种情况表明用户在其他site注册，并且首次登陆本site
+            user = UserProfile(username=user_info['username'], email=user_info['email'])
+            user.save()
+        auth.login(request, user)  # create session, write cookies
+        logined_users[auth_token] = user  # 存入全局变量中
+        request.session["auth_token"] = auth_token  # 存入session
+        return HttpResponseRedirect(redirect)
+    else:
+        raise PermissionDenied
+
+
+@check_login
+def logout(request):
+    """
+    登出
+    :param request:
+    :return:
+    """
+    auth_token = request.session.get('auth_token', None)
+    if auth_token:
+        try:
+            del request.session['auth_token']
+            client_ip = request.META.get("REMOTE_ADDR")
+            code, result = client.send_request(REMOTE_SSO_LOGOUT_URL + "?" +
+                                               urllib.urlencode({"auth_token": auth_token,"client_ip": client_ip}))
+            print result['msg']
+        except Exception as e:
+            print e
+
+    if auth_token in logined_users.keys():
+        logined_users.pop(auth_token)  # 从全局删除
+    auth.logout(request)
+    return HttpResponseRedirect('/')
+
+
+def login(request):
+    """
+    登录页面
+    :param request:
+    :return:
+    """
+    server = settings.SSO_API_AUTH_SETTING["url"]
+    callback = request.build_absolute_uri(reverse("authcallback") +
+                                          "?redirect=%s" % request.GET.get("next", settings.LOGIN_REDIRECT_URL))
+
+    return form_redirect(server+REMOTE_SSO_LOGIN_URL, apikey=settings.SSO_API_AUTH_SETTING["apikey"],
+                         callback=callback)
+
+
+def signup(request):
+    """
+    注册页面
+    :param request:
+    :return:
+    """
+    server = settings.SSO_API_AUTH_SETTING["url"]
+    callback = request.build_absolute_uri(reverse("signupcallback") +
+                                          "?redirect=%s" % request.GET.get("next", settings.LOGIN_REDIRECT_URL))
+
+    return form_redirect(server+REMOTE_SSO_SIGNUP_URL, apikey=settings.SSO_API_AUTH_SETTING["apikey"],
+                         callback=callback)
+
+
+def change_pwd(request):
+    """
+    修改密码页面
+    :param request:
+    :return:
+    """
+    server = settings.SSO_API_AUTH_SETTING["url"]
+    callback = request.build_absolute_uri(reverse("changepwdcallback") +
+                                          "?redirect=%s" % request.GET.get("next", settings.LOGIN_REDIRECT_URL))
+
+    return form_redirect(server+REMOTE_SSO_CHANGEPWD_URL, apikey=settings.SSO_API_AUTH_SETTING["apikey"],
+                         callback=callback)
+
+

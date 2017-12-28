@@ -215,3 +215,16 @@ LOGGING = {
         }
     }
 }
+
+# sso相关 begin
+SSO_API_AUTH_SETTING = {
+    "apikey": "fa19d893",
+    "seckey": "74643558ab664359b0830386ef5fe940",
+    # "url": "http://106.12.27.16:9000",
+    "url": "http://ssoserver.com:7000",
+}
+
+AUTHENTICATION_BACKENDS = ("account.sso.authbackend.SSOAuthBackend",)
+
+LOGIN_REDIRECT_URL = "/task/list"
+# sso相关 end

@@ -14,7 +14,6 @@ def login_required(fun):
     def wapper(request, *args, **kwargs):
         if request.user is None or request.user.is_anonymous():
             return HttpResponseRedirect('/')
-            # return HttpResponseRedirect('/static/unlogin.html')
 
         return fun(request, *args, **kwargs)
     return wapper
