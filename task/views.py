@@ -1391,49 +1391,38 @@ def addUser(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok', data)
     #return HttpResponse(status=200)
 def listPage(req):
-    try:
-        obJson = req.body
-        # params = json.loads(obJson)
-        if obJson != '' and json.loads(obJson).has_key('page1'):
-            page1 = json.loads(obJson)['page1']
-        else:
-            page1 = 1
-
-        if req.user.role == Contants.ROLE_ADMIN:
-            tasks = taskModels.Task.objects.order_by('-time').all()
-        else:
-            tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
-
-        pageSize = Contants.PAGE_SIZE
-        paginator = Paginator(tasks, pageSize)
-
-        try:
-            consumptionObjs = paginator.page(page1)
-        except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
-            consumptionObjs = paginator.page(1)
-        except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
-            consumptionObjs = paginator.page(paginator.num_pages)
-
-        # consumptions= Serializer().serialize(consumptionObjs,relations=('cpu',))
-        consumptions = serialize(consumptionObjs)
-        dict = json.loads(consumptions)
-        for task in dict:
-            cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
-            task['config']['cpu'] = json.loads(serialize(cpus))
-            sys = taskModels.System.objects.get(id=task['config']['sys'])
-            task['config']['sys'] = model_to_dict(sys)
-
-        data = {
-            'tasks': json.dumps(dict),
-            'page': page,
-            'pageSize': pageSize,
-            'total': paginator.count,
-        }
-    except Exception as e:
-        logger.error(str(e))
-        return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
-    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+    return HttpResponse(status=200)
 def listFilter(req):
+    return HttpResponse(status=200)
+
+def delete(req):
+    if req.method != 'POST' :
+        return HttpResponse(status=403)
+    data=req.POST
+    searchState = data.get('searchState')
+    dele = data.get('delete')
+    if searchState is None  and dele is None:
+        return HttpResponse(status=403)
+
+    selection = json.loads(searchState)
+
+    share_data=selection[0]['shareusers']
+    if dele == 'all':
+        for i in range(len(share_data)):
+            try:
+                taskModel = taskModels.Task.objects.get(id=req.user.id)
+                taskModel.shareusers.filter(id=share_data[i]['id'])
+                #print share_data[i]['id']
+                taskModel.delete()
+                return HttpResponse(status=200)
+            except:
+                logger.error('error')
+                return HttpResponse(status=500)
+    else:
+        pass
+    # data={
+    #     'usercounts':len(selection[0]['shareusers']),
+    #     'machinaryCode':selection[0]['id'],
+    # }
+    # return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok', data)
     return HttpResponse(status=200)

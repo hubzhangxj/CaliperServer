@@ -207,8 +207,8 @@
                                 },
                                 on: {
                                     click: () => {
-{#                                        this.show(params.index)#}
-                                         window.location.href = "folder/"+params.row.id;
+                                        {#                                        this.show(params.index)#}
+                                        window.location.href = "folder/"+params.row.id;
                                     }
                                 }
                             }, 'View'),
@@ -255,7 +255,8 @@
                                 },
                                 on: {
                                     click: () => {
-                                        this.remove(params.index)
+                                        console.log( params)
+                                        vm.remove(params.index)
                                     }
                                 }
                             }, 'Delete')
@@ -452,7 +453,7 @@
                         vm.page1=resData.page;
                         vm.pageSize=resData.pageSize;
 
-                       // console.log(resData)
+                        // console.log(resData)
                     } else {
                         vm.$Message.warning(response.data.msg);
                     }
@@ -520,8 +521,24 @@
             },
 
             allDelete: function () {
+                var params = new URLSearchParams();
+                params.append('searchState', JSON.stringify(vm.selection));
+                params.append('delete', 'all');
+                axios.post('list/delete', params ).then(function (response) {
+                    if (response.status == 200) {
+                        var  resData=response.data.data
+                        console.log(resData)
+                        vm.data1=[];
+                        vm.usercounts=0;
+                        vm.total1=0;
+                        vm.page1=1;
+                    } else {
+                        vm.$Message.warning(response.data.msg);
+                    }
+                }).catch(function (error) {
 
-                this.$Message.info('allDelete');
+                });
+
             },
 
             cancel : function() {
@@ -533,7 +550,21 @@
 
             },
             remove(index) {
-                this.data1.splice(index, 1);
+                var params = new URLSearchParams();
+                params.append('searchState', JSON.stringify(vm.selection));
+                params.append('delete', index);
+                params.append('page1', vm.page1);
+                axios.post('list/delete', params ).then(function (response) {
+                    if (response.status == 200) {
+                        var  resData=response.data.data
+                        console.log(resData)
+
+                    } else {
+                        vm.$Message.warning(response.data.msg);
+                    }
+                }).catch(function (error) {
+
+                });
             },
 
             pageChange1: function (page1) {

@@ -39,5 +39,6 @@ urlpatterns = [
     url("^list/addusersubmit/?$", taskViews.addUserSubmit),
     url("^list/adduser/?$", taskViews.addUser),
     url("^list/page/?$", taskViews.listPage),
+    url("^list/delete/?$", taskViews.delete),
 
 ]
