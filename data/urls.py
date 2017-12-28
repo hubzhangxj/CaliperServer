@@ -18,5 +18,6 @@ from django.contrib import admin
 from data import views as dataViews
 
 urlpatterns = [
+    url('^cert', dataViews.cert),
     url('^upload$',dataViews.upload)
 ]

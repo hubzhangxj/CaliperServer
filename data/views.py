@@ -350,6 +350,13 @@ def save_db(userName, result, outputFileName, log_path,config,hostName,remark=''
     return True
 
 
+@csrf_exempt
+def cert(req):
+    print "==========="
+    userName = req.GET.get("userName")
+    password = req.GET.get("password")
+    return HttpResponse("success" ,status=200)
+
 
 if __name__ == '__main__':
     input = "/home/qiuqiaohua/Documents/workspaces/web_workspaces/data/upload/_WS_17-12-20_10-11-26.zip"

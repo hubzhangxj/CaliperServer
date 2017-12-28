@@ -14,14 +14,15 @@ from shared.Response import Response
 from shared.log import logger
 from django.db.models import Q, Count, QuerySet
 import os
-# Create your views here.
-from django.http import StreamingHttpResponse, HttpResponse, HttpResponseRedirect
+from account.permission import login_required
+from django.http import HttpResponse
 
 
 def serialize(data, excluded='avatar'):
     return Serializer().serialize(data, excluded=excluded)
 
 
+@login_required
 def task(req):
     oss = taskModels.Config.objects.raw('select id,os from config GROUP by os')
     kernels = taskModels.Config.objects.raw('select id,kernel from config GROUP by kernel')
@@ -104,6 +105,7 @@ def task(req):
     return render(req, "task.html", data)
 
 
+@login_required
 def pageChange(req):
     try:
         obJson = req.body
@@ -177,6 +179,7 @@ def getConfigId(configs):
     return ids
 
 
+@login_required
 def filter(req):
     try:
         obJson = req.body
@@ -255,6 +258,7 @@ def filter(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
 
+@login_required
 def compare(req):
     try:
         from urllib import unquote
@@ -388,6 +392,7 @@ def variance(values):
         return 0
 
 
+@login_required
 def dimcompare(req, param):
     '''
 
@@ -603,6 +608,7 @@ def highlight2(tableData, compareKey, exclude=[], hl=5):
     return tableData
 
 
+@login_required
 def highlightChange(req):
     obJson = req.body
     if obJson is not None and obJson != "":
@@ -711,6 +717,7 @@ def boardInfo(req):
     return render(req, "boardInfo.html", data)
 
 
+@login_required
 def stateSearchUser(req):
     if not req.POST:
         return HttpResponse(status=403)
@@ -761,6 +768,7 @@ def stateSearchUser(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
 
+@login_required
 def statePageChange(req):
     try:
         obJson = req.body
@@ -825,6 +833,7 @@ def statePageChange(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
 
+@login_required
 def stateFilter(req):
     try:
         obJson = req.body
@@ -916,6 +925,7 @@ def stateFilter(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
 
+@login_required
 def rowdelete(req):
     if not req.POST:
         return HttpResponse(status=403)
@@ -963,6 +973,7 @@ def rowdelete(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
 
+@login_required
 def rowRestore(req):
     if not req.POST:
         return HttpResponse(status=403)
@@ -1010,6 +1021,7 @@ def rowRestore(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
 
+@login_required
 def permanentDelete(req):
     if not req.POST:
         return HttpResponse(status=403)
@@ -1058,6 +1070,7 @@ def permanentDelete(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
 
+@login_required
 def downloadFile(req):
     import CaliperServer.settings as settings
     import os, tempfile, zipfile
@@ -1141,6 +1154,7 @@ def dictfetchall(cursor):
     ]
 
 
+@login_required
 def singleTask(req):
     from urllib import unquote
     selection = json.loads(unquote(req.COOKIES.get("selection")))  # 选中的task 任务
@@ -1261,6 +1275,7 @@ def showtree(rootDir):
     return result_files
 
 
+@login_required
 def folder(req, taskId):
     try:
         import CaliperServer.settings as s
@@ -1310,6 +1325,7 @@ def gci(path):
     return datas
 
 
+@login_required
 def userList(req):
     # if not  req.POST:
     #     return HttpResponse(status=403)
@@ -1369,6 +1385,7 @@ def userList(req):
     # return HttpResponse(status=200,content='{}')
 
 
+@login_required
 def addUserSubmit(req):
     if req.method == 'POST':
         data = req.POST
@@ -1406,6 +1423,7 @@ def addUserSubmit(req):
         return HttpResponse(status=403)
 
 
+@login_required
 def addUser(req):
     if req.method != 'POST':
         return HttpResponse(status=403)
@@ -1422,6 +1440,7 @@ def addUser(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok', data)
 
 
+@login_required
 def delete(req):
     obJson = req.body
     userId = 0
@@ -1444,13 +1463,14 @@ def delete(req):
             return Response.CustomJsonResponse(Response.CODE_FAILED, 'fail')
 
 
+@login_required
 def deleteAll(req):
     obJson = req.body
     taskId = 0
     if obJson != '':
         if json.loads(obJson).has_key('taskId'):
             taskId = json.loads(obJson)['taskId']
-    if taskId == 0 :
+    if taskId == 0:
         return Response.CustomJsonResponse(Response.CODE_FAILED, 'fail')
     else:
         try:

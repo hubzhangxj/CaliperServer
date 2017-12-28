@@ -12,6 +12,7 @@ from django.contrib import auth
 from account.models import UserProfile
 
 from django.views.decorators.csrf import csrf_exempt
+from account.permission import login_required
 
 def main(request):
     downloadPath = settings.downloadPath
@@ -68,7 +69,11 @@ def login(req):
     auth.login(req, user)
     return HttpResponseRedirect("/task/list")
 
+def logout(req):
+    auth.logout(req)
+    return HttpResponseRedirect('/')
 
+@login_required
 def getuserinfo(req):
     # username=req.GET.get('username')
     # if not username :
@@ -84,6 +89,7 @@ def getuserinfo(req):
     #return HttpResponse(status=200)
     return render(req,"userinfo.html",{'isShowBack':True})
 
+@login_required
 @csrf_exempt
 def setuserinfo(req):
     if req.method == 'POST':
@@ -133,6 +139,7 @@ def setuserinfo(req):
     else:
         return HttpResponse(status=403,content='forbidden')
 
+@login_required
 @csrf_exempt
 def upload(req):
     try:
