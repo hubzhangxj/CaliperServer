@@ -31,7 +31,7 @@ urlpatterns = [
     url("^boardInfo/searchUser/?$", taskViews.stateSearchUser),
     url("^boardInfo/page/?$", taskViews.statePageChange),
     url("^boardInfo/filter/?$", taskViews.stateFilter),
-    url("^boardInfo/rowdelete/?$", taskViews.rowdelete),
+    url("^rowdelete$", taskViews.rowdelete),
     url("^boardInfo/rowRestore/?$", taskViews.rowRestore),
     url("^boardInfo/permanentDelete/?$", taskViews.permanentDelete),
     url("^download/?$", taskViews.downloadFile),

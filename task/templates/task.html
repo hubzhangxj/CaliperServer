@@ -24,7 +24,7 @@
                     <Icon type="ios-download-outline"></Icon>
                     Download
                 </i-button>
-                <i-button type="primary" @click="modal1 = true" style="margin-right: 10px">Delete</i-button>
+                <i-button type="primary" @click="del"  style="margin-right: 10px">Delete</i-button>
                 <Modal
                         v-model="modal1"
                         title="删除确认"
@@ -305,27 +305,25 @@
 
             },
             del: function () {
-                var params = new URLSearchParams();
-                console.log(vm.selection)
-                params.append('searchState', JSON.stringify(vm.selection));
-                vm.selection = []
-                axios.post('boardInfo/rowdelete/', params).then(function (response) {
-                    if (response.data.code == 0) {
-                        {# vm.$Message.success("成功");#}
-                        {#                                vm.data = JSON.parse(response.data.data.tasks);#}
-                        vm.reChecked(JSON.parse(response.data.data.tasks));
-                        vm.page = response.data.data.page;
-                        vm.total = response.data.data.total;
-                    } else {
-                        vm.data = [];
-                        vm.total = 0;
-                        vm.page = 1;
+                    if(vm.selection.length != 0) {
+                        var canDelete = true;
+                        for (index in vm.selection) {
+                            item = vm.selection[index];
+                            if (item.owner.id != {{ request.user.id }}) {
+                                canDelete = false;
+                            }
+                        }
+
+                        if (canDelete) {
+                            vm.modal1 = true;
+                        } else {
+                            vm.$Message.warning("Some select  task is not belong You!");
+                        }
+                    }else{
+                        vm.$Message.warning("Please select some task!");
                     }
-                })
-                    .catch(function (error) {
-                        console.log(error);
-                    });
-            },
+            }
+            ,
             share: function () {
                 if (vm.selection.length < 1) {
                     vm.$Message.warning('请选中指定操作的一行或多行记录');
@@ -336,7 +334,8 @@
                     vm.adduser()
                 }
 
-            },
+            }
+            ,
             pageChange: function (page) {
                 if (vm.filter.length == 0) {
                     axios.post('page', {"page": page})
@@ -372,7 +371,8 @@
                         });
                 }
 
-            },
+            }
+            ,
             filterTask: function () {
                 axios.post('filter', {"page": 1, "filter": vm.filter})
                     .then(function (response) {
@@ -389,12 +389,14 @@
                     .catch(function (error) {
                         console.log(error);
                     });
-            },
+            }
+            ,
             select: function (selection, row) {
                 vm.selection.push(row);
 
                 console.log(vm.selection);
-            },
+            }
+            ,
             selectCancle: function (selection, row) {
                 var removeId = -1;
                 for (i in vm.selection) {
@@ -407,7 +409,8 @@
                     vm.selection.splice(removeId, 1)
                 }
                 console.log(vm.selection);
-            },
+            }
+            ,
             selectAll: function (selection, removeObjs) {
                 for (i in selection) {
                     item = selection[i];
@@ -424,7 +427,8 @@
                 });
 
                 console.log(vm.selection);
-            },
+            }
+            ,
 
             reChecked: function (datas) {
                 if (vm.selection.length != 0) {
@@ -439,7 +443,8 @@
                     }
                 }
                 vm.data = datas;
-            },
+            }
+            ,
             userlist: function () {
 
                 {#                var params = new URLSearchParams();#}
@@ -467,7 +472,8 @@
                 });
 
                 vm.modal2 = true
-            },
+            }
+            ,
             adduser: function () {
                 //this.$Message.info('Clicked ok');
                 var params = new URLSearchParams();
@@ -486,13 +492,15 @@
 
 
                 vm.modal3 = true
-            },
+            }
+            ,
 
 
             userListSubmit: function () {
                 this.$Message.info('Clicked ok');
 
-            },
+            }
+            ,
             addUserSubmit: function () {
                 var params = new URLSearchParams();
                 params.append('tenandID', JSON.stringify(vm.tenandID));
@@ -515,15 +523,39 @@
                 });
                 vm.modal2 = false
 
-            },
+            }
+            ,
             okDelete: function () {
-                vm.del();
-                //this.$Message.info('Clicked ok');
-            },
+               axios.post('rowdelete',{"selection":JSON.stringify(vm.selection)}).then(function (response) {
+                        if (response.data.code == 0) {
+{#                            $.cookie('selection', "", {path: "/"});#}
+                            axios.post('page', {"page": 1})
+                                .then(function (response) {
+                                    if (response.data.code == 0) {
+                                        {# vm.$Message.success("成功");#}
+                                        {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                                        vm.reChecked(JSON.parse(response.data.data.tasks));
+                                        vm.page = response.data.data.page;
+                                        vm.total = response.data.data.total;
+                                    } else {
+                                        vm.$Message.warning(response.data.msg);
+                                    }
+                                })
+                                .catch(function (error) {
+                                    console.log(error);
+                                });
+                        } else {
+
+                        }
+                    }).catch(function (error) {
+                        console.log(error);
+                    });
+            }
+            ,
 
             allDelete: function () {
 
-                axios.post('list/allDelete', {'taskId':vm.selection[0]['id']}).then(function (response) {
+                axios.post('list/allDelete', {'taskId': vm.selection[0]['id']}).then(function (response) {
                     if (response.data.code == 0) {
 
                         vm.userlist()
@@ -535,16 +567,19 @@
 
                 });
 
-            },
+            }
+            ,
 
             cancel: function () {
                 this.$Message.info('您选择了取消操作');
-            },
+            }
+            ,
 
             download: function () {
                 window.open('download');
 
-            },
+            }
+            ,
             remove(userId, taskId) {
                 var data = {'userId': userId, "taskId": taskId};
                 axios.post('list/delete', data).then(function (response) {
@@ -558,7 +593,8 @@
                 }).catch(function (error) {
 
                 });
-            },
+            }
+            ,
 
             pageChange1: function (page) {
                 axios.post('list/userlist/', {"page": page})
@@ -581,7 +617,8 @@
                         console.log(error);
                     });
 
-            },
+            }
+            ,
 
 
         }

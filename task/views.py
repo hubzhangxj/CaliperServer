@@ -927,50 +927,21 @@ def stateFilter(req):
 
 @login_required
 def rowdelete(req):
-    if not req.POST:
-        return HttpResponse(status=403)
-    data = req.POST
-    searchState = data.get('searchState')
-    searchState = json.loads(searchState)
-
+    # from urllib import unquote
+    # selection = json.loads(unquote(req.COOKIES.get("selection")))  # 选中的task 任务
+    obJson = req.body
+    data = json.loads(obJson)
+    selection = json.loads(data.get('selection'))
     # print searchState
     if req.user.role == Contants.ROLE_ADMIN:
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
         tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
 
-    for i in range(len(searchState)):
-        tasks.filter(config_id=searchState[i]['id']).update(delete=1)
+    for task in selection:
+        tasks.filter(config_id=task['id']).update(delete=1)
 
-    tasks = tasks.filter(delete=0)
-    try:
-        if not tasks:
-            return HttpResponse(status=404)
-        pageSize = Contants.PAGE_SIZE
-        paginator = Paginator(tasks, pageSize)
-        try:
-            consumptionObjs = paginator.page(1)
-        except EmptyPage:
-            consumptionObjs = paginator.page(paginator.num_pages)
-        consumptions = serialize(consumptionObjs)
-        dict = json.loads(consumptions)
-        for task in dict:
-            cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
-            task['config']['cpu'] = json.loads(serialize(cpus))
-            sys = taskModels.System.objects.get(id=task['config']['sys'])
-            task['config']['sys'] = model_to_dict(sys)
-
-            data = {
-                'tasks': json.dumps(dict),
-                'page': 1,
-                'pageSize': pageSize,
-                'total': paginator.count,
-            }
-
-    except Exception as e:
-        logger.error(str(e))
-        return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
-    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok")
 
 
 @login_required

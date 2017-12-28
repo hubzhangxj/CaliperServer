@@ -65,7 +65,7 @@ def file_iterator(filename, chunk_size=512):
             else:
                 break
 def login(req):
-    user = UserProfile.objects.get(username="admin")
+    user = UserProfile.objects.get(username="max")
     auth.login(req, user)
     return HttpResponseRedirect("/task/list")
 
