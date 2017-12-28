@@ -28,6 +28,8 @@
                 <Modal
                         v-model="modal1"
                         title="Delete confirmation"
+                        ok-text="close"
+                        cancel-text="cancel"
                         @on-ok="okDelete"
                         @on-cancel="cancel">
                     <p>Are you sure you want to delete this record?</p>
@@ -38,6 +40,8 @@
                 <Modal
                         v-model="modal2"
                         title="Member list"
+                        ok-text="close"
+                        cancel-text="cancel"
                         @on-ok="userListSubmit"
                         @on-cancel="cancel">
                     <div style="display: flex;flex-direction: row;">
@@ -46,11 +50,11 @@
                     </div>
                     <div style="display: flex;flex-direction: row; margin-top: 10px">
                         <div>
-                            <i-button type="success" size="small" @click="adduser" style="margin-right: 5px">添加成员
+                            <i-button type="success" size="small" @click="adduser" style="margin-right: 5px">Add Members
                             </i-button>
                         </div>
                         <div>
-                            <i-button type="success" size="small" @click="allDelete" style="margin-right: 20px">全部删除
+                            <i-button type="success" size="small" @click="allDelete" style="margin-right: 20px">Delete All
                             </i-button>
                         </div>
                     </div>
@@ -68,6 +72,8 @@
                 <Modal
                         v-model="modal3"
                         title="Add members"
+                        ok-text="close"
+                        cancel-text="cancel"
                         @on-ok="addUserSubmit"
                         @on-cancel="cancel">
                     <div style="margin-top: 10px">
@@ -515,7 +521,7 @@
 
 
             userListSubmit: function () {
-                this.$Message.info('Clicked ok');
+
 
             }
             ,
@@ -589,7 +595,7 @@
             ,
 
             cancel: function () {
-                this.$Message.info('您选择了取消操作');
+                this.$Message.info('You have chosen to cancel the operation ');
             }
             ,
 
