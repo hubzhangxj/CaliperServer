@@ -16,7 +16,6 @@ import os
 # Create your views here.
 from django.http import StreamingHttpResponse, HttpResponse, HttpResponseRedirect
 
-
 def serialize(data, excluded='avatar'):
     return Serializer().serialize(data, excluded=excluded)
 
@@ -648,7 +647,8 @@ def boardInfo(req):
     if req.user.role == Contants.ROLE_ADMIN:
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
-        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+        #tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+        return HttpResponse(status=403,content='不是管理员权限,访问受限')
 
     obJson = req.body
     # params = json.loads(obJson)
@@ -689,14 +689,12 @@ def boardInfo(req):
         'isShowBack': True
     }
     print data['total']
-    # print consumptionObjs.object_list
+    #print consumptionObjs.object_list
     return render(req, "boardInfo.html", data)
-
-
 def stateSearchUser(req):
-    if not req.POST:
+    if not  req.POST:
         return HttpResponse(status=403)
-    data = req.POST
+    data=req.POST
     searchUserName = data.get('searchUserName')
     searchState = data.get('searchState')
     if req.user.role == Contants.ROLE_ADMIN:
@@ -704,15 +702,17 @@ def stateSearchUser(req):
     else:
         tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
     if searchUserName:
-        tasks = tasks.filter(owner__username=searchUserName)
+        tasks=tasks.filter(owner__username=searchUserName)
     if searchState == "delRow":
-        tasks = tasks.filter(delete=1)
-    elif searchState == "normal":
+        tasks=tasks.filter(delete=1)
+    elif  searchState == "normal":
         tasks = tasks.filter(delete=0)
     else:
         pass
+
+
     try:
-        if not tasks:
+        if not  tasks:
             print tasks
             return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
@@ -724,6 +724,7 @@ def stateSearchUser(req):
         consumptions = serialize(consumptionObjs)
         dict = json.loads(consumptions)
         for task in dict:
+
             cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
             task['config']['cpu'] = json.loads(serialize(cpus))
             sys = taskModels.System.objects.get(id=task['config']['sys'])
@@ -745,39 +746,38 @@ def stateSearchUser(req):
 def statePageChange(req):
     try:
         obJson = req.body
+        data=json.loads(obJson)
         # params = json.loads(obJson)
-        if obJson != '' and json.loads(obJson).has_key('page'):
-            page = json.loads(obJson)['page']
-        else:
-            page = 1
-        searchUserName = json.loads(obJson)['searchUserName']
-        searchState = json.loads(obJson)['searchState']
-
+        page = data.get('page')
+        searchUserName=data.get('searchUserName')
+        searchState=data.get('searchUserName')
+        if not  page: page = 1
         if req.user.role == Contants.ROLE_ADMIN:
             tasks = taskModels.Task.objects.order_by('-time').all()
+            if searchUserName != '' and not searchUserName:
+                tasks = tasks.filter(owner__username="{}".format(searchUserName))
+            if searchState == 'normal':
+                tasks = tasks.filter(delete=0)
+            elif searchState == 'delRow':
+                tasks = tasks.filter(delete=1)
+            else:
+                pass
         else:
-            tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
-
-        if searchUserName:
-            tasks = tasks.filter(owner__username=searchUserName)
-
-        if searchState == "delRow":
-            tasks = tasks.filter(delete=1)
-        elif searchState == "normal":
-            tasks = tasks.filter(delete=0)
-
-        #
-        # if req.user.role == Contants.ROLE_ADMIN:
-        #     tasks = taskModels.Task.objects.order_by('-time').all()
-        # else:
-        #     tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+            # tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+            # if searchUserName != '' and not searchUserName:
+            #     tasks = tasks.filter(owner__username="{}".format(searchUserName))
+            # if searchState == 'normal':
+            #     tasks = tasks.filter(delete=0)
+            # elif searchState == 'delRow':
+            #     tasks = tasks.filter(delete=1)
+            # else:
+            #     pass
+            return HttpResponse(status=403,content='不是管理员权限,访问受限')
 
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
 
         try:
-            if not tasks:
-                return HttpResponse(status=404)
             consumptionObjs = paginator.page(page)
         except PageNotAnInteger:
             # If page is not an integer, deliver first page.
@@ -806,29 +806,39 @@ def statePageChange(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
-
 def stateFilter(req):
     try:
         obJson = req.body
-        page = json.loads(obJson)['page']
-        filter = json.loads(obJson)['filter']
-        searchUserName = json.loads(obJson)['searchUserName']
-        searchState = json.loads(obJson)['searchState']
-        cmd = '''tasks = taskModels.Task.objects'''
+        data = json.loads(obJson)
+        page = data.get('page')
+        filter = data.get('filter')
+        searchUserName = data.get('searchUserName')
+        searchState = data.get('searchState')
 
         if filter == None or len(filter) == 0 or filter == '':
             if req.user.role == Contants.ROLE_ADMIN:
                 tasks = taskModels.Task.objects.order_by('-time').all()
+
+                if searchUserName !=''  and not searchUserName:
+                    tasks=tasks.filter(owner__username="{}".format(searchUserName))
+                if searchState  == 'normal':
+                    tasks = tasks.filter(delete=0)
+                elif searchState == 'delRow':
+                    tasks = tasks.filter(delete=1)
+                else:
+                    pass
+
             else:
-                tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
-
-            if searchUserName:
-                tasks = tasks.filter(owner__username=searchUserName)
-
-            if searchState == "delRow":
-                tasks = tasks.filter(delete=1)
-            elif searchState == "normal":
-                tasks = tasks.filter(delete=0)
+                # tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+                # if searchUserName !=''  and not searchUserName:
+                #     tasks=tasks.filter(owner__username="{}".format(searchUserName))
+                # if searchState  == 'normal':
+                #     tasks = tasks.filter(delete=0)
+                # elif searchState == 'delRow':
+                #     tasks = tasks.filter(delete=1)
+                # else:
+                #     pass
+                return HttpResponse(status=403,content='不是管理员权限,访问受限')
         else:
 
             if not filter.has_key('kernel') and not filter.has_key('os') and not filter.has_key('cpu'):
@@ -836,27 +846,11 @@ def stateFilter(req):
                     tasks = taskModels.Task.objects.order_by('-time').all()
                 else:
                     tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
-
-                if searchUserName:
-                    tasks = tasks.filter(owner__username=searchUserName)
-
-                if searchState == "delRow":
-                    tasks = tasks.filter(delete=1)
-                elif searchState == "normal":
-                    tasks = tasks.filter(delete=0)
             else:
                 if req.user.role == Contants.ROLE_ADMIN:
                     tasks = taskModels.Task.objects.order_by('-time').all()
                 else:
                     tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
-
-                if searchUserName:
-                    tasks = tasks.filter(owner__username=searchUserName)
-
-                if searchState == "delRow":
-                    tasks = tasks.filter(delete=1)
-                elif searchState == "normal":
-                    tasks = tasks.filter(delete=0)
 
                 if filter.has_key('cpu') and filter['cpu'] != '' and len(filter['cpu']) != 0:
                     cpus = filter['cpu']
@@ -870,8 +864,7 @@ def stateFilter(req):
                     kernels = filter['kernel']
                     configs = taskModels.Config.objects.filter(kernel__in=kernels)
                     tasks = tasks.filter(config_id__in=getConfigId(configs))
-        if not tasks:
-            return HttpResponse(status=404)
+
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
         try:
@@ -903,27 +896,27 @@ def stateFilter(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
-
 def rowdelete(req):
-    if not req.POST:
+    if not  req.POST:
         return HttpResponse(status=403)
-    data = req.POST
+    data=req.POST
     searchState = data.get('searchState')
     searchState = json.loads(searchState)
 
-    # print searchState
+    #print searchState
     if req.user.role == Contants.ROLE_ADMIN:
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
         tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
 
     for i in range(len(searchState)):
+
         tasks.filter(config_id=searchState[i]['id']).update(delete=1)
 
-    tasks = tasks.filter(delete=0)
+
+    tasks=tasks.filter(delete=0)
     try:
-        if not tasks:
-            print tasks
+        if not  tasks:
             return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
@@ -951,27 +944,26 @@ def rowdelete(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
-
 def rowRestore(req):
-    if not req.POST:
+    if not  req.POST:
         return HttpResponse(status=403)
-    data = req.POST
+    data=req.POST
     searchState = data.get('searchState')
     searchState = json.loads(searchState)
 
-    # print searchState
+    #print searchState
     if req.user.role == Contants.ROLE_ADMIN:
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
         tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
 
     for i in range(len(searchState)):
+
         tasks.filter(config_id=searchState[i]['id']).update(delete=0)
 
     tasks = tasks.filter(delete=1)
     try:
-        if not tasks:
-            print tasks
+        if not  tasks:
             return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
@@ -982,6 +974,7 @@ def rowRestore(req):
         consumptions = serialize(consumptionObjs)
         dict = json.loads(consumptions)
         for task in dict:
+
             cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
             task['config']['cpu'] = json.loads(serialize(cpus))
             sys = taskModels.System.objects.get(id=task['config']['sys'])
@@ -999,26 +992,28 @@ def rowRestore(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
-
 def permanentDelete(req):
-    if not req.POST:
+    if not  req.POST:
         return HttpResponse(status=403)
-    data = req.POST
+    data=req.POST
     searchState = data.get('searchState')
     searchState = json.loads(searchState)
 
-    # print searchState
+    #print searchState
     if req.user.role == Contants.ROLE_ADMIN:
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
-        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+        return HttpResponse(status=403)
 
     for i in range(len(searchState)):
+
+        #tasks.filter(config_id=searchState[i]['id']).update(delete=1)
         tasks.filter(config_id=searchState[i]['id']).delete()
 
-    tasks = tasks.filter(delete=0)
+
+    tasks=tasks.filter(delete=0)
     try:
-        if not tasks:
+        if not  tasks:
             return HttpResponse(status=404)
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
@@ -1029,6 +1024,7 @@ def permanentDelete(req):
         consumptions = serialize(consumptionObjs)
         dict = json.loads(consumptions)
         for task in dict:
+
             cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
             task['config']['cpu'] = json.loads(serialize(cpus))
             sys = taskModels.System.objects.get(id=task['config']['sys'])
@@ -1049,7 +1045,7 @@ def permanentDelete(req):
 
 def downloadFile(req):
     import CaliperServer.settings as settings
-    import os, tempfile, zipfile
+    import os,tempfile,zipfile
     from wsgiref.util import FileWrapper
     downloadPath = settings.downloadPath
     if req.method == 'GET':
@@ -1058,37 +1054,36 @@ def downloadFile(req):
         else:
             tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
 
-        if downloadPath[-1] != '/': downloadPath = downloadPath + '/'
+        if downloadPath[-1] != '/':downloadPath=downloadPath+'/'
 
         temp = tempfile.TemporaryFile()
         archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
-        flag = False
+        flag=False
         for task in tasks:
-            path = downloadPath + task.path
+            path=downloadPath+task.path
             if os.path.exists(path):
-                flag = True
-                filename = os.path.basename(path)
-                archive.write(path, filename)
+                flag=True
+                filename=os.path.basename(path)
+                archive.write(path,filename)
         archive.close()
 
         if not flag:
-            return HttpResponse(status=404, content='not found')
+            return HttpResponse(status=404,content='not found')
         wrapper = FileWrapper(temp)
 
-        size = temp.tell()
+        size=temp.tell()
         temp.seek(0)
         response = HttpResponse(wrapper, content_type='application/octet-stream')
         response['Content-Disposition'] = 'attachment;filename="{0}"'.format('{}.zip'.format(req.user))
         response['Content-Length'] = size
         return response
-        # return HttpResponse(status=200)
+        #return HttpResponse(status=200)
     else:
         return HttpResponse(status=403)
 
-
 def parseTableCols(model):
     # taskModels.Cpu._meta.fields[0].attname
-    cols = []
+    cols=[]
     for field in model._meta.fields:
         if field.name != 'id' and field.name != 'config':
             print field.name
@@ -1100,10 +1095,9 @@ def parseTableCols(model):
             cols.append(col)
     return cols
 
-
 def parseTableCols_partitions():
     # taskModels.Cpu._meta.fields[0].attname
-    cols = []
+    cols=[]
     first_col = {
         'title': 'Partition DeviceName',
         'key': 'devicename',
@@ -1297,3 +1291,149 @@ def gci(path):
             }
             datas.append(data)
     return datas
+
+def userList(req):
+    if not  req.POST:
+        return HttpResponse(status=403)
+    data=req.POST
+
+    selection = data.get('searchState')
+    if selection is None:
+        return HttpResponse(status=403)
+    selection = json.loads(selection)
+    page = data.get('page')
+    if page is None:
+        page = 1
+    else:
+        page = json.loads(page)
+    sl=selection[0]['shareusers']
+
+   # print  share_data
+    pageSize = Contants.PAGE_SIZE
+
+    paginator = Paginator(sl, pageSize)
+    try:
+        consumptionObjs = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        consumptionObjs = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        consumptionObjs = paginator.page(paginator.num_pages)
+
+    # consumptions= Serializer().serialize(consumptionObjs,relations=('cpu',))
+    share_data=[]
+    for i in range(len(consumptionObjs)):
+        temp={}
+        temp['userName']=sl[i]['username']
+        temp['userID']=sl[i]['id']
+        share_data.append(temp)
+
+    data={
+        'usercounts':len(selection[0]['shareusers']),
+        'machinaryCode':selection[0]['id'],
+        'data1':share_data,
+        'page': page,
+        'pageSize': pageSize,
+        'total': paginator.count,
+    }
+
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+    #return HttpResponse(status=200,content='{}')
+def addUserSubmit(req):
+    if req.method == 'POST':
+        data=req.POST
+        tenandID = data.get('tenandID')
+        searchState = data.get('searchState')
+        if tenandID == None or searchState == None:
+            return HttpResponse(status=403)
+        selection = json.loads(searchState)
+        tenandID=[x.strip() for x in json.loads(tenandID).split(',')]
+        failAdd = []
+        users =[]
+
+        for i in range(len(tenandID)):
+            print tenandID[i]
+            try:
+                user = taskModels.UserProfile.objects.get(id=tenandID[i])
+                users.append(user)
+            except:
+                logger.error("user is not found")
+                failAdd.append(tenandID[i])
+
+        for task in selection:
+            try:
+                taskModel = taskModels.Task.objects.get(id=task['id'])
+                for user in users:
+                    taskModel.shareusers.add(user)
+                    taskModel.save()
+            except:
+                logger.error('task is not found')
+        #return HttpResponse(status=200)
+        #print failAdd
+        return Response.CustomJsonResponse(Response.CODE_SUCCESS,'ok',{"fail":failAdd})
+
+    else:
+        return HttpResponse(status=403)
+def addUser(req):
+    if req.method != 'POST' :
+        return HttpResponse(status=403)
+    data=req.POST
+    searchState = data.get('searchState')
+    if searchState is None:
+        return HttpResponse(status=403)
+    selection = json.loads(searchState)
+
+    data={
+        'usercounts':len(selection[0]['shareusers']),
+        'machinaryCode':selection[0]['id'],
+    }
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok', data)
+    #return HttpResponse(status=200)
+def listPage(req):
+    try:
+        obJson = req.body
+        # params = json.loads(obJson)
+        if obJson != '' and json.loads(obJson).has_key('page1'):
+            page1 = json.loads(obJson)['page1']
+        else:
+            page1 = 1
+
+        if req.user.role == Contants.ROLE_ADMIN:
+            tasks = taskModels.Task.objects.order_by('-time').all()
+        else:
+            tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+
+        pageSize = Contants.PAGE_SIZE
+        paginator = Paginator(tasks, pageSize)
+
+        try:
+            consumptionObjs = paginator.page(page1)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            consumptionObjs = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            consumptionObjs = paginator.page(paginator.num_pages)
+
+        # consumptions= Serializer().serialize(consumptionObjs,relations=('cpu',))
+        consumptions = serialize(consumptionObjs)
+        dict = json.loads(consumptions)
+        for task in dict:
+            cpus = taskModels.Cpu.objects.filter(config_id=task['config']['id'])
+            task['config']['cpu'] = json.loads(serialize(cpus))
+            sys = taskModels.System.objects.get(id=task['config']['sys'])
+            task['config']['sys'] = model_to_dict(sys)
+
+        data = {
+            'tasks': json.dumps(dict),
+            'page': page,
+            'pageSize': pageSize,
+            'total': paginator.count,
+        }
+    except Exception as e:
+        logger.error(str(e))
+        return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
+def listFilter(req):
+    return HttpResponse(status=200)

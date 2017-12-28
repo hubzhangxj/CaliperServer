@@ -29,7 +29,62 @@
                         @on-cancel="cancel">
                     <p>你确定要删除此条记录吗？</p>
                 </Modal>
+
+
+
+
+
                 <i-button type="primary" @click="share">Share</i-button>
+                <Modal
+                        v-model="modal2"
+                        title="成员列表"
+                        @on-ok="userListSubmit"
+                        @on-cancel="cancel">
+                    <div style="display: flex;flex-direction: row;">
+                        <div style="font-size: 20px">机器编号:</div>
+                        <div style="color: #e20400;font-size: 22px">${machinaryCode}</div>
+                    </div>
+                    <div style="display: flex;flex-direction: row; margin-top: 10px">
+                        <div >
+                            <i-button type="success" size="small"  @click="adduser" style="margin-right: 5px">添加成员</i-button>
+                        </div>
+                        <div>
+                            <i-button type="success" size="small" @click="allDelete" style="margin-right: 20px">全部删除</i-button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px">
+                        <i-table border :columns="columns1" :data="data1"></i-table>
+                    </div>
+                    <div style="margin-top: 10px;margin-left: 60%">
+                        <Page :total="total1" :page-size="pageSize1" :current="page1" :show-total="true"
+                              @on-change="pageChange1"
+                              :page-size-opts="[1,10, 20, 30, 40]"></Page>
+                    </div>
+                </Modal>
+
+
+
+
+                <Modal
+                        v-model="modal3"
+                        title="添加成员"
+                        @on-ok="addUserSubmit"
+                        @on-cancel="cancel">
+                    <div style="display: flex;flex-direction: row;">
+                        <div style="font-size: 15px">你将为编号为 </div>
+                        <div style="color: #e20400;font-size: 20px">${machinaryCode}</div>
+                        <div style="font-size: 15px"> 的机器添加新的成员,当前已有成员 </div>
+                        <div style="color: #e20400;font-size: 20px">${usercounts}</div>
+                        <div style="font-size: 15px"> 人</div>
+                    </div>
+                    <div style="margin-top: 10px">
+                        请输入用户ID，多个ID请用","分隔
+                    </div>
+                    <div style="margin-top: 10px">
+                        <i-input v-model="tenandID" type="textarea" :rows="4" placeholder="例如:10010,10011,10012"></i-input>
+                    </div>
+
+                </Modal>
             </div>
 
             <Page :total="total" :page-size="pageSize" :current="page" :show-total="true"
@@ -67,6 +122,11 @@
         el: '#app',
         data: {
             modal1: false,
+            modal2: false,
+            modal3: false,
+            machinaryCode:'',
+            usercounts:'',
+            tenandID:'',
             columns: [
                 {
                     type: 'selection',
@@ -162,6 +222,52 @@
             total:{{ total|safe }},
             filter: {},
             selection: [], {#  选中的table 列 #}
+            columns1: [
+                {
+                    title: '用户名',
+                    key: 'userName',
+                    render: (h, params) => {
+                        return h('div', [
+                            h('Icon', {
+                                props: {
+                                    type: 'person'
+                                }
+                            }),
+                            h('strong', params.row.name)
+                        ]);
+                    }
+                },
+                {
+                    title: '用户ID',
+                    key: 'userID'
+                },
+                {
+                    title: '移除',
+                    key: 'remove',
+                    width: 150,
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', [
+                            h('Button', {
+                                props: {
+                                    type: 'error',
+                                    size: 'small'
+                                },
+                                on: {
+                                    click: () => {
+                                        this.remove(params.index)
+                                    }
+                                }
+                            }, 'Delete')
+                        ]);
+                    }
+                }
+            ],
+            data1: [],
+            page1: 1,
+            pageSize1: 1,
+            total1:1,
+
         },
         methods: {
             view: function () {
@@ -200,6 +306,7 @@
                 var params = new URLSearchParams();
                 console.log(vm.selection)
                 params.append('searchState', JSON.stringify(vm.selection));
+                vm.selection=[]
                 axios.post('boardInfo/rowdelete/', params).then(function (response) {
                     if (response.data.code == 0) {
                         {# vm.$Message.success("成功");#}
@@ -218,7 +325,15 @@
                     });
             },
             share: function () {
-                console.log(vm.selection);
+                if (vm.selection.length < 1){
+                    vm.$Message.warning('请选中指定操作的一行或多行记录');
+                }else if (vm.selection.length == 1){
+                    //this.$Modal.confirm({})
+                    vm.userlist()
+                }else{
+                    vm.adduser()
+                }
+
             },
             pageChange: function (page) {
                 if (vm.filter.length == 0) {
@@ -298,11 +413,11 @@
                 }
 
                 vm.selection.forEach(function (item,index,array) {
-                     for(r in removeObjs){
+                    for(r in removeObjs){
                         rItem = removeObjs[r];
-                         if(rItem.id === item.id){
-                             array.splice(index,1)
-                         }
+                        if(rItem.id === item.id){
+                            array.splice(index,1)
+                        }
                     }
                 });
 
@@ -323,10 +438,92 @@
                 }
                 vm.data = datas;
             },
+            userlist: function () {
+
+                var params = new URLSearchParams();
+                params.append('searchState', JSON.stringify(vm.selection));
+                axios.post('list/userlist/', params).then(function (response) {
+                    if (response.status == 200) {
+                        var  resData=response.data.data
+                        vm.data1=resData.data1;
+                        vm.machinaryCode=resData.machinaryCode
+                        vm.usercounts=resData.usercounts
+                        vm.total1=resData.total;
+                        vm.page1=resData.page;
+                        vm.pageSize=resData.pageSize;
+
+                       // console.log(resData)
+                    } else {
+                        vm.$Message.warning(response.data.msg);
+                    }
+                }).catch(function (error) {
+                    vm.data1=[];
+                    vm.machinaryCode='';
+                    vm.usercounts='';
+                    vm.total1=0;
+                    vm.page1=1;
+                });
+
+                vm.modal2=true
+            },
+            adduser: function () {
+                //this.$Message.info('Clicked ok');
+                var params = new URLSearchParams();
+                params.append('searchState', JSON.stringify(vm.selection));
+                axios.post('list/adduser', params ).then(function (response) {
+                    if (response.status == 200) {
+                        vm.machinaryCode=response.data.data.machinaryCode
+                        vm.usercounts=response.data.data.usercounts
+
+                    } else {
+                        vm.$Message.warning(response.data.msg);
+                    }
+                }).catch(function (error) {
+
+                });
+
+
+                vm.modal3=true
+            },
+
+
+            userListSubmit: function () {
+                this.$Message.info('Clicked ok');
+
+            },
+            addUserSubmit: function () {
+                var params = new URLSearchParams();
+                params.append('tenandID', JSON.stringify(vm.tenandID));
+                params.append('searchState', JSON.stringify(vm.selection));
+                vm.tenandID=''
+                axios.post('list/addusersubmit', params).then(function (response) {
+                    if (response.status == 200) {
+                        var  resData=response.data.data.fail
+                        console.log(resData.length)
+                        if (resData.length != 0){
+                            vm.$Message.error('用户ID:'+resData.toString()+' not found');
+
+                        }
+
+                    } else {
+                        vm.$Message.warning(response.data.msg);
+                    }
+                }).catch(function (error) {
+
+                });
+                vm.modal2=false
+
+            },
             okDelete: function () {
                 vm.del();
                 //this.$Message.info('Clicked ok');
             },
+
+            allDelete: function () {
+
+                this.$Message.info('allDelete');
+            },
+
             cancel : function() {
                 this.$Message.info('您选择了取消操作');
             },
@@ -334,7 +531,42 @@
             download : function () {
                 window.open('download');
 
-            }
+            },
+            remove(index) {
+                this.data1.splice(index, 1);
+            },
+
+            pageChange1: function (page1) {
+                if (vm.filter.length == 0) {
+                    axios.post('list/page/', {"page1": page1})
+                        .then(function (response) {
+                            if (response.data.code == 0) {
+                                var  resData=response.data.data
+                                console.log(resData)
+
+                            } else {
+                                vm.$Message.warning(response.data.msg);
+                            }
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                } else {
+                    axios.post('list/filter', {"page1": page1, "filter1": vm.filter1})
+                        .then(function (response) {
+                            if (response.data.code == 0) {
+                                var  resData=response.data.data
+                                console.log(resData)
+                            } else {
+                                vm.$Message.warning(response.data.msg);
+                            }
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                }
+
+            },
 
 
         }

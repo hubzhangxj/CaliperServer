@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>board information</title>
     {% include "script.html" %}
     <link href="/static/links/intro.css" rel="stylesheet">
 
@@ -40,7 +40,7 @@
     </div>
 
     <div style="margin-top: 10px">
-        <i-table border :columns="columns" :data="data"  @on-selection-change="selectChange"  @on-select-all="selectAll" @on-select="select" @on-select-cancel="selectCancle"></i-table>
+        <i-table border :columns="columns" :data="data"  @on-select-all="selectAll" @on-select="select" @on-select-cancel="selectCancle"></i-table>
         <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
             <div style="display: flex;flex-direction: row;align-items: center">
                 <i-button type="primary" @click="modal2 = true" style="margin-left: 5%">Restore</i-button>
@@ -68,8 +68,8 @@
     </div>
 
 </div>
-<script>
 
+<script>
     var vm = new Vue({
         el: '#app',
         data: {
@@ -78,7 +78,6 @@
             },
             modal1: false,
             modal2: false,
-            selection: [],
             selectList: [
                 {
                     value: 'allRow',
@@ -158,7 +157,7 @@
                     }
                 },
                 {
-                    title: 'Status',
+                    title: 'Test Profile',
                     key: 'pName',
                     align: 'center',
                     render: (h, params) => {
@@ -186,6 +185,9 @@
             page: {{ page|safe }},
             pageSize: {{ pageSize|safe }},
             total:{{ total|safe }},
+            filter: {},
+            selection: [], {#  选中的table 列 #}
+            searchState:'',
         },
         methods: {
             restore: function () {
@@ -206,45 +208,52 @@
                     }
                 })
                     .catch(function (error) {
-                        console.log(error);
+                        vm.data=[];
+                        vm.total=0;
+                        vm.page=1;
                     });
             },
 
             del: function () {
 
-
                 var params = new URLSearchParams();
                 console.log(vm.selection)
                 params.append('searchState', JSON.stringify(vm.selection));
-                axios.post('boardInfo/rowdelete/', params).then(function (response) {
+                vm.selection=[]
+                axios.post('boardInfo/permanentDelete/', params).then(function (response) {
                     if (response.data.code == 0) {
                         {# vm.$Message.success("成功");#}
                         {#                                vm.data = JSON.parse(response.data.data.tasks);#}
                         vm.reChecked(JSON.parse(response.data.data.tasks));
                         vm.page = response.data.data.page;
                         vm.total = response.data.data.total;
+                        vm.selection=[]
                     } else {
                         vm.data=[];
                         vm.total=0;
                         vm.page=1;
+                        vm.selection=[]
                     }
                 })
                     .catch(function (error) {
-                        console.log(error);
+                        vm.data=[];
+                        vm.total=0;
+                        vm.page=1;
                     });
 
 
             },
-
             searchUser: function (searchState) {
                 searchState=searchState||''
-                //  console.log(this.formValidate.searchName)
+                vm.searchState=searchState
+                //console.log(vm.searchState)
                 var params = new URLSearchParams();
                 params.append('searchUserName', this.formValidate.searchName);
                 // console.log(vm.searchState)
                 params.append('searchState', searchState);
                 axios.post('boardInfo/searchUser', params)
                     .then(function (response) {
+
                         if (response.data.code == 0) {
                             {# vm.$Message.success("成功");#}
                             {#                                vm.data = JSON.parse(response.data.data.tasks);#}
@@ -252,6 +261,7 @@
                             vm.page = response.data.data.page;
                             vm.total = response.data.data.total;
                         } else {
+
                             vm.data=[];
                             vm.total=0;
                             vm.page=1;
@@ -259,12 +269,71 @@
                         }
                     })
                     .catch(function (error) {
-                        console.log(error);
+                        vm.data=[];
+                        vm.total=0;
+                        vm.page=1;
                     });
 
 
             },
+            pageChange: function (page) {
+                if (vm.filter.length == 0) {
+                    axios.post('boardInfo/page', {"page": page,'searchUserName':this.formValidate.searchName,'searchState':vm.searchState})
+                        .then(function (response) {
+                            if (response.data.code == 0) {
+                                {# vm.$Message.success("成功");#}
+                                {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                                vm.reChecked(JSON.parse(response.data.data.tasks));
+                                vm.page = response.data.data.page;
+                                vm.total = response.data.data.total;
+                            } else {
+                                vm.$Message.warning(response.data.msg);
+                            }
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                } else {
+                    axios.post('boardInfo/filter', {"page": page, "filter": vm.filter,'searchUserName':this.formValidate.searchName,'searchState':vm.searchState})
+                        .then(function (response) {
+                            if (response.data.code == 0) {
+                                {# vm.$Message.success("成功");#}
+                                {#                                vm.data = JSON.parse(response.data.data.tasks);#}
+                                vm.reChecked(JSON.parse(response.data.data.tasks));
+                                vm.page = response.data.data.page;
+                                vm.total = response.data.data.total;
+                            } else {
+                                vm.$Message.warning(response.data.msg);
+                            }
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                }
 
+            },
+            filterTask: function () {
+                axios.post('filter', {"page": 1, "filter": vm.filter})
+                    .then(function (response) {
+                        if (response.data.code == 0) {
+                            {# vm.$Message.success("成功");#}
+                            {#                            vm.data = JSON.parse(response.data.data.tasks);#}
+                            vm.reChecked(JSON.parse(response.data.data.tasks));
+                            vm.page = response.data.data.page;
+                            vm.total = response.data.data.total;
+                        } else {
+                            vm.$Message.warning(response.data.msg);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
+            select: function (selection, row) {
+                vm.selection.push(row);
+
+                console.log(vm.selection);
+            },
             selectCancle: function (selection, row) {
                 var removeId = -1;
                 for (i in vm.selection) {
@@ -278,74 +347,24 @@
                 }
                 console.log(vm.selection);
             },
-
-            select: function (selection, row) {
-                //vm.selection=[];
-                vm.selection.push(row)
-                console.log(vm.selection);
-
-            },
-            selectAll:function (selection) {
-                vm.selection=[];
+            selectAll: function (selection,removeObjs) {
                 for (i in selection) {
                     item = selection[i];
                     vm.selection.push(item);
                 }
 
+                vm.selection.forEach(function (item,index,array) {
+                    for(r in removeObjs){
+                        rItem = removeObjs[r];
+                        if(rItem.id === item.id){
+                            array.splice(index,1)
+                        }
+                    }
+                });
+
                 console.log(vm.selection);
             },
-            selectChange:function (selection) {
-                vm.selection=[];
-                for (i in selection) {
-                    item = selection[i];
-                    vm.selection.push(item);
-                }
-                console.log(vm.selection);
 
-
-
-            },
-
-            pageChange: function (page) {
-                if (vm.filter.length == 0) {
-                    axios.post('boardInfo/page', {"page": page})
-                        .then(function (response) {
-                            if (response.data.code == 0) {
-                                {# vm.$Message.success("成功");#}
-                                {#                                vm.data = JSON.parse(response.data.data.tasks);#}
-                                vm.reChecked(JSON.parse(response.data.data.tasks));
-                                vm.page = response.data.data.page;
-                                vm.total = response.data.data.total;
-                            } else {
-                                vm.data=[];
-                                vm.total=0;
-                                vm.page=1;
-                            }
-                        })
-                        .catch(function (error) {
-                            console.log(error);
-                        });
-                } else {
-                    axios.post('boardInfo/filter', {"page": page, "filter": vm.filter})
-                        .then(function (response) {
-                            if (response.data.code == 0) {
-                                {# vm.$Message.success("成功");#}
-                                {#                                vm.data = JSON.parse(response.data.data.tasks);#}
-                                vm.reChecked(JSON.parse(response.data.data.tasks));
-                                vm.page = response.data.data.page;
-                                vm.total = response.data.data.total;
-                            } else {
-                                vm.data=[];
-                                vm.total=0;
-                                vm.page=1;
-                            }
-                        })
-                        .catch(function (error) {
-                            console.log(error);
-                        });
-                }
-
-            },
             reChecked: function (datas) {
                 if (vm.selection.length != 0) {
                     for (i in vm.selection) {
@@ -360,7 +379,6 @@
                 }
                 vm.data = datas;
             },
-
             okDelete: function () {
                 vm.del();
                 //this.$Message.info('Clicked ok');
@@ -372,10 +390,13 @@
                 vm.restore();
                 //this.$Message.info('Clicked ok');
             },
+
+
         }
     });
 
 </script>
+
 </body>
 
 </html>
