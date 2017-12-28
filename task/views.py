@@ -727,7 +727,7 @@ def stateSearchUser(req):
     if req.user.role == Contants.ROLE_ADMIN:
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
-        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+        return HttpResponse(status=403, content='不是管理员权限,访问受限')
     if searchUserName:
         tasks = tasks.filter(owner__username=searchUserName)
     if searchState == "delRow":
