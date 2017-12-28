@@ -27,21 +27,21 @@
                 <i-button type="primary" @click="del" style="margin-right: 10px">Delete</i-button>
                 <Modal
                         v-model="modal1"
-                        title="删除确认"
+                        title="Delete confirmation"
                         @on-ok="okDelete"
                         @on-cancel="cancel">
-                    <p>你确定要删除此条记录吗？</p>
+                    <p>Are you sure you want to delete this record?</p>
                 </Modal>
 
 
                 <i-button type="primary" @click="share">Share</i-button>
                 <Modal
                         v-model="modal2"
-                        title="成员列表"
+                        title="Member list"
                         @on-ok="userListSubmit"
                         @on-cancel="cancel">
                     <div style="display: flex;flex-direction: row;">
-                        <div style="font-size: 20px">机器编号:</div>
+                        <div style="font-size: 20px">machinary code:</div>
                         <div style="color: #e20400;font-size: 22px">${machinaryCode}</div>
                     </div>
                     <div style="display: flex;flex-direction: row; margin-top: 10px">
@@ -67,22 +67,15 @@
 
                 <Modal
                         v-model="modal3"
-                        title="添加成员"
+                        title="Add members"
                         @on-ok="addUserSubmit"
                         @on-cancel="cancel">
-                    <div style="display: flex;flex-direction: row;">
-                        <div style="font-size: 15px">你将为编号为</div>
-                        <div style="color: #e20400;font-size: 20px">${machinaryCode}</div>
-                        <div style="font-size: 15px"> 的机器添加新的成员,当前已有成员</div>
-                        <div style="color: #e20400;font-size: 20px">${usercounts}</div>
-                        <div style="font-size: 15px"> 人</div>
-                    </div>
                     <div style="margin-top: 10px">
-                        请输入用户ID，多个ID请用","分隔
+                        Please enter the user name, multiple user names please, separated
                     </div>
                     <div style="margin-top: 10px">
                         <i-input v-model="tenandID" type="textarea" :rows="4"
-                                 placeholder="例如:10010,10011,10012"></i-input>
+                                 placeholder="E.g:zhangsan,lisi,wange"></i-input>
                     </div>
 
                 </Modal>
@@ -225,7 +218,7 @@
             selection: [], {#  选中的table 列 #}
             columns1: [
                 {
-                    title: '用户名',
+                    title: 'user name',
                     key: 'userName',
                     render: (h, params) => {
                         return h('div', [
@@ -239,11 +232,11 @@
                     }
                 },
                 {
-                    title: '用户ID',
+                    title: 'user ID',
                     key: 'userID'
                 },
                 {
-                    title: '移除',
+                    title: 'remove',
                     key: 'remove',
                     width: 150,
                     align: 'center',
@@ -536,7 +529,7 @@
                         var resData = response.data.data.fail
                         console.log(resData.length)
                         if (resData.length != 0) {
-                            vm.$Message.error('用户ID:' + resData.toString() + ' not found');
+                            vm.$Message.error('user name:' + resData.toString() + ' not found');
 
                         }
 

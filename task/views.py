@@ -727,7 +727,7 @@ def stateSearchUser(req):
     if req.user.role == Contants.ROLE_ADMIN:
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
-        return HttpResponse(status=403, content='不是管理员权限,访问受限')
+        return HttpResponse(status=403, content='Not administrator privileges, limited access')
     if searchUserName:
         tasks = tasks.filter(owner__username=searchUserName)
     if searchState == "delRow":
@@ -798,7 +798,7 @@ def statePageChange(req):
             #     tasks = tasks.filter(delete=1)
             # else:
             #     pass
-            return HttpResponse(status=403, content='不是管理员权限,访问受限')
+            return HttpResponse(status=403, content='Not administrator privileges, limited access')
 
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
@@ -866,7 +866,7 @@ def stateFilter(req):
                 #     tasks = tasks.filter(delete=1)
                 # else:
                 #     pass
-                return HttpResponse(status=403, content='不是管理员权限,访问受限')
+                return HttpResponse(status=403, content='Not administrator privileges, limited access')
         else:
 
             if not filter.has_key('kernel') and not filter.has_key('os') and not filter.has_key('cpu'):
@@ -1370,10 +1370,11 @@ def addUserSubmit(req):
         users = []
 
         for i in range(len(tenandID)):
-            print tenandID[i]
+
             try:
-                user = taskModels.UserProfile.objects.get(id=tenandID[i])
+                user = taskModels.UserProfile.objects.get(name=tenandID[i])
                 users.append(user)
+
             except:
                 logger.error("user is not found")
                 failAdd.append(tenandID[i])
@@ -1388,6 +1389,7 @@ def addUserSubmit(req):
                 logger.error('task is not found')
         # return HttpResponse(status=200)
         # print failAdd
+        print users
         return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok', {"fail": failAdd})
 
     else:
