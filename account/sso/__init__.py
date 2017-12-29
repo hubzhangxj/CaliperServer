@@ -8,6 +8,7 @@ def _load_setting(n, default):
 
 
 REMOTE_AUTH_TOKEN_URL = "/uams/authtoken"
+REMOTE_AUTH_USER_URL = "/uams/authuser"
 REMOTE_SSO_LOGIN_URL = "/uams/login"
 REMOTE_SSO_LOGOUT_URL = "/uams/logout"
 REMOTE_SSO_SIGNUP_URL = "/uams/signup"

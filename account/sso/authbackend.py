@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import urllib
-from . import REMOTE_AUTH_TOKEN_URL
+from . import REMOTE_AUTH_TOKEN_URL, REMOTE_AUTH_USER_URL
 from apiclient import client
 from account.models import UserProfile
 
@@ -16,6 +16,18 @@ class SSOAuthBackend(object):
         except Exception as e:
             print e.message
             return e.message, None, None
+
+    @staticmethod
+    def authenticate_user(username, password):
+        try:
+            code, info = client.send_request(
+                REMOTE_AUTH_USER_URL + "?" + urllib.urlencode({"username": username, "password": password}))
+
+            print info
+            return info['result']
+        except Exception as e:
+            print e.message
+            return False
 
     def get_user(self, uid):
         try:

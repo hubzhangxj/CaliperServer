@@ -355,7 +355,9 @@ def cert(req):
     print "==========="
     userName = req.GET.get("userName")
     password = req.GET.get("password")
-    return HttpResponse("success" ,status=200)
+    from account.sso.authbackend import SSOAuthBackend
+    result = SSOAuthBackend.authenticate_user(userName, password)
+    return HttpResponse(result, status=200)
 
 
 if __name__ == '__main__':
