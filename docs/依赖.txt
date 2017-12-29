@@ -1,1 +1,1 @@
-sudo pip install poster
+pip install numpy PyCrypto requests
