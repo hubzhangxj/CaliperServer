@@ -258,16 +258,25 @@ def filter(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
-def calculate(list):
+def calculate(v,list):
+    if list is None or len(list) == 0:
+        return 0
     max  = np.max(list)
-    newList = []
-    for i in list:
-        if max == 0:
-            newList.append(0)
-        else:
-            value = i/float(max)*100
-            value = round(value,3)
-            newList.append(value)
+    if max == 0:
+        return  0
+    else:
+        value = v / float(max) * 100
+        value = round(value, 3)
+        return value
+
+    # newList = []
+    # for i in list:
+    #     if max == 0:
+    #         newList.append(0)
+    #     else:
+    #         value = i/float(max)*100
+    #         value = round(value,3)
+    #         newList.append(value)
     return newList
 
 def calculate_single(value,max):
@@ -292,21 +301,35 @@ def compare(req):
             categories.append(dim.name)
 
         # 蛛网图 数据构造  start
+        value_list={}
+        for categorie in categories:
+            datas = []
+            for index, task in enumerate(selection):
+                try:
+                    dimResult = taskModels.DimResult.objects.get(task_id=task['id'], dim__name=categorie)
+                    datas.append(dimResult.result)
+                except:
+                    logger.error('find dimresult none')
+                    datas.append(0)
+            value_list[categorie] = datas
+
 
         series_data = []
         for index, task in enumerate(selection):
             data = []
             for categorie in categories:
+
                 try:
                     dimResult = taskModels.DimResult.objects.get(task_id=task['id'], dim__name=categorie)
-                    data.append(dimResult.result)
+                    # data.append(dimResult.result)
+                    data.append(calculate(dimResult.result,value_list[categorie]))
                 except:
                     logger.error('find dimresult none')
                     data.append(0)
 
             single = {
                 'name': task['name'],
-                'data': calculate(data),
+                'data': data,
                 'visible': index == 0
                 # 'pointPlacement': 'on'
             }
@@ -323,19 +346,21 @@ def compare(req):
         for task in selection:
             times.append(task['time'])
 
+
+
         for index, categorie in enumerate(categories):
             data = []
             for task in selection:
                 try:
                     dimResult = taskModels.DimResult.objects.get(task_id=task['id'], dim__name=categorie)
-                    data.append(dimResult.result)
+                    data.append(calculate(dimResult.result, value_list[categorie]))
                 except:
                     logger.error('find dimresult none')
                     data.append(0)
 
             single = {
                 'name': categorie,
-                'data': calculate(data),
+                'data': data,
                 'visible': index == 0
                 # 'pointPlacement': 'on'
             }
@@ -441,24 +466,37 @@ def dimcompare(req, param):
 
     from urllib import unquote
     selection = json.loads(unquote(req.COOKIES.get("selection")))  # 选中的task 任务
+
+    value_list = {}
+    for categorie in categories:
+        datas = []
+        for index, task in enumerate(selection):
+            try:
+                dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
+                sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id,
+                                                                  scenario__name=categorie)
+                datas.append(sceResult.result)
+            except:
+                logger.error('find dimresult none')
+                datas.append(0)
+        value_list[categorie] = datas
+
     sce_series = []
-    for task in selection:
-        data = []
-        try:
-            dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
-            for categorie in categories:
-                try:
-                    sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id,
-                                                                      scenario__name=categorie)
-                    data.append(sceResult.result)
-                except:
-                    data.append(0)
-        except:
-            data = []
+    for index, task in enumerate(selection):
+        sce_data = []
+        for categorie in categories:
+            try:
+                dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
+                sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id,
+                                                                  scenario__name=categorie)
+                sce_data.append(calculate(sceResult.result, value_list[categorie]))
+            except:
+                sce_data.append(0)
 
         single = {
             'name': task['name'],
-            'data': calculate(data),
+            'data': sce_data,
+            'visible':index == 0
             # 'pointPlacement': 'on'
         }
         sce_series.append(single)
@@ -535,23 +573,41 @@ def dimcompare(req, param):
         case_categories[sce.name] = case_c
         # case_categories.append(case_c)
 
+    value_list = {}
+    for scename, values in case_categories.items():  # 场景的集合
+        case_list={}
+        for casename in values:  # case名称的集合.
+            datas = []
+            for index, task in enumerate(selection):
+                try:
+                    dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
+                    sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id, scenario__name=scename)
+                    caseResult = taskModels.CaseResult.objects.get(sceResult_id=sceResult.id, case__name=casename)
+                    datas.append(caseResult.result)
+                except:
+                    datas.append(0)
+            case_list[casename] = datas
+        value_list[scename] = case_list
+
+
     case_series = {}
     for scename, values in case_categories.items():  # 场景的集合
         task_case_data = []
-        for task in selection:  # 选择的任务的集合
+        for index, task in enumerate(selection):
             case_data = []
             for casename in values:  # case名称的集合
                 try:
                     dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
                     sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id, scenario__name=scename)
                     caseResult = taskModels.CaseResult.objects.get(sceResult_id=sceResult.id, case__name=casename)
-                    case_data.append(caseResult.result)
+                    case_data.append(calculate(caseResult.result, value_list[scename][casename]))
                 except:
                     case_data.append(0)
 
             case_signle = {
                 'name': task['name'],
-                'data': calculate(case_data),
+                'data': case_data,
+                'visible':index == 0
             }
             task_case_data.append(case_signle)
         case_obj = {
