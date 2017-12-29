@@ -350,14 +350,26 @@ def save_db(userName, result, outputFileName, log_path,config,hostName,remark=''
     return True
 
 
-@csrf_exempt
+def userDeal(userName):
+    try:
+       taskModels.UserProfile.objects.get(username=userName)
+    except:
+        #用户不存在
+        user = taskModels.UserProfile(username=userName,name=userName)
+        user.save()
+
+
+# @csrf_exempt
 def cert(req):
-    print "==========="
     userName = req.GET.get("userName")
     password = req.GET.get("password")
     from account.sso.authbackend import SSOAuthBackend
     result = SSOAuthBackend.authenticate_user(userName, password)
-    return HttpResponse(result, status=200)
+    if result:
+        userDeal(userName)
+        return HttpResponse("success", status=200)
+    else:
+        return HttpResponse("fail", status=200)
 
 
 if __name__ == '__main__':
