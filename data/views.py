@@ -72,11 +72,17 @@ def upload(request):
                 # logDir = os.path.join(sourceDir_log)  # log 解压后的路径
                 configPath = os.path.join(sourceDir_log, CONFIG_FILENAME)
 
+                remarkFile = os.path.join(sourceDir_output,"output","test_message.txt")
+                if os.path.exists(remarkFile):
+                    remark = open(remarkFile, 'r').read()
+                else:
+                    remark = ""
+
                 config,hostName = parseConfig(configPath)
                 if config is None:
                     return HttpResponse(status=400)
                 else:
-                    save_db(username,rDict,outputFileName + ".zip",sourceDir_log,config,hostName)
+                    save_db(username,rDict,outputFileName + ".zip",sourceDir_log,config,hostName,remark)
                     logger.debug("入库操作成功")
 
         else:

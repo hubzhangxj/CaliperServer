@@ -75,6 +75,7 @@
         <div style="height: 100%;    background-color: #FEFEFE; margin-left: 40px; margin-right: 40px;">
             <div style="display: flex;flex-direction: row;height: 100%">
                 <div>
+
                     <i-menu style="height: 100%;" @on-select="select">
                         <Submenu name="1">
                             <template slot="title">
@@ -99,7 +100,7 @@
                     </i-menu>
                 </div>
                 <div id="left" class="left">
-
+                                    <div>{{ remark|safe }}</div>
                     <a name="cpu" style="color:#676a6c ">
                         <h1>
                             <small>CPU Information</small>

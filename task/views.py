@@ -1271,7 +1271,8 @@ def singleTask(req):
         'partition_cols': json.dumps(parseTableCols_partitions()),
         'partitions': json.dumps(partitions),
         'dim_tools': dimResults,
-        'isShowBack': True
+        'isShowBack': True,
+        'remark':task['remark']
     }
     return render(req, "singleTask.html", data)
 
