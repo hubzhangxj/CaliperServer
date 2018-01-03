@@ -258,12 +258,13 @@ def filter(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
-def calculate(v,list):
+
+def calculate(v, list):
     if list is None or len(list) == 0:
         return 0
-    max  = np.max(list)
+    max = np.max(list)
     if max == 0:
-        return  0
+        return 0
     else:
         value = v / float(max) * 100
         value = round(value, 3)
@@ -279,7 +280,8 @@ def calculate(v,list):
     #         newList.append(value)
     return newList
 
-def calculate_single(value,max):
+
+def calculate_single(value, max):
     newValue = 0
     if max == 0:
         newValue = 0
@@ -287,6 +289,7 @@ def calculate_single(value,max):
         newValue = value / float(max) * 100
         newValue = round(newValue, 3)
     return newValue
+
 
 @login_required
 def compare(req):
@@ -301,7 +304,7 @@ def compare(req):
             categories.append(dim.name)
 
         # 蛛网图 数据构造  start
-        value_list={}
+        value_list = {}
         for categorie in categories:
             datas = []
             for index, task in enumerate(selection):
@@ -313,7 +316,6 @@ def compare(req):
                     datas.append(0)
             value_list[categorie] = datas
 
-
         series_data = []
         for index, task in enumerate(selection):
             data = []
@@ -322,7 +324,7 @@ def compare(req):
                 try:
                     dimResult = taskModels.DimResult.objects.get(task_id=task['id'], dim__name=categorie)
                     # data.append(dimResult.result)
-                    data.append(calculate(dimResult.result,value_list[categorie]))
+                    data.append(calculate(dimResult.result, value_list[categorie]))
                 except:
                     logger.error('find dimresult none')
                     data.append(0)
@@ -345,8 +347,6 @@ def compare(req):
 
         for task in selection:
             times.append(task['time'])
-
-
 
         for index, categorie in enumerate(categories):
             data = []
@@ -410,7 +410,7 @@ def compare(req):
             for dim in dims:
                 try:
                     dimResult = taskModels.DimResult.objects.get(task_id=task['id'], dim_id=dim.id)
-                    tableSingle[dim.name] = calculate_single(dimResult.result,np.max(data_total[dim.id]))
+                    tableSingle[dim.name] = calculate_single(dimResult.result, np.max(data_total[dim.id]))
                 except:
                     logger.error('find dimresult none')
                     tableSingle[dim.name] = 0
@@ -444,7 +444,7 @@ def variance(values):
     :return:
     '''
     if type(values) == list and 0 not in values:
-        return round(np.var(values),3)
+        return round(np.var(values), 3)
     else:
         return 0
 
@@ -496,7 +496,7 @@ def dimcompare(req, param):
         single = {
             'name': task['name'],
             'data': sce_data,
-            'visible':index == 0
+            'visible': index == 0
             # 'pointPlacement': 'on'
         }
         sce_series.append(single)
@@ -537,7 +537,6 @@ def dimcompare(req, param):
                 vv.append(0)
         data_total[cache.id] = vv
 
-
     tableData = []  # table column 对应的数据值
 
     for sce in sces:
@@ -549,8 +548,8 @@ def dimcompare(req, param):
             try:
                 dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
                 sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id, scenario_id=sce.id)
-                tableSingle[task['id']] = calculate_single(sceResult.result,np.max(data_total[sce.id]))
-                values.append(calculate_single(sceResult.result,np.max(data_total[sce.id])))
+                tableSingle[task['id']] = calculate_single(sceResult.result, np.max(data_total[sce.id]))
+                values.append(calculate_single(sceResult.result, np.max(data_total[sce.id])))
             except:
                 values.append(0)
                 tableSingle[task['id']] = 0
@@ -575,7 +574,7 @@ def dimcompare(req, param):
 
     value_list = {}
     for scename, values in case_categories.items():  # 场景的集合
-        case_list={}
+        case_list = {}
         for casename in values:  # case名称的集合.
             datas = []
             for index, task in enumerate(selection):
@@ -588,7 +587,6 @@ def dimcompare(req, param):
                     datas.append(0)
             case_list[casename] = datas
         value_list[scename] = case_list
-
 
     case_series = {}
     for scename, values in case_categories.items():  # 场景的集合
@@ -607,7 +605,7 @@ def dimcompare(req, param):
             case_signle = {
                 'name': task['name'],
                 'data': case_data,
-                'visible':index == 0
+                'visible': index == 0
             }
             task_case_data.append(case_signle)
         case_obj = {
@@ -625,7 +623,7 @@ def dimcompare(req, param):
 
     data_total = {}
     for scename, values in case_categories.items():  # 场景的集合
-        caseDatas ={}
+        caseDatas = {}
         for casename in values:  # case名称的集合
             vv = []
             for task in selection:
@@ -636,7 +634,7 @@ def dimcompare(req, param):
                     vv.append(caseResult.result)
                 except:
                     vv.append(0)
-            caseDatas[casename]= vv
+            caseDatas[casename] = vv
         data_total[scename] = caseDatas
 
     sce_table_data = {}
@@ -648,14 +646,14 @@ def dimcompare(req, param):
             tableSingle['name'] = casename
             print casename
             print caseDatas[casename]
-            values =[]
+            values = []
             for task in selection:
                 try:
                     dimResult = taskModels.DimResult.objects.get(dim__name=param, task_id=task['id'])
                     sceResult = taskModels.ScenarioResult.objects.get(dimresult_id=dimResult.id, scenario__name=scename)
                     caseResult = taskModels.CaseResult.objects.get(sceResult_id=sceResult.id, case__name=casename)
-                    tableSingle[task['id']] = calculate_single(caseResult.result,np.max(caseDatas[casename]))
-                    values.append(calculate_single(caseResult.result,np.max(caseDatas[casename])))
+                    tableSingle[task['id']] = calculate_single(caseResult.result, np.max(caseDatas[casename]))
+                    values.append(calculate_single(caseResult.result, np.max(caseDatas[casename])))
                 except:
                     tableSingle[task['id']] = 0
                     values.append(0)
@@ -1282,14 +1280,16 @@ def singleTask(req):
     cursor = connection.cursor()
 
     try:
-        sql = "SELECT a.name as dimName, d.name as toolName, e.content FROM dimension AS a " \
+        sql = "SELECT a.name as dimName, d.name as toolName, e.content FROM dimResult as dim " \
+              "LEFT JOIN  dimension AS a on  dim.dim_id = a.id " \
               "LEFT JOIN scenario AS b ON a.id = b.dim_id " \
               "LEFT JOIN testCase AS c ON b.id = c.scenario_id " \
               "LEFT JOIN testTool AS d ON c.tool_id = d.id " \
-              "LEFT JOIN log AS e ON d.id = e.tool_id " \
+              "LEFT JOIN log AS e ON d.id = e.tool_id and e.task_id = %s " \
+              "where dim.task_id= %s " \
               "GROUP BY a.`name`,d.name";
         print  sql
-        cursor.execute(sql)
+        cursor.execute(sql, [task['id'], task['id']])
         datas = dictfetchall(cursor)
 
     finally:
@@ -1328,7 +1328,7 @@ def singleTask(req):
         'partitions': json.dumps(partitions),
         'dim_tools': dimResults,
         'isShowBack': True,
-        'remark':task['remark']
+        'remark': task['remark']
     }
     return render(req, "singleTask.html", data)
 
@@ -1338,7 +1338,10 @@ def tool_result(request, toolName):
     toolName = str(toolName).lower()
     content = []
     try:
-        log = taskModels.Log.objects.get(tool__name=toolName)
+        from urllib import unquote
+        selection = json.loads(unquote(request.COOKIES.get("selection")))  # 选中的task 任务
+        task = selection[0]
+        log = taskModels.Log.objects.get(tool__name=toolName,task_id=task['id'])
         content = log.content
     except:
         content = []
