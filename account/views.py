@@ -23,6 +23,9 @@ from sso.utility import form_redirect
 
 from account.permission import login_required
 
+USER_ADMIN = 0 #管理员
+USER_CUSTOM = 1 #普通用户
+
 def main(request):
     from CaliperServer.settings import downloadPath
     versions = []
@@ -196,7 +199,10 @@ def auth_callback(request):
     error, user, user_info = SSOAuthBackend.authenticate(auth_token)
     if not error:
         if not user:  # 这种情况表明用户在其他site注册，并且首次登陆本site
-            user = UserProfile(username=user_info['username'], email=user_info['email'], role=1)
+            role = USER_CUSTOM
+            if user_info['admin']:
+                role = USER_ADMIN
+            user = UserProfile(username=user_info['username'], email=user_info['email'], role=role)
             user.save()
         auth.login(request, user)  # create session, write cookies
         logined_users[auth_token] = user  # 存入全局变量中
