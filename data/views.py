@@ -16,7 +16,7 @@ from account import models as accountModels
 from django.db import transaction
 
 PASSWORD = '123'
-CONFIG_FILENAME = "config_output.json"
+CONFIG_FILENAME = "hardwareinfo.json"
 
 
 @csrf_exempt
@@ -305,8 +305,9 @@ def showtree(rootDir):
         '''
         for f in files:
             filepath = os.path.join(root, f)
-            if filepath.endswith("_json.txt"):
-                toolName = os.path.basename(filepath).split("_")[0]
+            fileName = os.path.basename(filepath)
+            if filepath.endswith(".json") and fileName != CONFIG_FILENAME:
+                toolName = fileName.split(".")[0]
                 tools = {"toolName": toolName, "logPath": filepath}
                 result_files.append(tools)
     return result_files
