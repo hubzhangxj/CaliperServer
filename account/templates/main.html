@@ -81,9 +81,7 @@
                 Video</a>
             <a href="{% static 'links/benchmark.html' %}"
                target="_blank">Benchmark</a>
-            <a href="https://github.com/open-estuary/caliper" target="_blank">View
-                Source
-                Code</a>
+            <a href="https://github.com/open-estuary/caliper" target="_blank">Source Code</a>
             <Dropdown trigger="click" style="margin-right: 20px" @on-click="download">
                 <a style="color: #fff;" href="javascript:void(0)">
                     Download Caliper
@@ -110,16 +108,16 @@
                 </div>
             </div>
             <div style="width:300px;display: flex;flex-direction: column;">
-                <i-button type="success" @click="login" size="large" long>Go</i-button>
+                                <i-button type="success" @click="login" size="large" long>Go</i-button>
+                {#                <a href="user/login">GO</a>#}
+{#                <a href="user/login" onclick="javascript:location.replace(this.href);#}
+{#event.returnValue=false; ">GO </a>#}
                 <a style="color: white;align-self: flex-end;font-size: 14px" href="/user/register">Register</a>
             </div>
         </div>
     </div>
 </div>
-{#
-</div>
 
-</div>
 <script>
     vm = new Vue({
         el: "#app",
@@ -149,26 +147,47 @@
                 {#                        vm.$Message.error(error);#}
                 {#                    });#}
             },
-            login:function () {
-{#                  data = {"version": name};#}
-                window.location.href =  'user/login';
-{#                                axios.post('user/login', "")#}
-{#                                    .then(function (response) {#}
-{#                                        const url = window.URL.createObjectURL(new Blob([response.data]));#}
-{#                                        const link = document.createElement('a');#}
-{#                                        link.href = url;#}
-{#                                        link.setAttribute('download', 'file.pdf');#}
-{#                                        document.body.appendChild(link);#}
-{#                                        link.click();#}
-{#                                         vm.$Message.success(response);#}
-{#                                    })#}
-{#                                    .catch(function (error) {#}
-{#                                        console.log(error);#}
-{#                                        vm.$Message.error(error);#}
-{#                                    });#}
+            login: function () {
+                {#                  data = {"version": name};#}
+                window.location.href = 'user/login';
+
+                {#                                axios.post('user/login', "")#}
+                {#                                    .then(function (response) {#}
+                {#                                        const url = window.URL.createObjectURL(new Blob([response.data]));#}
+                {#                                        const link = document.createElement('a');#}
+                {#                                        link.href = url;#}
+                {#                                        link.setAttribute('download', 'file.pdf');#}
+                {#                                        document.body.appendChild(link);#}
+                {#                                        link.click();#}
+                {#                                         vm.$Message.success(response);#}
+                {#                                    })#}
+                {#                                    .catch(function (error) {#}
+                {#                                        console.log(error);#}
+                {#                                        vm.$Message.error(error);#}
+                {#                                    });#}
+
+
             }
+        },
+        mounted: function () {
+            console.log(myBrowser());
         }
     });
+
+    function myBrowser() {
+        var userAgent = navigator.userAgent; //取得浏览器的userAgent字符串
+        var isOpera = userAgent.indexOf("Opera") > -1;
+        if (isOpera) {
+            return "Opera"
+        }
+        ; //判断是否Opera浏览器
+        if (userAgent.indexOf("Firefox") > -1) {
+            return "Firefox";
+        } //判断是否Firefox浏览器
+        if (userAgent.indexOf("Chrome") > -1) {
+            return "Chrome";
+        }
+    }
 
 </script>
 
