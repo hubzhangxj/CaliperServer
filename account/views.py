@@ -167,10 +167,13 @@ def upload(req):
         else:
             try:
                 user = UserProfile.objects.get(username=req.user.username)
-                oldPath = user.avatar.path
+                if user.avatar.name == '':
+                    oldPath = ''
+                else:
+                    oldPath = user.avatar.path
                 user.avatar = file
                 user.save()
-                if user.avatar.path != oldPath:
+                if user.avatar.path != oldPath and oldPath != '':
                     os.remove(oldPath)
             except Exception as e:
                 logger.debug("avatar exception %s", str(e))
