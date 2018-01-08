@@ -31,4 +31,4 @@ urlpatterns = [
     url(r'^logoutnotify$', aViews.logout_notify, name="logoutnotify"),
     url(r'^signupcallback$', aViews.signup_callback, name="signupcallback"),
     url(r'^changepwdcallback$', aViews.changepwd_callback, name="changepwdcallback"),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
