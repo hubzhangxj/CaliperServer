@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import url
 from account import views as aViews
+from django.conf.urls.static import static
+from CaliperServer import  settings
 
 urlpatterns = [
     url('^download$',aViews.download),
@@ -29,4 +31,4 @@ urlpatterns = [
     url(r'^logoutnotify$', aViews.logout_notify, name="logoutnotify"),
     url(r'^signupcallback$', aViews.signup_callback, name="signupcallback"),
     url(r'^changepwdcallback$', aViews.changepwd_callback, name="changepwdcallback"),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

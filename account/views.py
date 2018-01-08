@@ -148,15 +148,44 @@ def setuserinfo(req):
 
 @csrf_exempt
 def upload(req):
-    try:
-        file = req.FILES['file']
-        # filename=str(file)
-        item = UserProfile.objects.get(username=req.user.username)
-    except:
-        return HttpResponse(status=500, content='database connect failed')
-    item.avatar = file
-    item.save()
-    return HttpResponse(status=200)
+    # try:
+    #     file = req.FILES['file']
+    #     # filename=str(file)
+    #     item = UserProfile.objects.get(username=req.user.username)
+    # except:
+    #     return HttpResponse(status=500, content='database connect failed')
+    # item.avatar = file
+    # item.save()
+    # return HttpResponse(status=200)
+
+    if req.method == 'POST':
+        file = req.FILES.get('file', None)
+        logger.debug("file count %s", file.name)
+        if not file:
+            logger.debug("file is not exist")
+            return HttpResponse(status=500)
+        else:
+            try:
+                user = UserProfile.objects.get(username=req.user.username)
+                oldPath = user.avatar.path
+                user.avatar = file
+                user.save()
+                if user.avatar.path != oldPath:
+                    os.remove(oldPath)
+            except Exception as e:
+                logger.debug("avatar exception %s", str(e))
+                return HttpResponse(status=500)
+
+                # form = UploadFileForm(request.POST, request.FILES)
+                # if form.is_valid():
+                #     handle_uploaded_file(request.FILES['file'])
+                #     return HttpResponseRedirect('/success/url/')
+                # else:
+                # form = UploadFileForm()
+    data = {
+        'avatar': user.avatar.name
+    }
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok', data)
 
 
 ################sso

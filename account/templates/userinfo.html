@@ -288,7 +288,7 @@
             mail: "{{ request.user.email }}",
             phone: "{{ request.user.telphone }}",
             last_login: "{{ request.user.last_login| date:"Y-m-d H:i:s" }}",
-            avatar: "/static/{{ request.user.avatar }}",
+            avatar: "/upload/{{ request.user.avatar }}",
 
             formValidate: {
                 mail: '',
@@ -396,11 +396,7 @@
             },
             handleSuccess:function  (res, file) {
                 // 因为上传过程为实例，这里模拟添加 url
-                console.log(res)
-                        console.log(file)
-                {#file.url = '/user/userinfo/set/';#}
-                {#file.name = this.username + file.name#}
-                vm.avatar = '/upload/avatars/' + file.name;
+                vm.avatar = '/upload/' + res.data.avatar;
                 this.$Message.success('upload Success!');
             },
             modifyPass:function() {
