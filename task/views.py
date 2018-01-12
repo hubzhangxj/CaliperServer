@@ -1262,6 +1262,7 @@ def singleTask(req):
     nets = taskModels.Net.objects.filter(config_id=task['config']['id'])
     storages = taskModels.Storage.objects.filter(config_id=task['config']['id'])
     storages = json.loads(serialize(storages))
+    partitions = []
     for storage in storages:
         partitions = taskModels.Partition.objects.filter(storage_id=storage['id'])
         partitions = json.loads(serialize(partitions))
@@ -1307,7 +1308,6 @@ def singleTask(req):
                 tools.append(tool)
         dimResult['dim']['name'] = str(dimResult['dim']['name']).upper()
         dimResult['tools'] = tools
-
     data = {
         'dims': dimObjs,
         'cpu_cols': json.dumps(parseTableCols(taskModels.Cpu)),
