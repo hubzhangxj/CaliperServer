@@ -28,7 +28,6 @@ urlpatterns = [
     url('^register', aViews.signup),
     url(r'^changepwd$', aViews.change_pwd),
     url(r'^authcallback$', aViews.auth_callback, name="authcallback"),
-    url(r'^logoutnotify$', aViews.logout_notify, name="logoutnotify"),
     url(r'^signupcallback$', aViews.signup_callback, name="signupcallback"),
     url(r'^changepwdcallback$', aViews.changepwd_callback, name="changepwdcallback"),
 ]

@@ -19,6 +19,7 @@ from django.contrib import admin
 
 from CaliperServer import settings
 from account import urls as userUrl
+from account import views as userViews
 from data import urls as dataUrl
 from task import urls as taskUrl
 from account import views as accountView
@@ -27,6 +28,7 @@ from account import views as accountView
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$',accountView.main),
+    url(r'^logoutnotify$', userViews.logout_notify),
     url('^user/',include(userUrl)),
     url('^task/',include(taskUrl)),
     url('^data/',include(dataUrl)),
