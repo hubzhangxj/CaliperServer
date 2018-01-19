@@ -21,10 +21,11 @@ from .sso import REMOTE_SSO_LOGIN_URL, REMOTE_SSO_CHANGEPWD_URL, REMOTE_SSO_LOGO
 from sso.authbackend import SSOAuthBackend
 from sso.utility import form_redirect
 
-from account.permission import login_required
+from .permission import login_required
 
 USER_ADMIN = 0 #管理员
 USER_CUSTOM = 1 #普通用户
+
 
 def main(request):
     from CaliperServer.settings import downloadPath
@@ -193,30 +194,6 @@ def upload(req):
 
 ################sso
 
-def check_login(fun):
-    """
-    检查是否登录
-    :param fun:
-    :return:
-    """
-    def wapper(request, *args, **kwargs):
-        auth_token_session = request.session.get("auth_token", None)
-        if not auth_token_session:
-            print "auth_token not exist"
-            if request.user and not request.user.is_anonymous():  # 登录用户
-                auth.logout(request)
-            return HttpResponseRedirect('/')
-        else:
-            if auth_token_session not in logined_users.keys():
-                auth.logout(request)
-                return HttpResponseRedirect('/')
-            else:
-                if request.user is None or request.user.is_anonymous():  # 未登录用户
-                    return HttpResponseRedirect('/')
-                else:  # 已登录用户
-                    return fun(request, *args, **kwargs)
-    return wapper
-
 
 @csrf_exempt
 def auth_callback(request):
@@ -274,14 +251,14 @@ def logout_notify(request):
     :return:
     """
     auth_token = request.GET.get("auth_token")
-    print "logout_notify:"+auth_token, auth_token in logined_users.keys()
+    print "logout_notify:" + auth_token, auth_token in logined_users.keys()
     if auth_token in logined_users.keys():
         logined_users.pop(auth_token)  # 从全局删除
         auth.logout(request)
-        if request.session.exists("auth_token"):
-            del request.session['auth_token']
+        # if request.session.exists("auth_token"):
+        #     del request.session['auth_token']
     else:
-        print auth_token+' not in logined_users.keys().'
+        print auth_token + ' not in logined_users.keys().'
     return JsonResponse({"msg": "ok"})
 
 
@@ -308,7 +285,7 @@ def changepwd_callback(request):
         raise PermissionDenied
 
 
-@check_login
+@login_required
 def logout(request):
     """
     登出

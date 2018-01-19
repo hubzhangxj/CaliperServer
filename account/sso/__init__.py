@@ -16,4 +16,4 @@ REMOTE_SSO_RESETPWD_URL = "/uams/resetpwd"
 REMOTE_SSO_CHANGEPWD_URL = "/uams/changepwd"
 
 logined_users = {}  # logging users
-role_user = None
+

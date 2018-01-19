@@ -28,7 +28,7 @@ from account import views as accountView
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$',accountView.main),
-    url(r'^logoutnotify$', userViews.logout_notify),
+    url(r'^uams/logoutnotify$', userViews.logout_notify),
     url('^user/',include(userUrl)),
     url('^task/',include(taskUrl)),
     url('^data/',include(dataUrl)),
