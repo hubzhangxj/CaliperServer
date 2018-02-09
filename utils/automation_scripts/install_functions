@@ -1,0 +1,468 @@
+#!/bin/bash
+## How to build caliperserver.install:
+# tar cvzf caliperserver-[ver].tar.gz CaliperServer
+# cat caliperserver.install caliperserver-[ver].tar.gz > caliperserver-[ver].install
+
+## show messages in a message box 
+# Usage: show_message [messages] [height] [width]
+show_message()
+{
+    height=7
+    width=48
+    if [ $# -gt 1 ]; then
+	height=$2
+	width=$3
+    fi
+    whiptail --title "install" --msgbox "$1" $height $width
+}
+
+## write messages to the log file
+# Usage: write_log [message] [the log file]
+write_log()
+{
+    echo $1 >> $2 2>&1    
+}
+
+
+## check the os information, if the OS is supported by caliperserver
+# Usage: check_osinfo [config file]
+# Return: 0: support; others: not support
+check_osinfo()
+{
+    if [ $# -ne 1 ]; then
+	return 4
+    fi
+#1.find and save the system operating system and version
+    system_os=`cat /etc/os-release | grep -owP 'ID=\K\S+' | sed 's/"//g'`
+    system_os_version=`cat /etc/os-release | grep -owP 'VERSION_ID=\K\S+' | sed 's/"//g'`
+
+#2.get the operating system and version in the config file
+    inOs=0
+    cat $1 | while read line
+    do
+        if [ "x$line" = "x[supported_os]" ]; then
+            inOs=1
+	    continue
+        fi
+
+        if [ $inOs -eq 1 ]; then
+	    if [ "x$line" = "x" ]; then return 1; fi
+            echo "$line" | grep '^\['
+            if [ $? -eq 0 ]; then return 2; fi
+
+	    os_name=`echo $line | awk -F ',' '{gsub(/^[ \t]+/,"",$2);print $1}'`
+	    os_version=`echo $line | awk -F ',' '{gsub(/^[ \t]+/,"",$2);print $2}'`
+
+#3.contrast the two information in turn
+	    if [ "$system_os" = "$os_name" -a "$system_os_version" = "$os_version" ]; then
+		return 0
+	    fi
+	fi
+    done
+    #return 3
+}	    
+
+## check the hardware information, if the platform is supported by caliperserver
+# Usage: check_hardinfo [config file]
+# Return: 0: support; others: not support
+check_hardinfo()
+{
+    if [ $# -ne 1 ]; then
+	return 4
+    fi
+
+#1.find and save the system arch and processor manufacturer and processor version
+    system_arch=`uname -m`
+    system_processor_manufacturer=`sudo dmidecode --string processor-manufacturer | uniq`
+    system_processor_version=`sudo dmidecode --string processor-version | uniq`
+
+#2.find the above information in the configuration file, if information is the same
+    inProcessor=0
+    cat $1 | while read line
+    do
+        if [ "x$line" = "x[supported_processor]" ]; then
+            inProcessor=1
+	    continue
+        fi
+
+        if [ $inProcessor -eq 1 ]; then
+	    if [ "x$line" = "x" ]; then return 1; fi
+            echo "$line" | grep '^\['
+            if [ $? -eq 0 ]; then return 2; fi
+
+	    processor_manufacturer=`echo $line | awk -F ',' '{gsub(/^[ \t]+/,"",$2);print $1}'`
+	    processor_version=`echo $line | awk -F ',' '{gsub(/^[ \t]+/,"",$2);print $2}'`
+
+	    if [ "$system_processor_manufacturer" = "$processor_manufacturer" -a "$system_processor_version" = "$processor_version" ]; then
+		return 0
+	    fi
+	fi
+    done
+
+    #return 3
+}
+
+## check the net information
+# Usage: check_net [config file]
+# Return: 0: network is connected; others: network is down
+check_net()
+{
+#1.find and save website information
+    inNet=0
+    cat $1 | while read line
+    do
+        if [ "x$line" = "x[network]" ]; then
+            inNet=1
+	    continue
+        fi
+
+        if [ $inNet -eq 1 ]; then
+            echo "$line" | grep '^#'
+            if [ $? -eq 0 ]; then continue; fi
+            echo "$line" | grep '^\['
+            if [ $? -eq 0 ]; then return 2; fi
+	    if [ "x$line" = "x" ]; then continue; fi
+	    
+#2.use the ping command to check the network
+
+	    network=$line
+    	    ping -c 3 $network > /dev/null 2>&1
+	    if [ $? -ne 0 ]
+	    then
+        	return 1
+	    else
+        	return 0
+	    fi
+	fi
+    done
+
+}
+
+
+## comparison of two version numbers,new version number is higher than old version number 
+# Usage: verion_gt [new version number] [old version number] 
+# Return: 0: greater than; 1: not greater than
+version_gt() 
+{ 
+    test "$(echo "$@" | tr " " "\n" | sort -V | head -n 1)" != "$1"
+    return $?
+}
+
+## comparison of two version numbers
+# Usage: check_version [new_version]
+# Return: 0: install; 1: update; 2: donot install
+check_version()
+{
+    if [ $# -ne 1 ]; then return 0; fi
+    new_version=$1
+#1. is it exist /opt/CaliperServer: if not, then install, otherwise compare versions
+#    which caliper
+#    ret=$?
+#    if [ $ret -eq 0 -a -d "/opt/Caliper" ]
+    if [ -d "/opt/CaliperServer" ]
+    then 
+#2. compare versions: get the old version number, the new version higher than the old version to upgrade
+        old_version=`cat /opt/CaliperServer/common.py | grep -owP "VERSION=\K\S+" | sed 's/\"//g'`
+	if [ "x$old_version" = "x" ]; then
+	    return 0
+	fi
+
+        if version_gt $new_version $old_version
+        then 
+            return 1
+	else
+	    return 2
+        fi
+    fi
+    return 0
+}
+
+## output the start time of the installation to the log file
+# Usage: log_install_date [log]
+log_install_date()
+{
+    echo "[install_date]" >> $log 2>&1
+    echo date=$(date +%Y-%m-%d_%H:%M:%S) >> $log 2>&1
+}
+
+## install each dpk package
+# Usage: install_pkg [package name] [pkg_type]
+# Return: 0: installed; 1: already installed; 2: install failed
+install_pkg()
+{
+    tmp_log="/tmp/caliperserver_tmp.log"
+    if [ "x$2" = "xdpk" ]
+    then 
+    #dpk
+        dpkg-query -W -f='${Status}' $1 > $tmp_log 2>&1
+        check=`grep -c "ok installed" $tmp_log`
+        if [ $check -eq 0 ]
+        then
+            nums="1 2 3"
+            for num in ${nums}
+            do
+                if [ $1 = "mysql-server-5.7" ]
+                then
+                    sudo debconf-set-selections /tmp/CaliperServer/utils/automation_scripts/mysql.debconf   
+                fi
+                sudo $3 install $1 -y > $tmp_log 2>&1
+                if [ $? -eq 0 ]
+                then
+		    # install successed
+		    return 0
+                    break
+                fi
+            done
+	    # install failed
+	    return 2
+        else
+            # already installed
+	    return 1
+        fi 
+    else #rpm
+        check=`rpm -qa $1`
+        if [ -z $check ]
+        then
+            nums="1 2 3"
+            for num in ${nums}
+            do
+	        if [ "x$3" = "xzypper" ]
+                then
+                    sudo $3 install -y $1 > $tmp_log 2>&1
+                else
+                    sudo $3 install $1 -y > $tmp_log 2>&1
+                fi
+                
+                if [ $? -eq 0 ]
+                then
+                    # install successed
+                    return 0
+                    break
+                fi
+            done
+            # install failed
+            return 2
+        else
+            # already installed
+            return 1
+        fi
+    fi
+}
+
+
+## install dpk packages
+# Usage: install_all_pkg 
+install_all_pkg()
+{
+    system_os=`cat /etc/os-release | grep -owP 'ID=\K\S+' | sed 's/"//g'`
+
+    case $system_os in
+    ubuntu)
+    	pkg_type="dpk"
+        order="apt-get"
+    	packs=`jq .ubuntu_dpk_package[].platform $depend_json | sed 's/\"//g'`
+    	;;
+    centos)
+    	pkg_type="rpm"
+        order="yum"
+    	packs=`jq .centos_dpk_package[].platform $depend_json | sed 's/\"//g'`
+    	;;
+    rhel)
+    	pkg_type="rpm"
+        order="yum"
+    	packs=`jq .redhat_dpk_package[].platform $depend_json | sed 's/\"//g'`
+    	;;
+    sles)
+    	pkg_type="rpm"
+        order="zypper"
+    	packs=`jq .sles_dpk_package[].platform $depend_json | sed 's/\"//g'`
+    	;;
+    esac
+    count=`echo $packs | awk '{print NF}'`
+
+    start=15
+    end=60
+    rate=`echo "scale=2;($end-$start)/$count" | bc`
+    percent=$start
+    percent_int=$start
+
+    i=0
+    for pack in ${packs}
+    do
+        percent=`echo "$start+$rate*$i" | bc`
+        percent_int=`echo $percent | awk -F'.' '{print $1}'`
+        if [ $percent_int -gt $end ]
+        then
+            percent_int=$end
+        fi
+
+	{
+        install_pkg $pack $pkg_type $order
+        ret=$?
+        case $ret in
+        0)
+            write_log "$pack pkg install success" $log
+            ;;
+        1)
+            write_log "$pack pkg install already" $log
+            ;;
+        2)
+            write_log "$pack pkg install failed" $log
+            ;;
+        esac
+    	} | whiptail --title "CaliperServer installation" --gauge "$pack" 7 55 $percent_int
+
+	tail -1 $log | grep "install failed"
+	if [ $? -eq 0 ]
+	then
+	    show_message "install $pack failed. Exit install" 9 50
+	    exit 1
+	fi
+
+        i=`expr $i + 1`
+    done
+
+    if [ $order == zypper ]
+    then
+        which pip
+        ret=$?
+        if [ ret -ne 0 ]
+        then
+            easy_install pip
+        fi
+    fi
+}
+
+## install each pip package
+# Usage: 1 parameters
+#	install_pip [package name]
+install_pip()
+{
+    tmp_log="/tmp/caliperserver_tmp.log"
+    packss=$1
+    pack=${packss%==*}
+    pip show $pack > $tmp_log 2>&1
+    check=`grep -c $pack $tmp_log`
+    if [ $check -eq 0 ]
+    then
+        nums="1 2 3"
+        for num in ${nums}
+        do
+            sudo LC_ALL=C pip install $packss >/dev/null 2>&1
+            if [ $? -eq 0 ]
+            then
+		return 0
+		break;
+	    fi
+	done
+
+    	return 2
+    else
+        return 1
+    fi 
+}
+
+## install pip packages
+# Usage: install_all_pip
+install_all_pip()
+{
+    packs=`jq .pip_package[].platform $depend_json | sed 's/\"//g'`
+    count=`echo $packs | awk '{print NF}'`
+    start=60
+    end=90
+    rate=`echo "scale=2;($end-$start)/$count" | bc`
+    percent=$start
+    percent_int=$start
+    i=0
+    for pack in ${packs}
+    do
+        percent=`echo "$start+$rate*$i" | bc`
+        percent_int=`echo $percent | awk -F'.' '{print $1}'`
+        if [ $percent_int -gt $end ]
+        then
+            percent_int=$end
+        fi
+
+        {
+        install_pip $pack
+        ret=$?
+        case $ret in
+        0)
+            write_log "$pack pip install success" $log
+            ;;
+        1)
+            write_log "$pack pip install already" $log
+            ;;
+        2)
+            write_log "$pack pip install failed" $log
+            ;;
+        esac
+        } | whiptail --title "CaliperServer installation" --gauge "$pack" 7 55 $percent_int
+
+	tail -1 $log | grep "install failed"
+	if [ $? -eq 0 ]
+	then
+	    show_message "install $pack failed. Exit install" 9 50
+	    exit 1
+	fi
+
+        i=`expr $i + 1`
+    done
+}
+
+## config mysql 
+# Usage: config_mysql
+config_mysql()
+{
+    system_os=`cat /etc/os-release | grep -owP 'ID=\K\S+' | sed 's/"//g'`
+    case $system_os in 
+    ubuntu)
+        #sudo sh /opt/CaliperServer/config_mysql.sh   
+        sudo mysql --defaults-file=/etc/mysql/debian.cnf < /opt/CaliperServer/utils/automation_scripts/init.sql
+        mysql -ucaliper -p123456 -Dcaliper < /opt/CaliperServer/utils/automation_scripts/caliperserver.sql
+        ;;
+    centos|rhel)
+        sudo systemctl start mariadb
+        sudo systemctl enable mariadb
+        #mysql_secure_installation
+        #sudo sh /opt/CaliperServer/config_mysql_else.sh 
+        mysql -uroot -proot < /opt/CaliperServer/utils/automation_scripts/init_else.sql
+        mysql -uroot < /opt/CaliperServer/utils/automation_scripts/init_else.sql
+        mysql -ucaliper -p123456 -Dcaliper < /opt/CaliperServer/utils/automation_scripts/caliperserver.sql
+        ;;
+    sles)
+        sudo systemctl start mysql.service
+        sudo systemctl enable mysql.service
+        #mysql_secure_installation
+        mysql -uroot -proot < /opt/CaliperServer/utils/automation_scripts/init_else.sql
+        mysql -uroot < /opt/CaliperServer/utils/automation_scripts/init_else.sql
+        mysql -ucaliper -p123456 -Dcaliper < /opt/CaliperServer/utils/automation_scripts/caliperserver.sql
+        ;;
+    esac
+
+}
+
+## config nginx
+# Usage: config_nginx
+config_nginx()
+{  
+    system_os=`cat /etc/os-release | grep -owP 'ID=\K\S+' | sed 's/"//g'`
+    if [ $system_os = "ubuntu" ]
+    then
+        sudo cp /etc/nginx/nginx.conf /opt/CaliperServer/utils/automation_scripts/nginx_default.conf   
+        sudo cp /opt/CaliperServer/utils/automation_scripts/nginx.conf /etc/nginx/nginx.conf 
+        sudo cp /opt/CaliperServer/utils/automation_scripts/Caliperserver /etc/nginx/sites-available/Caliperserver 
+    else 
+        sudo cp /etc/nginx/nginx.conf /opt/CaliperServer/utils/automation_scripts/nginx_default.conf
+        sudo cp /opt/CaliperServer/utils/automation_scripts/nginx_else.conf /etc/nginx/nginx.conf   
+    fi
+}
+
+## start nginx
+# Usage: start_nginx
+#start_nginx()
+#{
+#    sudo /usr/sbin/nginx -c /etc/nginx/nginx.conf 
+#    cd /opt/CaliperServer/
+#    sudo uwsgi --ini /opt/CaliperServer/Caliperserver_uwsgi.ini & 
+#}
