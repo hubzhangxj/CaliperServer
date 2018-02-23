@@ -17,6 +17,7 @@ def login_required(fun):
     :return:
     """
     def wapper(request, *args, **kwargs):
+        # return fun(request, *args, **kwargs) #跳过UAMS的登录校验
         auth_token_session = request.session.get("auth_token", None)
         if not auth_token_session:
             print "auth_token not exist"
