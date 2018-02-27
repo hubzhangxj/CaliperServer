@@ -10,11 +10,11 @@ fi
 
 cd `dirname $0` 
  
-tar cvzf caliperserver.tar.gz ../../../CaliperServer
+tar cvzf $HOME/caliperserver.tar.gz ../../../CaliperServer --exclude=.git
 
 var=`cat ../../common.py | grep -owP "VERSION=\K\S+" | sed 's/\"//g'`
 
-cat install.sh caliperserver.tar.gz > $HOME/caliperserver-$var.install
+cat install.sh $HOME/caliperserver.tar.gz > $HOME/caliperserver-$var.install
 
 md5sum $HOME/caliperserver-$var.install > $HOME/caliperserver-$var.install.md5
 
