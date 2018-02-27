@@ -116,7 +116,11 @@
     {#        form.submit();#}
     {#        $('input[type="submit"]', form).click();#}
     {#    }#}
-
+     //防止页面后退
+    history.pushState(null, null, document.URL);
+    window.addEventListener('popstate', function () {
+        history.pushState(null, null, document.URL);
+    });
 
     var vm = new Vue({
         el: '#app',
@@ -300,6 +304,8 @@
                     {#                        });#}
                 } else if (vm.selection.length > 20) {
                     vm.$Message.error('Sorry,Select 20 items at most!')
+                }else{
+                    vm.$Message.warning("Please select some task!");
                 }
 
             },
