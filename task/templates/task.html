@@ -332,7 +332,7 @@
             share: function () {
 
                 if (vm.selection.length < 1) {
-                    vm.$Message.warning('请选中指定操作的一行或多行记录');
+                    vm.$Message.warning('Please select some task!');
                 } else if (vm.selection.length == 1) {
                     //this.$Modal.confirm({})
                     var canShare = true;
@@ -597,16 +597,36 @@
 
                 });
 
-            }
-            ,
+            },
 
             cancel: function () {
                 this.$Message.info('You have chosen to cancel the operation ');
-            }
-            ,
+            },
 
             download: function () {
-                window.open('download');
+                if (vm.selection.length <= 0) {
+                    vm.$Message.warning("Please select some task!");
+                }else {
+{#                    window.open('download');#}
+                    zips = [];
+                    for(z in vm.selection){
+                    for(var i=0;i<vm.selection.length;i++)
+                        z = vm.selection[i]
+                        zips.push(z['path'])
+                    }
+                    window.open('download?zips='+zips);
+{#                    axios.post('download', zips).then(function (response) {#}
+{#                        if (response.data.code == 0) {#}
+{##}
+{##}
+{#                        } else {#}
+{#                            vm.$Message.error('fail');#}
+{#                        }#}
+{#                    }).catch(function (error) {#}
+{##}
+{#                    });#}
+
+                }
 
             }
             ,

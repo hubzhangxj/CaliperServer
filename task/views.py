@@ -17,6 +17,9 @@ import os
 from account.permission import login_required
 from django.http import HttpResponse
 import numpy as np
+import CaliperServer.settings as settings
+from django.http import StreamingHttpResponse
+import uuid
 
 
 def serialize(data, excluded='avatar'):
@@ -1160,13 +1163,63 @@ def permanentDelete(req):
         return Response.CustomJsonResponse(Response.CODE_FAILED, "fail")
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
+def file_iterator(filename, chunk_size=512):
+    with open(filename, "rb") as f:
+        while True:
+            c = f.read(chunk_size)
+            if c:
+                yield c
+            else:
+                break
 
 @login_required
 def downloadFile(req):
-    import CaliperServer.settings as settings
-    import os, tempfile, zipfile
-    from wsgiref.util import FileWrapper
-    downloadPath = settings.downloadPath
+    full_path = None
+    try:
+        downloadPath = settings.uploadPath
+        hasFile = False
+        zips = req.GET.get('zips')
+        if zips is not None:
+            zips = zips.split(',')
+            if len(zips) == 1:
+                if os.path.exists(downloadPath):
+                    hasFile = True
+                    full_path = os.path.join(downloadPath, zips[0])
+            else:
+                zipName = str(uuid.uuid1()) + ".zip"
+                full_path = os.path.join(downloadPath, zipName)
+                import zipfile
+                f = zipfile.ZipFile(full_path, 'w', zipfile.ZIP_DEFLATED)
+
+                for zip in zips:
+                    zip_path = os.path.join(downloadPath, zip)
+                    if os.path.exists(zip_path):
+                        hasFile = True
+                        f.write(zip_path,os.path.basename(zip_path))
+                f.close()
+
+        if full_path is not None and os.path.exists(full_path) and hasFile:
+            splits = full_path.split("/")
+            fileName = splits[len(splits) - 1]
+            response = StreamingHttpResponse(file_iterator(full_path))
+            response['Content-Type'] = 'application/octet-stream'
+            response['Content-Disposition'] = 'attachment;filename="{0}"'.format(fileName)
+            return response
+    except Exception as e:
+        logger.error(str(e))
+    return HttpResponse('can not found this files')
+
+
+
+
+
+    downloadPath = settings.uploadPath
+
+
+
+
+
+
     if req.method == 'GET':
         if req.user.role == Contants.ROLE_ADMIN:
             tasks = taskModels.Task.objects.order_by('-time').all()
