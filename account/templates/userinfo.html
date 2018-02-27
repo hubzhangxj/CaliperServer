@@ -316,17 +316,24 @@
                 this.$refs[name].validate((valid) => {
                     if (valid) {
 
-                        var params = new URLSearchParams();
-                        params.append('username', this.username);
-                        params.append('mail', this.formValidate.mail);
-                        axios.post('/user/userinfo/set/', params).then(function (response) {
-                            console.log(''.concat( response.status));
+
+                        var params = {
+                            'username': vm.userid,
+                            'mail': vm.formValidate.mail
+                        };
+                        axios.post('set', params).then(function (response) {
+                            if (response.data.code == 0) {
+                               vm.mailisShow = !vm.mailisShow;
+                                vm.mail=vm.formValidate.mail;
+                                 vm.$Message.success('Success!');
+
+                            } else {
+                                 vm.$Message.error('Fail!');
+
+                            }
                         }).catch(function (error) {
-                            alert(error);
+                            vm.$Message.error(error);
                         });
-                        this.$Message.success('Success!');
-                        this.mailisShow = !this.mailisShow;
-                        vm.mail=this.formValidate.mail
 
                     } else {
                         this.$Message.error('Fail!');
@@ -344,21 +351,25 @@
                 this.$refs[name].validate((valid) => {
 
                     if (valid) {
+                        var params = {
+                            'username': vm.userid,
+                            'phone': vm.formValidate.ph
+                        };
+                        axios.post('set', params).then(function (response) {
+                            if (response.data.code == 0) {
+                                 vm.phisShow = !vm.phisShow;
+                                 vm.phone=vm.formValidate.ph;
+                                 vm.$Message.success('Success!');
 
-                        var params = new URLSearchParams();
-                        params.append('username', this.username);
-                        params.append('phone', this.formValidate.ph);
-                        axios.post('/user/userinfo/set/', params).then(function (response) {
-                            console.log(''.concat( response.status));
+                            } else {
+                                 vm.$Message.error('Fail!');
+
+                            }
                         }).catch(function (error) {
-                            alert(error);
+                            vm.$Message.error(error);
                         });
-                        this.$Message.success('Success!');
-                        this.phisShow = !this.phisShow;
-                        vm.phone=this.formValidate.ph
-
                     } else {
-                        this.$Message.error('Fail!');
+                        vm.$Message.error('Fail!');
                     }
 
                 })

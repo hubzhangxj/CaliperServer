@@ -22,6 +22,7 @@ from sso.authbackend import SSOAuthBackend
 from sso.utility import form_redirect
 
 from .permission import login_required
+import traceback
 
 USER_ADMIN = 0 #管理员
 USER_CUSTOM = 1 #普通用户
@@ -98,45 +99,78 @@ def getuserinfo(req):
     #return HttpResponse(status=200)
     return render(req,"userinfo.html",{'isShowBack':True})
 
-@csrf_exempt
-def setuserinfo(req):
-    if req.method == 'POST':
-        data = req.POST
-        username = data.get('username')
-        username_file=req.GET.get('username')
-        if username:
-            mail = data.get('mail')
-            phone = data.get('phone')
-            if mail:
-                try:
-                    item = UserProfile.objects.get(username=username)
-                except:
-                    return HttpResponse(status=500, content='database connect failed')
-                item.email = mail
-                item.save()
-                return HttpResponse(status=200)
-            if phone:
-                try:
-                    item = UserProfile.objects.get(username=username)
-                except:
-                    return HttpResponse(status=500, content='database connect failed')
-                item.telphone = phone
-                item.save()
-                return HttpResponse(status=200)
-        elif   username_file:
-            try:
-                file=req.FILES['file']
-                #filename=str(file)
-            except Exception as e:
-                return HttpResponse(status=500, content='unknow error')
 
-            try:
-                item = UserProfile.objects.get(username=req.user.username)
-            except:
-                return HttpResponse(status=500, content='database connect failed')
-            item.avatar = file
-            item.save()
-            return HttpResponse(status=200)
+def setuserinfo(req):
+    try:
+        data = json.loads(req.body)
+        username = data['username']
+        phone = None
+        mail = None
+        if data.has_key('phone'):
+            phone = data['phone']
+            UserProfile.objects.filter(username=username).update(telphone=phone)
+        else:
+            mail = data['mail']
+            UserProfile.objects.filter(username=username).update(email=mail)
+
+    except Exception as e:
+        logger.debug(traceback.format_exc())
+        return Response.CustomJsonResponse(Response.CODE_FAILED,'fail')
+    return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok')
+
+    # if req.method == 'POST':
+    #     data = json.loads(req.body)
+    #     username = data['username']
+    #     if mail:
+    #         try:
+    #             item = UserProfile.objects.get(username=username)
+    #         except:
+    #             return HttpResponse(status=500, content='database connect failed')
+    #         item.email = mail
+    #         item.save()
+    #         return HttpResponse(status=200)
+    #     if phone:
+    #         try:
+    #             item = UserProfile.objects.get(username=username)
+    #         except:
+    #             return HttpResponse(status=500, content='database connect failed')
+    #         item.telphone = phone
+    #         item.save()
+    #         return HttpResponse(status=200)
+    #
+    #     if username:
+    #         mail = data.get('mail')
+    #         phone = data.get('phone')
+    #         if mail:
+    #             try:
+    #                 item = UserProfile.objects.get(username=username)
+    #             except:
+    #                 return HttpResponse(status=500, content='database connect failed')
+    #             item.email = mail
+    #             item.save()
+    #             return HttpResponse(status=200)
+    #         if phone:
+    #             try:
+    #                 item = UserProfile.objects.get(username=username)
+    #             except:
+    #                 return HttpResponse(status=500, content='database connect failed')
+    #             item.telphone = phone
+    #             item.save()
+    #             return HttpResponse(status=200)
+    #     elif   username_file:
+    #         try:
+    #             file=req.FILES['file']
+    #             #filename=str(file)
+    #         except Exception as e:
+    #             return HttpResponse(status=500, content='unknow error')
+    #
+    #         try:
+    #             item = UserProfile.objects.get(username=req.user.username)
+    #         except:
+    #             return HttpResponse(status=500, content='database connect failed')
+    #         item.avatar = file
+    #         item.save()
+    #         return HttpResponse(status=200)
       #      path = '/tmp/photo/'
          ##   if not os.path.exists(path):
          #       os.makedirs(path)
@@ -144,8 +178,8 @@ def setuserinfo(req):
           #      for chunk in file.chunks():
            #         destination.write(chunk)
 
-    else:
-        return HttpResponse(status=403,content='forbidden')
+    # else:
+    #     return HttpResponse(status=403,content='forbidden')
 
 @csrf_exempt
 def upload(req):

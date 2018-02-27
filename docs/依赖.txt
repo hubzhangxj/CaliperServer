@@ -1,2 +1,4 @@
-pip install numpy PyCrypto requests
+pip install numpy PyCrypto requests pillow
 apt-get install unzip
+
+
