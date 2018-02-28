@@ -151,11 +151,11 @@
                     <div class="baseLine">
                         <div class="left">
                             <div class="showText">
-                                <div class="titleText" v-if="!name_edit">用户名:</div>
+                                <div class="titleText" v-if="!name_edit">姓名:</div>
                                 <div class="contentText" v-if="!name_edit">${ person.name }</div>
                                 <div v-if="name_edit">
-                                    <Form-item label="用户名:" prop="name">
-                                        <i-input v-model="person.name" placeholder="请输入用户名"></i-input>
+                                    <Form-item label="姓名:" prop="name">
+                                        <i-input v-model="person.name" placeholder="请输入姓名"></i-input>
                                     </Form-item>
                                 </div>
                             </div>
@@ -199,7 +199,7 @@
                     <div class="baseLine">
                         <div class="left">
 
-                                <div class="titleText" >账户ID：</div>
+                                <div class="titleText" >用户名：</div>
                                 <div class="contentText"  style="color:#FF9900">${ userid}</div>
 
                         </div>
