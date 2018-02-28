@@ -1,4 +1,5 @@
-﻿<html>
+﻿{% load  filter %}
+<html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,6 @@
 
     {% include "script.html" %}
     <link href="/static/links/intro.css" rel="stylesheet">
-
 </head>
 
 <style>
@@ -67,7 +67,7 @@
         flex: 1;
         display: flex;
         flex-direction: row;
-        justify-content: flex-start;
+        justify-content: space-between;
 
     }
 
@@ -93,203 +93,303 @@
         margin-left: 40px;
         display: flex;
 
+    }
 
+    .control_btn {
+        cursor: pointer;
+        color: dodgerblue;
+        font-size: 13px;
+    }
+
+    .showText {
+        flex: 5;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+    }
+
+    .showBtn {
+        flex: 1;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
     }
 
 
 </style>
-<body >
+<body>
 {% include "top.html" %}
 <div id="person">
     <div style="background-color:white;padding-bottom: 40px;padding-right: 40px;padding-left: 40px">
-    <div class="header">用户信息</div>
-    <hr class="hr-bottom"/>
-    <div class="header" style="font-weight: bold">基本资料</div>
+        <div class="header">用户信息</div>
+        <hr class="hr-bottom"/>
+        <div class="header" style="font-weight: bold">基本资料</div>
 
-    <div class="base">
-        <div>
-            <img class="headImg" style="max-width: 120%" :src="avatar"/>
-            <div style="text-align: center" id="image">
-                <Upload
-                        ref="upload"
-                        :show-upload-list="false"
-                        :format="['jpg','jpeg','png']"
-                        :max-size="2048"
-                        :on-success="handleSuccess"
-                        :on-format-error="handleFormatError"
-                        :on-exceeded-size="handleMaxSize"
-                        action="/user/userinfo/upload">
-                    <i-button type="ghost" icon="ios-cloud-upload-outline" style="margin-top: 5px">修改头像</i-button>
-                </Upload>
+        <div class="base">
+            <div>
+                <img class="headImg" style="max-width: 120%" :src="avatar"/>
+                <div style="text-align: center" id="image">
+                    <Upload
+                            ref="upload"
+                            :show-upload-list="false"
+                            :format="['jpg','jpeg','png']"
+                            :max-size="2048"
+                            :on-success="handleSuccess"
+                            :on-format-error="handleFormatError"
+                            :on-exceeded-size="handleMaxSize"
+                            action="/user/userinfo/upload">
+                        <i-button type="ghost" icon="ios-cloud-upload-outline" style="margin-top: 5px">修改头像</i-button>
+                    </Upload>
 
+                </div>
             </div>
+            <i-form ref="person_vaild" :rules="ruleValidatePersion" :model="person" :label-width="80"
+                    label-position="left"
+                    inline
+                    style="width: 100%" name="form">
+                <div class="baseContent">
+                    <div class="baseLine">
+                        <div class="left">
+                            <div class="showText">
+                                <div class="titleText" v-if="!name_edit">用户名:</div>
+                                <div class="contentText" v-if="!name_edit">${ person.name }</div>
+                                <div v-if="name_edit">
+                                    <Form-item label="用户名:" prop="name">
+                                        <i-input v-model="person.name" placeholder="请输入用户名"></i-input>
+                                    </Form-item>
+                                </div>
+                            </div>
+
+
+                            <div class="showBtn">
+                                <div id="m_person" class="control_btn" v-if="!name_edit" @click="modify('c_name')">修改
+                                </div>
+                                <div class="control_btn" v-if="name_edit" @click="saveVaild('c_name')">保存</div>
+                                <div style="margin-left: 10px" v-if="name_edit" class="control_btn"
+                                     @click="cancle('c_name')">取消
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="right">
+                            <div class="showText">
+                                <div class="titleText" v-if="!company_edit">组织：</div>
+                                <div class="contentText" v-if="!company_edit" id="org">${ person.company }</div>
+                                <div v-if="company_edit">
+                                    <Form-item label="组织:" prop="company">
+                                        <i-input v-model="person.company" placeholder="请输入组织名"></i-input>
+                                    </Form-item>
+                                </div>
+                            </div>
+
+                            <div class="showBtn">
+                                <div id="m_person" class="control_btn" v-if="!company_edit"
+                                     @click="modify('c_company')">修改
+                                </div>
+                                <div class="control_btn" v-if="company_edit" @click="saveVaild('c_company')">保存</div>
+                                <div style="margin-left: 10px" v-if="company_edit" class="control_btn"
+                                     @click="cancle('c_company')">取消
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <hr class="hr-bottom"/>
+
+                    <div class="baseLine">
+                        <div class="left">
+
+                                <div class="titleText" >账户ID：</div>
+                                <div class="contentText"  style="color:#FF9900">${ userid}</div>
+
+                        </div>
+                        <div class="right">
+                            <div class="showText">
+                                <div class="titleText" v-if="!address_edit">地区：</div>
+                                <div class="contentText" v-if="!address_edit">${ person.address}</div>
+
+                                <div v-if="address_edit">
+                                    <Form-item label="地区:" prop="address">
+                                        <i-input v-model="person.address" placeholder="请输入地区名"></i-input>
+                                    </Form-item>
+                                </div>
+                            </div>
+
+                            <div class="showBtn">
+                                <div id="m_person" class="control_btn" v-if="!address_edit"
+                                     @click="modify('c_address')">修改
+                                </div>
+                                <div class="control_btn" v-if="address_edit" @click="saveVaild('c_address')">保存</div>
+                                <div style="margin-left: 10px" v-if="address_edit" class="control_btn"
+                                     @click="cancle('c_address')">取消
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="hr-bottom"/>
+                    <div class="baseLine">
+                        <div class="left">
+                            <div class="titleText">角色：</div>
+                            <div class="contentText">${ role }</div>
+                        </div>
+                        <div class="right">
+                            <div class="titleText">注册时间 ：</div>
+                            <div class="contentText">
+                                ${ time }
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <hr class="hr-bottom"/>
+                    <div class="baseLine">
+                        <div class="left">
+                            <div class="titleText">上次登录：</div>
+                            <div class="contentText" style="color:#FF9900">${ last_login }</div>
+                        </div>
+                        <div class="right">
+                        </div>
+                    </div>
+                </div>
+            </i-form>
         </div>
+        <hr class="hr-bottom"/>
 
-        <div class="baseContent">
-            <div class="baseLine">
-                <div class="left">
-                    <div class="titleText">用户名:</div>
-                    <div class="contentText">${ username }</div>
+        <div id="change">
+            <div style="display: flex;flex-direction: row">
+                <div style="flex: 1;font-size: 14px">密码:</div>
+                <div style="flex:22;display: flex;flex-direction: row;justify-content: space-around">
+                    <div style="flex:20;font-size:14px;">安全性高的密码可以使帐号更安全。建议您定期更换密码，设置一个包含字母，符号或数字中至少两项且长度超过6位的密码。</div>
+                    <div id="m_pass"
+                         style="flex:4;font-size:16px;text-align: right; margin-right: 20px;color: #428BCA;">
+                        {#                    <i-button type="text" @click="modifyPass">修改</i-button>#}
+                        <a style="font-size: 13px;"
+                           href="/user/changepwd" >修改&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+                    </div>
+
+
                 </div>
-                <div class="right">
-                    <div class="titleText">组织：</div>
-                    <div class="contentText" id="org">${ org }</div>
+            </div>
+
+
+            <hr class="hr-bottom"/>
+
+            <div style="display: flex;flex-direction: row">
+                <div style="flex: 1;font-size: 14px">邮箱:</div>
+                <div style="flex:22;display: flex;flex-direction: row;justify-content: space-around">
+                    <div style="flex:20;font-size:14px;">${mail}</div>
+                    <div id="m_email"
+                         style="flex:4;font-size:16px;text-align: right; margin-right: 20px;color: #428BCA;">
+                        <!--<a href="javascript:m_mail();">修改</a>-->
+                        <i-button type="text" @click="modifyMail" style="color: #2b85e4;font-size: 13px" >修改</i-button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="changemail">
+                <div id="mail" v-if="mailisShow">
+                    <i-form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="80" inline>
+
+
+                        <Form-Item label="E-mail" prop="mail">
+                            <i-input v-model="formValidate.mail" placeholder="Enter your e-mail"></i-input>
+                        </Form-Item>
+
+
+                        <Form-Item>
+                            <i-button type="primary" @click="handlemailSubmit('formValidate')"
+                                      >修改
+                            </i-button>
+                            <i-button type="ghost" @click="handlemailReset('formValidate')" style="margin-left: 10px">取消
+                            </i-button>
+                        </Form-Item>
+                    </i-form>
                 </div>
 
             </div>
+
+
             <hr class="hr-bottom"/>
 
-            <div class="baseLine">
-                <div class="left">
-                    <div class="titleText">账户ID：</div>
-                    <div class="contentText" style="color:#FF9900">${ userid }</div>
-                </div>
-                <div class="right">
-                    <div class="titleText">地区：</div>
-                    <div class="contentText">${ address}</div>
-                </div>
-            </div>
-            <hr class="hr-bottom"/>
-            <div class="baseLine">
-                <div class="left">
-                    <div class="titleText">角色：</div>
-                    <div class="contentText">${ role }</div>
-                </div>
-                <div class="right">
-                    <div class="titleText">注册时间 ：</div>
-                    <div class="contentText">
-                        ${ time }
 
+            <div style="display: flex;flex-direction: row">
+                <div style="flex: 1;font-size: 14px">手机:</div>
+                <div style="flex:22;display: flex;flex-direction: row;justify-content: space-around">
+                    <div style="flex:20;font-size:14px;">${phone}</div>
+                    <div id="m_phone"
+                         style="flex:4;font-size:16px;text-align: right; margin-right: 20px;color: #428BCA;">
+                        <i-button type="text" @click="modifyPhone" style="color: #2b85e4;font-size: 13px">修改</i-button>
                     </div>
                 </div>
 
-            </div>
-            <hr class="hr-bottom"/>
-            <div class="baseLine">
-                <div class="left">
-                    <div class="titleText">上次登录：</div>
-                    <div class="contentText" style="color:#FF9900">${ last_login }</div>
-                </div>
-                <div class="right">
-                </div>
-            </div>
-        </div>
-    </div>
-    <hr class="hr-bottom"/>
 
-    <div id="change">
-        <div style="display: flex;flex-direction: row">
-            <div style="flex: 1;font-size: 14px">密码:</div>
-            <div style="flex:22;display: flex;flex-direction: row;justify-content: space-around">
-                <div style="flex:20;font-size:14px;">安全性高的密码可以使帐号更安全。建议您定期更换密码，设置一个包含字母，符号或数字中至少两项且长度超过6位的密码。</div>
-                <div id="m_pass"
-                     style="flex:4;font-size:16px;text-align: right; margin-right: 20px;color: #428BCA;">
-{#                    <i-button type="text" @click="modifyPass">修改</i-button>#}
-                    <a style="color: black;font-size: 12px;" href="/user/changepwd">修改&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+            </div>
+
+            <div id="changephone">
+                <div id="ph" v-if="phisShow">
+                    <i-form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="80" inline>
+                        <Form-Item label="手机号码" prop="ph">
+                            <i-input v-model="formValidate.ph" placeholder="Enter phone"></i-input>
+                        </Form-Item>
+
+
+                        <Form-Item>
+                            <i-button type="primary" @click="handlephoneSubmit('formValidate')">修改</i-button>
+                            <i-button type="ghost" @click="handlephoneReset('formValidate')" style="margin-left: 10px">
+                                取消
+                            </i-button>
+                        </Form-Item>
+                    </i-form>
                 </div>
 
-
-            </div>
-        </div>
-
-
-        <hr class="hr-bottom"/>
-
-        <div style="display: flex;flex-direction: row">
-            <div style="flex: 1;font-size: 14px">邮箱:</div>
-            <div style="flex:22;display: flex;flex-direction: row;justify-content: space-around">
-                <div style="flex:20;font-size:14px;">${mail}</div>
-                <div id="m_email"
-                     style="flex:4;font-size:16px;text-align: right; margin-right: 20px;color: #428BCA;">
-                    <!--<a href="javascript:m_mail();">修改</a>-->
-                    <i-button type="text" @click="modifyMail">修改</i-button>
-                </div>
-            </div>
-        </div>
-
-        <div id="changemail">
-            <div id="mail" v-if="mailisShow">
-                <i-form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="80" inline>
-
-
-                    <Form-Item label="E-mail" prop="mail">
-                        <i-input v-model="formValidate.mail" placeholder="Enter your e-mail"></i-input>
-                    </Form-Item>
-
-
-                    <Form-Item>
-                        <i-button type="primary" @click="handlemailSubmit('formValidate')">修改</i-button>
-                        <i-button type="ghost" @click="handlemailReset('formValidate')" style="margin-left: 10px">取消
-                        </i-button>
-                    </Form-Item>
-                </i-form>
-            </div>
-
-        </div>
-
-
-        <hr class="hr-bottom"/>
-
-
-        <div style="display: flex;flex-direction: row">
-            <div style="flex: 1;font-size: 14px">手机:</div>
-            <div style="flex:22;display: flex;flex-direction: row;justify-content: space-around">
-                <div style="flex:20;font-size:14px;">${phone}</div>
-                <div id="m_phone"
-                     style="flex:4;font-size:16px;text-align: right; margin-right: 20px;color: #428BCA;">
-                    <i-button type="text" @click="modifyPhone">修改</i-button>
-                </div>
             </div>
 
 
         </div>
-
-        <div id="changephone" >
-            <div id="ph" v-if="phisShow">
-                <i-form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="80" inline>
-                    <Form-Item label="手机号码" prop="ph">
-                        <i-input v-model="formValidate.ph" placeholder="Enter phone"></i-input>
-                    </Form-Item>
-
-
-                    <Form-Item>
-                        <i-button type="primary" @click="handlephoneSubmit('formValidate')">修改</i-button>
-                        <i-button type="ghost" @click="handlephoneReset('formValidate')" style="margin-left: 10px">取消
-                        </i-button>
-                    </Form-Item>
-                </i-form>
-            </div>
-
-        </div>
-
 
     </div>
-
-</div>
 </div>
 </body>
 </html>
 
-<script >
+<script>
 
 
     var vm = new Vue({
         el: '#person',
 
         data: {
+            company_edit: false,
+            address_edit: false,
+            name_edit: false,
             mailisShow: false,
             phisShow: false,
-            username:"{{ request.user.name }}",
-            org: "{{ request.user.company }}",
-            userid:  "{{ request.user.username }}",
-            address: "{{ request.user.address }}",
-            role: "{{ request.user.role }}",
+            username: "{{ request.user.name |safen }}",
+            org: "{{ request.user.company |safen }}",
+            userid: "{{ request.user.username |safen }}",
+            address: "{{ request.user.address |safen }}",
+            role: "{{ request.user.role |safen }}",
             time: "{{ request.user.date_joined | date:"Y-m-d H:i:s" }}",
-            mail: "{{ request.user.email }}",
+            mail: "{{ request.user.email|safen }}",
             phone: "{{ request.user.telphone }}",
             last_login: "{{ request.user.last_login| date:"Y-m-d H:i:s" }}",
             avatar: "/upload/{{ request.user.avatar }}",
 
+            ruleValidatePersion: {//表单验证
+                name: {required: true, type: 'string', message: '必填字段', trigger: 'blur'},
+                company: {required: false, type: 'string', message: '必填字段'},
+                address: {required: false, type: 'string', message: '必填字段'},
+            },
+            person: {
+                name: '{{ request.user.name|safen }}',
+                company: '{{ request.user.company|safen }}',
+                address: '{{ request.user.address|safen }}',
+            },
+            old: {
+                name: '{{ request.user.first_name|safen }}',
+                company: '{{ request.user.userprofile.company|safen }}',
+                address: '{{ request.user.userprofile.address|safen }}',
+            },
             formValidate: {
                 mail: '',
                 ph: '',
@@ -323,12 +423,12 @@
                         };
                         axios.post('set', params).then(function (response) {
                             if (response.data.code == 0) {
-                               vm.mailisShow = !vm.mailisShow;
-                                vm.mail=vm.formValidate.mail;
-                                 vm.$Message.success('Success!');
+                                vm.mailisShow = !vm.mailisShow;
+                                vm.mail = vm.formValidate.mail;
+                                vm.$Message.success('Success!');
 
                             } else {
-                                 vm.$Message.error('Fail!');
+                                vm.$Message.error('Fail!');
 
                             }
                         }).catch(function (error) {
@@ -346,7 +446,6 @@
             },
 
 
-
             handlephoneSubmit: function (name) {
                 this.$refs[name].validate((valid) => {
 
@@ -357,12 +456,12 @@
                         };
                         axios.post('set', params).then(function (response) {
                             if (response.data.code == 0) {
-                                 vm.phisShow = !vm.phisShow;
-                                 vm.phone=vm.formValidate.ph;
-                                 vm.$Message.success('Success!');
+                                vm.phisShow = !vm.phisShow;
+                                vm.phone = vm.formValidate.ph;
+                                vm.$Message.success('Success!');
 
                             } else {
-                                 vm.$Message.error('Fail!');
+                                vm.$Message.error('Fail!');
 
                             }
                         }).catch(function (error) {
@@ -381,39 +480,121 @@
             },
 
 
-
-            modifyMail:function () {
+            modifyMail: function () {
 
                 vm.mailisShow = true
             },
 
-            modifyPhone:function () {
+            modifyPhone: function () {
 
                 vm.phisShow = true
             },
 
-            handleFormatError :function (file) {
+            handleFormatError: function (file) {
                 this.$Notice.warning({
                     title: 'The file format is incorrect',
                     desc: 'File format of ' + file.name + ' is incorrect, please select jpg or png.'
                 });
             },
 
-            handleMaxSize:function (file) {
+            handleMaxSize: function (file) {
                 this.$Notice.warning({
                     title: 'Exceeding file size limit',
                     desc: 'File  ' + file.name + ' is too large, no more than 2M.'
                 });
             },
-            handleSuccess:function  (res, file) {
+            handleSuccess: function (res, file) {
                 // 因为上传过程为实例，这里模拟添加 url
                 vm.avatar = '/upload/' + res.data.avatar;
                 this.$Message.success('upload Success!');
             },
-            modifyPass:function() {
-                 //window.location.href = '/changePass'
+            modifyPass: function () {
+                //window.location.href = '/changePass'
                 window.open("");
-            }
+            },
+            modify: function (id) {
+                switch (id) {
+                    case "c_name":
+                        vm.name_edit = true;
+                        break;
+                    case "c_company":
+                        vm.company_edit = true;
+                        break;
+                    case "c_address":
+                        vm.address_edit = true;
+                        break;
+                }
+            },
+            cancle: function (id) {
+                switch (id) {
+                    case "c_name":
+                        vm.name_edit = false;
+                        vm.person.name = vm.old.name;
+                        break;
+                    case "c_company":
+                        vm.company_edit = false;
+                        vm.person.company = vm.old.company;
+                        break;
+                    case "c_address":
+                        vm.address_edit = false;
+                        vm.person.address = vm.old.address;
+                        break;
+                }
+            },
+            saveVaild: function (id) {
+                vaild = this.$refs['person_vaild'];
+                {#                switch (id) {#}
+                {#                    case "c_name":#}
+                {#                        vaild = this.$refs['person_vaild'];#}
+                {#                        break;#}
+                {#                    case "c_company":#}
+                {#                        vaild = this.$refs['person_vaild'];#}
+                {#                        break;#}
+                {#                    case "c_address":#}
+                {#                        vaild = this.$refs['person_vaild'];#}
+                {##}
+                {#                        break;#}
+                {##}
+                {#                }#}
+                vaild.validate(function (valid) {
+                    if (valid) {
+                        vm.save(id)
+                    }
+                });
+            },
+            save: function (id) {
+                axios.post('save', JSON.stringify(vm.person))
+                    .then(function (response) {
+                        console.log(response);
+                        if (response.data.code == 0) {
+                            vm.$Message.success(response.data.msg);
+                            switch (id) {
+                                case "c_name":
+                                    vm.name_edit = false;
+                                    vm.old.name = vm.person.name;
+                                    break;
+                                case "c_company":
+                                    vm.company_edit = false;
+                                    vm.old.company = vm.person.company;
+                                    break;
+                                case "c_address":
+
+                                    vm.address_edit = false;
+                                    vm.old.address = vm.person.address;
+                                    break;
+                            }
+
+
+                        } else {
+                            vm.$Message.warning(response.data.msg);
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                        {#                            vm.$Message.error(error);#}
+                    });
+            },
+
 
         }
 

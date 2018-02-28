@@ -20,5 +20,13 @@ def pcut(value):
         return value
     return out
 
+@register.filter
+def safen(value):
+    v = str(value)
+    if v is None or v == 'None':
+        return ''
+    else:
+        return value
+
 if __name__ == '__main__':
     print  pcut(18913387696)

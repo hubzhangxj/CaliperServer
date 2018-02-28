@@ -23,6 +23,7 @@ urlpatterns = [
     url('^userinfo/$',aViews.getuserinfo),
     url('^userinfo/set$',aViews.setuserinfo),
     url('^userinfo/upload$', aViews.upload),
+    url('^userinfo/save$', aViews.save),
     url('^login$',aViews.login),
     url('^logout$', aViews.logout),
     url('^register', aViews.signup),
