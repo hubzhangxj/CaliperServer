@@ -46,7 +46,7 @@ def main(request):
 
 
 def download(req):
-    downloadPath = settings.downloadPath
+    downloadPath = CaliperServer.settings.downloadPath
     try:
         filePath = ''
         version = req.GET.get('version')

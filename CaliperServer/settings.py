@@ -44,7 +44,7 @@ print uploadPath
 SECRET_KEY = 'x6=vjz#1)p9^$dxl(8_hw5xy&8#2dv=^q(^n!89xh8509@65!d'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
