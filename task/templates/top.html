@@ -37,7 +37,7 @@
         data: {
             role:"{{ request.user.role|safe }}" === ADMIN,
             isShowBack: !('{{ isShowBack|safe }}' === '' || '{{ isShowBack|safe }}' === 'undefined' || '{{ isShowBack|safe }}' === 'False'),
-            name:'{{ request.user.name }}' === 'None' ?'{{ request.user.username }}':'{{ request.user.name }}'
+            name:'{{ request.user.username }}'
         },
         methods: {
             person: function () {

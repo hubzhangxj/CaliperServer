@@ -20,7 +20,6 @@ from django.core.urlresolvers import reverse
 from .sso import REMOTE_SSO_LOGIN_URL, REMOTE_SSO_CHANGEPWD_URL, REMOTE_SSO_LOGOUT_URL, REMOTE_SSO_SIGNUP_URL, logined_users
 from sso.authbackend import SSOAuthBackend
 from sso.utility import form_redirect
-
 from .permission import login_required
 import traceback
 
@@ -46,7 +45,7 @@ def main(request):
 
 
 def download(req):
-    downloadPath = CaliperServer.settings.downloadPath
+    from CaliperServer.settings import downloadPath
     try:
         filePath = ''
         version = req.GET.get('version')
@@ -134,6 +133,7 @@ def save(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok')
 
 
+@csrf_exempt
 @login_required
 def upload(req):
     # try:

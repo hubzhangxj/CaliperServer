@@ -7,4 +7,25 @@
 <script src="{% static '/js/axios.min.js' %}"></script>
 <script>
     axios.defaults.headers.common['X-CSRFToken'] = '{{csrf_token}}';
+
+    function isContains(str, substr) {
+        return str.toString().indexOf(substr) >= 0;
+    }
+
+    axios.interceptors.response.use(function (response) {
+        // Do something with response data
+        {#            console.log("=======================");#}
+        {#            console.log(isContains(response.data,'<title>登录</title>'));#}
+        {#            console.log(response.data);#}
+        //TODO  判断条件可能会有变化
+        var isHtml = isContains(response.data, '<title>Caliper</title>');
+        if (isHtml) {
+            window.location.href = '/';
+        }
+        {#            console.log("=======================");#}
+        return response;
+    }, function (error) {
+        // Do something with response error
+        return Promise.reject(error);
+    });
 </script>
