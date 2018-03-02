@@ -17,26 +17,35 @@
 #
 server {
     listen         8000; 
-    server_name    127.0.0.1 
+    #server_name    127.0.0.1
     charset UTF-8;
-    access_log      /var/log/nginx/myweb_access.log;
-    error_log       /var/log/nginx/myweb_error.log;
+    access_log      /var/log/nginx/caliperserver_access.log;
+    error_log       /var/log/nginx/caliperserver_error.log;
 
     client_max_body_size 1024M;
 
     location / { 
 #        root /mydata/www; 
+        uwsgi_send_timeout 600;        # 指定向uWSGI传送请求的超时时间，完成握手后向uWSGI传送请求的超时时间。
+        uwsgi_connect_timeout 600;   # 指定连接到后端uWSGI的超时时间。
+        uwsgi_read_timeout 600;        # 指定接收uWSGI应答的超时时间，完成握手后接收uWSGI应答的超时时间。
         include uwsgi_params;
+#	uwsgi_pass unix:///tmp/caliperserver.sock;
         uwsgi_pass 127.0.0.1:8003;
-#        uwsgi_read_timeout 2;
     }   
     location /static {
         expires 30d;
         autoindex on; 
         add_header Cache-Control private;
 #        alias /opt/CaliperServer/caliperserver/resources/common_static/;
-        alias /opt/CaliperServer/static/;
+        alias /opt/CaliperServer/caliperserver/static/;
      }
+    location /upload {
+	expires 30d;
+	autoindex on;
+	add_header Cache-Control private;
+	alias /opt/CaliperServer/data/upload/;
+    }
 }
 
 
