@@ -442,6 +442,25 @@ config_mysql()
 
 }
 
+## config apache
+# Usage: config_apache
+config_apache()
+{
+    system_os=`cat /etc/os-release | grep -owP 'ID=\K\S+' | sed 's/"//g'`
+    if [ $system_os = "ubuntu" ]
+    then
+	apacheconfdir='/etc/apache2'
+        sudo cp /opt/CaliperServer/utils/automation_scripts/caliperserver.conf $apacheconfdir/sites-available/
+	sudo a2ensite caliperserver.conf
+	systemctl restart apache2
+    else
+	apacheconfdir='/etc/httpd'
+        sudo cp /opt/CaliperServer/utils/automation_scripts/caliperserver.conf.else $apacheconfdir/conf.d
+        sudo systemctl restart httpd
+    fi
+    
+}
+
 ## config nginx
 # Usage: config_nginx
 config_nginx()

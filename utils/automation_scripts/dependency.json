@@ -1,31 +1,47 @@
 {
 "ubuntu_dpk_package":[
     {"platform":"python-pip","install":"yes"},
+    {"platform":"gcc","install":"yes"},
+    {"platform":"g++","install":"yes"},
+    {"platform":"make","install":"yes"},
     {"platform":"python-requests","install":"yes"},
-    {"platform":"nginx","install":"yes"},
+    {"platform":"apache2","install":"yes"},
+    {"platform":"libapache2-mod-wsgi","install":"yes"},
     {"platform":"libmysqlclient-dev","install":"yes"},
     {"platform":"mysql-server-5.7","install":"yes"}
 ],
 
 "centos_dpk_package":[
     {"platform":"python-pip","install":"yes"},
+    {"platform":"gcc","install":"yes"},
+    {"platform":"gcc-c++","install":"yes"},
+    {"platform":"make","install":"yes"},
     {"platform":"python-requests","install":"yes"},
-    {"platform":"nginx","install":"yes"},
+    {"platform":"httpd","install":"yes"},
+    {"platform":"mod_wsgi","install":"yes"},
     {"platform":"mysql-devel","install":"yes"},
     {"platform":"mariadb-server","install":"yes"}
 ],
 
 "redhat_dpk_package":[
     {"platform":"python-pip","install":"yes"},
+    {"platform":"gcc","install":"yes"},
+    {"platform":"gcc-c++","install":"yes"},
+    {"platform":"make","install":"yes"},
     {"platform":"python-requests","install":"yes"},
-    {"platform":"nginx","install":"yes"},
+    {"platform":"httpd","install":"yes"},
+    {"platform":"mod_wsgi","install":"yes"},
     {"platform":"mysql-devel","install":"yes"},
     {"platform":"mariadb-server","install":"yes"}
 ],
 
 "sles_dpk_package":[
     {"platform":"python-requests","install":"yes"},
-    {"platform":"nginx","install":"yes"},
+    {"platform":"gcc","install":"yes"},
+    {"platform":"gcc-c++","install":"yes"},
+    {"platform":"make","install":"yes"},
+    {"platform":"httpd","install":"yes"},
+    {"platform":"mod_wsgi","install":"yes"},
     {"platform":"libmysqlclient-devel","install":"yes"},
     {"platform":"mariadb","install":"yes"}
 ],
@@ -35,7 +51,6 @@
     {"platform":"poster==0.8.1","install":"yes"},
     {"platform":"mysqlclient==1.3.12","install":"yes"},
     {"platform":"pycrypto==2.6.1","install":"yes"},
-    {"platform":"numpy==1.13.3","install":"yes"},
-    {"platform":"uwsgi==2.0.15","install":"yes"}
+    {"platform":"numpy==1.13.3","install":"yes"}
 ]
 }
