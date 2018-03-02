@@ -20,4 +20,8 @@ md5sum $HOME/caliperserver-$var.install > $HOME/caliperserver-$var.install.md5
 
 chmod 775 $HOME/caliperserver-$var.install
 
-rm -rf caliperserver.tar.gz
+rm -f caliperserver.tar.gz
+rm -f $HOME/caliperserver-v$var.zip
+
+cd $HOME && zip caliperserver-v$var.zip caliperserver-$var.install caliperserver-$var.install.md5
+
