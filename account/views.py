@@ -197,7 +197,7 @@ def auth_callback(request):
     if not error:
         if not user:  # 这种情况表明用户在其他site注册，并且首次登陆本site
             role = USER_CUSTOM
-            if user_info['admin'] == "CaliperServer":
+            if user_info is not None and  user_info['admin'] == "CaliperServer":
                 role = USER_ADMIN
             user = UserProfile(username=user_info['username'], email=user_info['email'], role=role)
             user.save()

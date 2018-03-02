@@ -315,7 +315,7 @@ def compare(req):
                     dimResult = taskModels.DimResult.objects.get(task_id=task['id'], dim__name=categorie)
                     datas.append(dimResult.result)
                 except:
-                    logger.error('find dimresult none')
+                    logger.error('find dimresult none taskId:%d',task['id'])
                     datas.append(0)
             value_list[categorie] = datas
 
