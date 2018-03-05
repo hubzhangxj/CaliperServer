@@ -28,7 +28,9 @@ urlpatterns = [
     url('^logout$', aViews.logout),
     url('^register', aViews.signup),
     url(r'^changepwd$', aViews.change_pwd),
+    url(r'^changemail$', aViews.change_email),
     url(r'^authcallback$', aViews.auth_callback, name="authcallback"),
     url(r'^signupcallback$', aViews.signup_callback, name="signupcallback"),
     url(r'^changepwdcallback$', aViews.changepwd_callback, name="changepwdcallback"),
+    url(r'^changemailcallback$', aViews.changemail_callback, name="changemailcallback"),
 ]

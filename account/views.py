@@ -17,14 +17,15 @@ from django.http import JsonResponse
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
-from .sso import REMOTE_SSO_LOGIN_URL, REMOTE_SSO_CHANGEPWD_URL, REMOTE_SSO_LOGOUT_URL, REMOTE_SSO_SIGNUP_URL, logined_users
+from .sso import REMOTE_SSO_LOGIN_URL, REMOTE_SSO_CHANGEPWD_URL, REMOTE_SSO_LOGOUT_URL, REMOTE_SSO_SIGNUP_URL, \
+    logined_users,REMOTE_SSO_CHANGEMAIL_URL
 from sso.authbackend import SSOAuthBackend
 from sso.utility import form_redirect
 from .permission import login_required
 import traceback
 
-USER_ADMIN = 0 #管理员
-USER_CUSTOM = 1 #普通用户
+USER_ADMIN = 0  # 管理员
+USER_CUSTOM = 1  # 普通用户
 
 
 def main(request):
@@ -39,7 +40,7 @@ def main(request):
     versions.sort(key=operator.itemgetter('version'), reverse=True)
     logger.debug(versions)
 
-    data = {'versions': json.dumps(versions),"yyy":"pppp"}
+    data = {'versions': json.dumps(versions), "yyy": "pppp"}
 
     return render(request, "main.html", data)
 
@@ -69,6 +70,7 @@ def download(req):
         response['Content-Disposition'] = 'attachment;filename="{0}"'.format(fileName)
         return response
 
+
 def file_iterator(filename, chunk_size=512):
     with open(filename, "rb") as f:
         while True:
@@ -77,10 +79,13 @@ def file_iterator(filename, chunk_size=512):
                 yield c
             else:
                 break
+
+
 def login0(req):
     user = UserProfile.objects.get(username="admin")
     auth.login(req, user)
     return HttpResponseRedirect("/task/list")
+
 
 @login_required
 def getuserinfo(req):
@@ -95,8 +100,9 @@ def getuserinfo(req):
     # except:
     #     return HttpResponse(status=404, content='未找到')
 
-    #return HttpResponse(status=200)
-    return render(req,"userinfo.html",{'isShowBack':True})
+    # return HttpResponse(status=200)
+    return render(req, "userinfo.html", {'isShowBack': True})
+
 
 @login_required
 def setuserinfo(req):
@@ -114,8 +120,9 @@ def setuserinfo(req):
 
     except Exception as e:
         logger.debug(traceback.format_exc())
-        return Response.CustomJsonResponse(Response.CODE_FAILED,'fail')
+        return Response.CustomJsonResponse(Response.CODE_FAILED, 'fail')
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok')
+
 
 @login_required
 def save(req):
@@ -197,7 +204,7 @@ def auth_callback(request):
     if not error:
         if not user:  # 这种情况表明用户在其他site注册，并且首次登陆本site
             role = USER_CUSTOM
-            if user_info is not None and  user_info['admin'] == "CaliperServer":
+            if user_info is not None and user_info['admin'] == "CaliperServer":
                 role = USER_ADMIN
             user = UserProfile(username=user_info['username'], email=user_info['email'], role=role)
             user.save()
@@ -286,7 +293,7 @@ def logout(request):
             del request.session['auth_token']
             client_ip = request.META.get("REMOTE_ADDR")
             code, result = client.send_request(REMOTE_SSO_LOGOUT_URL + "?" +
-                                               urllib.urlencode({"auth_token": auth_token,"client_ip": client_ip}))
+                                               urllib.urlencode({"auth_token": auth_token, "client_ip": client_ip}))
             print result['msg']
         except Exception as e:
             print e
@@ -307,7 +314,7 @@ def login(request):
     callback = request.build_absolute_uri(reverse("authcallback") +
                                           "?redirect=%s" % request.GET.get("next", settings.LOGIN_REDIRECT_URL))
 
-    return form_redirect(server+REMOTE_SSO_LOGIN_URL, apikey=settings.SSO_API_AUTH_SETTING["apikey"],
+    return form_redirect(server + REMOTE_SSO_LOGIN_URL, apikey=settings.SSO_API_AUTH_SETTING["apikey"],
                          callback=callback)
 
 
@@ -321,7 +328,7 @@ def signup(request):
     callback = request.build_absolute_uri(reverse("signupcallback") +
                                           "?redirect=%s" % request.GET.get("next", settings.LOGIN_REDIRECT_URL))
 
-    return form_redirect(server+REMOTE_SSO_SIGNUP_URL, apikey=settings.SSO_API_AUTH_SETTING["apikey"],
+    return form_redirect(server + REMOTE_SSO_SIGNUP_URL, apikey=settings.SSO_API_AUTH_SETTING["apikey"],
                          callback=callback)
 
 
@@ -333,9 +340,45 @@ def change_pwd(request):
     """
     server = settings.SSO_API_AUTH_SETTING["url"]
     callback = request.build_absolute_uri(reverse("changepwdcallback") +
-                                          "?redirect=%s" % request.GET.get("next", settings.LOGIN_REDIRECT_URL))
+                                          "?redirect=%s" % request.GET.get("next", settings.USER_REDIRECT_URL))
 
-    return form_redirect(server+REMOTE_SSO_CHANGEPWD_URL, apikey=settings.SSO_API_AUTH_SETTING["apikey"],
+    return form_redirect(server + REMOTE_SSO_CHANGEPWD_URL, apikey=settings.SSO_API_AUTH_SETTING["apikey"],
                          callback=callback)
 
+
+def change_email(request):
+    """
+    修改密码页面
+    :param request:
+    :return:
+    """
+    server = settings.SSO_API_AUTH_SETTING["url"]
+    callback = request.build_absolute_uri(reverse("changemailcallback") +
+                                          "?redirect=%s" % request.GET.get("next", settings.USER_REDIRECT_URL))
+
+    return form_redirect(server + REMOTE_SSO_CHANGEMAIL_URL, apikey=settings.SSO_API_AUTH_SETTING["apikey"],
+                         username=request.user.username,
+                         callback=callback)
+
+@csrf_exempt
+def changemail_callback(request):
+    """
+    修改邮箱后的回调（由SSO服务器发起）
+    :param request:
+    :return:
+    """
+    auth_token = request.POST.get("auth_token")
+    email = request.POST.get("email")
+    redirect = request.GET.get("redirect", settings.USER_REDIRECT_URL)
+
+    error, user, user_info = SSOAuthBackend.authenticate(auth_token)
+    if not error:
+        UserProfile.objects.filter(username=user_info['username']).update(email=email)
+        user = UserProfile.objects.get(username=user_info['username'])
+        auth.login(request, user)  # create session, write cookies
+        logined_users[auth_token] = user  # 存入全局变量中
+        request.session["auth_token"] = auth_token  # 存入session
+        return HttpResponseRedirect(redirect)
+    else:
+        raise PermissionDenied
 

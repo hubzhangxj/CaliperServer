@@ -44,7 +44,7 @@ print uploadPath
 SECRET_KEY = 'x6=vjz#1)p9^$dxl(8_hw5xy&8#2dv=^q(^n!89xh8509@65!d'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -228,4 +228,5 @@ SSO_API_AUTH_SETTING = {
 AUTHENTICATION_BACKENDS = ("account.sso.authbackend.SSOAuthBackend",)
 
 LOGIN_REDIRECT_URL = "/task/list"
+USER_REDIRECT_URL = '/user/userinfo/'
 # sso相关 end

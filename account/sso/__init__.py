@@ -14,6 +14,7 @@ REMOTE_SSO_LOGOUT_URL = "/uams/logout"
 REMOTE_SSO_SIGNUP_URL = "/uams/signup"
 REMOTE_SSO_RESETPWD_URL = "/uams/resetpwd"
 REMOTE_SSO_CHANGEPWD_URL = "/uams/changepwd"
+REMOTE_SSO_CHANGEMAIL_URL = "/uams/changemail"
 
 logined_users = {}  # logging users
 
