@@ -13,12 +13,12 @@ main()
 
 ##	1. check user
 
-    user=`whoami`
-    if [ "$user" = "root" ]
-    then
-        echo "Please run this program as normal user!"
-	exit 0
-    fi
+#    user=`whoami`
+#    if [ "$user" = "root" ]
+#    then
+#        echo "Please run this program as normal user!"
+#	exit 0
+#    fi
 
 ##         check whiptail
     which whiptail
@@ -263,6 +263,19 @@ main()
             sudo cp -r /tmp/CaliperServer /opt/
         fi
         
+	mkdir -p /opt/data
+
+        case $system_os in
+        ubuntu)
+	    sudo chown -R www-data.www-data /opt/CaliperServer
+	    sudo chown -R www-data.www-data /opt/data
+	    ;;
+	centos|rhel|sles)
+	    sudo chown -R apache.apache /opt/CaliperServer
+	    sudo chown -R apache.apache /opt/data
+	    ;;
+	esac
+	    
         write_log "caliperserver install success" $log
 
     } | whiptail --title "CaliperServer installation" --gauge "caliperserver" 7 55 95
@@ -273,7 +286,7 @@ main()
 ## 15. config sql and config nginx and start nginx service
     config_mysql
    
-    config_nginx
+    config_apache
 
 #    start_nginx
 
