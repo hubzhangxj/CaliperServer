@@ -23,6 +23,8 @@ from sso.authbackend import SSOAuthBackend
 from sso.utility import form_redirect
 from .permission import login_required
 import traceback
+from shared.crypto import *
+from django.shortcuts import HttpResponse, redirect
 
 USER_ADMIN = 0  # 管理员
 USER_CUSTOM = 1  # 普通用户
@@ -40,7 +42,7 @@ def main(request):
     versions.sort(key=operator.itemgetter('version'), reverse=True)
     logger.debug(versions)
 
-    data = {'versions': json.dumps(versions), "yyy": "pppp"}
+    data = {'versions': json.dumps(versions)}
 
     return render(request, "main.html", data)
 
@@ -381,4 +383,63 @@ def changemail_callback(request):
         return HttpResponseRedirect(redirect)
     else:
         raise PermissionDenied
+
+
+@csrf_exempt
+def lock_notify(request):
+    """
+    账户被锁定后的通知（由SSO服务器发起）
+    :param request:
+    :return:
+    """
+    day = request.GET.get("d", 0)
+    account = request.GET.get("account", None)
+    singer = request.GET.get("singer", None)
+    if day and account and singer:
+        isOk = verify(account,singer)
+        if not isOk:
+            return HttpResponse('参数值签名有误', status=403)
+        user = UserProfile.objects.filter(username=account).first()
+        if user is None:
+            return HttpResponse('用户名不存在', status=403)
+        if day == u'1':  # 锁定当天
+            for token, user in logined_users.items():
+                if user.username == account:
+                    logined_users.pop(token)
+                    break
+            user.is_active = False
+            user.save()
+            return HttpResponse('ok', status=200)
+        elif day == u'7':  # 锁定7天
+            # TODO
+            print 7
+        else:
+            return HttpResponse('参数值有误', status=403)
+        return HttpResponseRedirect(redirect)
+    else:
+        return HttpResponse('参数缺失', status=403)
+
+@csrf_exempt
+def unlock_notify(request):
+    """
+    账户解锁后的通知（由SSO服务器发起）
+    :param request:
+    :return:
+    """
+    account = request.GET.get("account", None)
+    singer = request.GET.get("singer", None)
+    if account and singer:
+        isOk = verify(account,singer)
+        if not isOk:
+            return HttpResponse('参数值签名有误', status=403)
+        user = UserProfile.objects.filter(username=account).first()
+        if user is None:
+            return HttpResponse('用户名不存在', status=403)
+
+        user.is_active = True
+        user.save()
+        return HttpResponse('ok', status=200)
+    else:
+        return HttpResponse('参数缺失', status=403)
+
 

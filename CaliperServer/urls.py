@@ -24,12 +24,13 @@ from data import urls as dataUrl
 from task import urls as taskUrl
 from account import views as accountView
 
-
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^$',accountView.main),
-    url(r'^uams/logoutnotify$', userViews.logout_notify),
-    url('^user/',include(userUrl)),
-    url('^task/',include(taskUrl)),
-    url('^data/',include(dataUrl)),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+                  url(r'^admin/', admin.site.urls),
+                  url(r'^$', accountView.main),
+                  url(r'^uams/logoutnotify$', userViews.logout_notify),
+                  url(r'^uams/locknotify$', userViews.lock_notify),
+                  url(r'^uams/unlocknotify$', userViews.unlock_notify),
+                  url('^user/', include(userUrl)),
+                  url('^task/', include(taskUrl)),
+                  url('^data/', include(dataUrl)),
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
