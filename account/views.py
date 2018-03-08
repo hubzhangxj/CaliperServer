@@ -407,8 +407,9 @@ def lock_notify(request):
                 if user.username == account:
                     logined_users.pop(token)
                     break
-            user.is_active = False
-            user.save()
+            # user.is_active = False
+            # user.save()
+            UserProfile.objects.filter(username=account).update(is_active=False)
             return HttpResponse('ok', status=200)
         elif day == u'7':  # 锁定7天
             # TODO
@@ -436,8 +437,9 @@ def unlock_notify(request):
         if user is None:
             return HttpResponse('用户名不存在', status=403)
 
-        user.is_active = True
-        user.save()
+        # user.is_active = True
+        # user.save()
+        UserProfile.objects.filter(username=account).update(is_active=True)
         return HttpResponse('ok', status=200)
     else:
         return HttpResponse('参数缺失', status=403)
