@@ -13,8 +13,7 @@
 <div id="app">
     <div style="padding-bottom: 40px;padding-right: 40px;padding-left: 40px">
         {#        @on-select-all="selectAll" @on-select="select"  @on-select-cancel="selectCancle"  @on-selection-change="change"#}
-        <i-table border :columns="columns" :data="data" @on-select-all="selectAll" @on-select="select"
-                 @on-select-cancel="selectCancle"
+        <i-table border :columns="columns" :data="data" @on-select-all="selectAll" @on-selection-change="selectChange"
         ></i-table>
 
         <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
@@ -275,6 +274,10 @@
 
         },
         methods: {
+            selectChange: function (selection) {
+                    vm.selection = selection;
+                    console.log(selection);
+            },
             view: function () {
                 console.log(vm.selection);
                 if (vm.selection.length == 1) {
