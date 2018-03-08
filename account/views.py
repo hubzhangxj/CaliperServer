@@ -135,6 +135,7 @@ def save(req):
         user.name = server['name']
         user.company = server['company']
         user.address = server['address']
+        user.telphone = server['phone']
         user.save()
     except Exception as e:
         logger.debug(str(e))

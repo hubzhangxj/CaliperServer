@@ -95,6 +95,14 @@
 
     }
 
+    .contentText2 {
+        flex: 5;
+        font-size: 14px;
+        color: #333333;
+        display: flex;
+
+    }
+
     .control_btn {
         cursor: pointer;
         color: dodgerblue;
@@ -114,6 +122,11 @@
         flex-direction: row;
         justify-content: center;
     }
+    .controlBtn {
+            margin-right: 20px;
+            color: #428BCA;
+            font-size: 13px;
+        }
 
 
 </style>
@@ -314,15 +327,42 @@
             <hr class="hr-bottom"/>
 
 
-            <div style="display: flex;flex-direction: row">
-                <div style="flex: 1;font-size: 14px">手机:</div>
-                <div style="flex:22;display: flex;flex-direction: row;justify-content: space-around">
-                    <div style="flex:20;font-size:14px;">${phone}</div>
-                    <div id="m_phone"
-                         style="flex:4;font-size:16px;text-align: right; margin-right: 20px;color: #428BCA;">
-                        <i-button type="text" @click="modifyPhone" style="color: #2b85e4;font-size: 13px">修改</i-button>
+            <div style="display: flex;flex-direction: row;width: 100%">
+                <i-form ref="person_vaild" :rules="ruleValidatePersion" :model="person" :label-width="80"
+                        label-position="left"
+                        inline
+                        style="width: 100%" name="form">
+                    <div style="display: flex;flex-direction: row;width: 100%" v-if="!phone_edit">
+                        <div style="flex: 1;font-size: 14px">手机:</div>
+                        <div style="flex:22;display: flex;flex-direction: row;justify-content: space-between">
+                            <div style="flex:20;font-size:14px;">${person.phone}</div>
+                            <div id="m_phone" @click="modify('c_phone')"
+                                 style="flex:4;font-size:13px;text-align: right; margin-right: 38px;color: #428BCA;">修改
+                            </div>
+                        </div>
                     </div>
-                </div>
+
+                    <div style="display: flex;flex-direction: row;width: 100%;justify-content: space-between;"
+                         v-if="phone_edit">
+                        <Form-item label="手机:" prop="phone">
+                            <i-input v-model="person.phone" placeholder="请输入手机"></i-input>
+                        </Form-item>
+                        <div style="display: flex;flex-direction: row;align-items: center;margin-right: 8px">
+                            <div class="controlBtn" @click="saveVaild('c_phone')">保存</div>
+                            <div id="c_phone" class="control_btn" @click="cancle('c_phone')">取消</div>
+                        </div>
+                    </div>
+                </i-form>
+
+
+                {#                <div style="flex: 1;font-size: 14px">手机:</div>#}
+                {#                <div style="flex:22;display: flex;flex-direction: row;justify-content: space-around">#}
+                {#                    <div style="flex:20;font-size:14px;">${phone}</div>#}
+                {#                    <div id="m_phone"#}
+                {#                         style="flex:4;font-size:16px;text-align: right; margin-right: 20px;color: #428BCA;">#}
+                {#                        <i-button type="text" @click="modifyPhone" style="color: #2b85e4;font-size: 13px">修改</i-button>#}
+                {#                    </div>#}
+                {#                </div>#}
 
 
             </div>
@@ -364,6 +404,7 @@
             company_edit: false,
             address_edit: false,
             name_edit: false,
+            phone_edit: false,
             mailisShow: false,
             phisShow: false,
             username: "{{ request.user.name |safen }}",
@@ -381,16 +422,24 @@
                 name: {required: true, type: 'string', message: '必填字段', trigger: 'blur'},
                 company: {required: false, type: 'string', message: '必填字段'},
                 address: {required: false, type: 'string', message: '必填字段'},
+                phone: {
+                        required: true,
+                        type: 'string',
+                        message: '请输入正确的手机号码',
+                        pattern: '^1[3|4|5|7|8|9][0-9]{9}$'
+                    },
             },
             person: {
                 name: '{{ request.user.name|safen }}',
                 company: '{{ request.user.company|safen }}',
                 address: '{{ request.user.address|safen }}',
+                phone:'{{ request.user.telphone }}'
             },
             old: {
                 name: '{{ request.user.first_name|safen }}',
                 company: '{{ request.user.userprofile.company|safen }}',
                 address: '{{ request.user.userprofile.address|safen }}',
+                phone:'{{ request.user.telphone }}'
             },
             formValidate: {
                 mail: '',
@@ -525,6 +574,9 @@
                     case "c_address":
                         vm.address_edit = true;
                         break;
+                    case "c_phone":
+                        vm.phone_edit = true;
+                        break;
                 }
             },
             cancle: function (id) {
@@ -540,6 +592,10 @@
                     case "c_address":
                         vm.address_edit = false;
                         vm.person.address = vm.old.address;
+                        break;
+                    case "c_phone":
+                        vm.phone_edit = false;
+                        vm.person.phone = vm.old.phone;
                         break;
                 }
             },
@@ -583,6 +639,11 @@
 
                                     vm.address_edit = false;
                                     vm.old.address = vm.person.address;
+                                    break;
+                                case "c_phone":
+
+                                    vm.phone_edit = false;
+                                    vm.old.phone = vm.person.phone;
                                     break;
                             }
 
