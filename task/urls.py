@@ -35,6 +35,7 @@ urlpatterns = [
     url("^boardInfo/rowRestore/?$", taskViews.rowRestore),
     url("^boardInfo/permanentDelete/?$", taskViews.permanentDelete),
     url("^download/?$", taskViews.downloadFile),
+    url("^download/real/?$", taskViews.downloadReal),
     url("^list/userlist/?$", taskViews.userList),
     url("^list/addusersubmit/?$", taskViews.addUserSubmit),
     url("^list/adduser/?$", taskViews.addUser),

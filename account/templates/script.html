@@ -12,6 +12,15 @@
         return str.toString().indexOf(substr) >= 0;
     }
 
+    const downloadUrl = url => {
+        let iframe = document.createElement('iframe')
+        iframe.style.display = 'none';
+        iframe.src = url;
+        iframe.onload = function () {
+            document.body.removeChild(iframe)
+        };
+        document.body.appendChild(iframe)
+    };
     axios.interceptors.response.use(function (response) {
         // Do something with response data
         {#            console.log("=======================");#}
@@ -22,10 +31,20 @@
         if (isHtml) {
             window.location.href = '/';
         }
-        {#            console.log("=======================");#}
+
+
+{#        if (response.headers && response.headers['content-type'] === 'application/octet-stream') {#}
+{#            downloadUrl(response.request.responseURL);#}
+{##}
+{#            response.headers['content-type'] = 'text/json';#}
+{#            return response;#}
+{#        }#}
+
         return response;
     }, function (error) {
         // Do something with response error
         return Promise.reject(error);
     });
+
+
 </script>

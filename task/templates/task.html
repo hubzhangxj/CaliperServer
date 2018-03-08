@@ -53,7 +53,8 @@
                             </i-button>
                         </div>
                         <div>
-                            <i-button type="success" size="small" @click="allDelete" style="margin-right: 20px">Delete All
+                            <i-button type="success" size="small" @click="allDelete" style="margin-right: 20px">Delete
+                                All
                             </i-button>
                         </div>
                     </div>
@@ -115,7 +116,7 @@
     {#        form.submit();#}
     {#        $('input[type="submit"]', form).click();#}
     {#    }#}
-     //防止页面后退
+    //防止页面后退
     history.pushState(null, null, document.URL);
     window.addEventListener('popstate', function () {
         history.pushState(null, null, document.URL);
@@ -275,8 +276,8 @@
         },
         methods: {
             selectChange: function (selection) {
-                    vm.selection = selection;
-                    console.log(selection);
+                vm.selection = selection;
+                console.log(selection);
             },
             view: function () {
                 console.log(vm.selection);
@@ -307,7 +308,7 @@
                     {#                        });#}
                 } else if (vm.selection.length > 20) {
                     vm.$Message.error('Sorry,Select 20 items at most!')
-                }else{
+                } else {
                     vm.$Message.warning("Please select some task!");
                 }
 
@@ -609,26 +610,30 @@
             download: function () {
                 if (vm.selection.length <= 0) {
                     vm.$Message.warning("Please select some task!");
-                }else {
-{#                    window.open('download');#}
+                } else {
+                    {#                    window.open('download');#}
                     zips = [];
-                    for(z in vm.selection){
-                    for(var i=0;i<vm.selection.length;i++)
-                        z = vm.selection[i]
+                    for (z in vm.selection) {
+                        for (var i = 0; i < vm.selection.length; i++)
+                            z = vm.selection[i]
                         zips.push(z['path'])
                     }
-                    window.open('download?zips='+zips);
-{#                    axios.post('download', zips).then(function (response) {#}
-{#                        if (response.data.code == 0) {#}
-{##}
-{##}
-{#                        } else {#}
-{#                            vm.$Message.error('fail');#}
-{#                        }#}
-{#                    }).catch(function (error) {#}
-{##}
-{#                    });#}
 
+                    axios.post('download', vm.selection).then(function (response) {
+                        if(response.data.code===0) {
+                            const elink = document.createElement('a');
+                            elink.href = "download/real?path=" + response.data.data.path +
+                                "&fileName=" + response.data.data.fileName + "&isMult=" + response.data.data.isMult;
+                            document.body.appendChild(elink);
+                            elink.click();
+                            document.body.removeChild(elink)
+                        }else{
+                            vm.$Message.error("file not found!")
+                        }
+                    }).catch(function (error) {
+                        console.log(error);
+                        vm.$Message.error("file not found!")
+                    });
                 }
 
             }

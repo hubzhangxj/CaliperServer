@@ -9,3 +9,5 @@ ROLE_ADMIN = 0 #管理员
 ROLE_USER = 1 #普通用户
 
 PAGE_SIZE = 20
+
+TEMPFOLDER = 'temp'

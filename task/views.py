@@ -15,12 +15,12 @@ from shared.log import logger
 from django.db.models import Q, Count, QuerySet
 import os
 from account.permission import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 import numpy as np
 import CaliperServer.settings as settings
 from django.http import StreamingHttpResponse
 import uuid
-
+from shared.Contants import TEMPFOLDER
 
 def serialize(data, excluded='avatar'):
     return Serializer().serialize(data, excluded=excluded)
@@ -1172,86 +1172,136 @@ def file_iterator(filename, chunk_size=512):
             else:
                 break
 
+def readFile(fn, buf_size=262144):#大文件下载，设定缓存大小
+    f = open(fn, "rb")
+    while True:#循环读取
+        c = f.read(buf_size)
+        if c:
+            yield c
+        else:
+            break
+    f.close()
+
 @login_required
 def downloadFile(req):
+
+    obJson = req.body
+    selection = json.loads(obJson)
     full_path = None
+    real_path = None
+    fileName = ''
+    isMult = False #是否下载多个文件
     try:
         downloadPath = settings.uploadPath
         hasFile = False
-        zips = req.GET.get('zips')
-        if zips is not None:
-            zips = zips.split(',')
-            if len(zips) == 1:
-                if os.path.exists(downloadPath):
+        if len(selection) == 1:
+            if os.path.exists(downloadPath):
+                hasFile = True
+                full_path = os.path.join(downloadPath, selection[0]['path'])
+        else:
+            zipName = str(uuid.uuid1()) + ".zip"
+
+            full_path = os.path.join(downloadPath, TEMPFOLDER)
+            if not os.path.exists(full_path):
+                os.makedirs(full_path)
+            full_path = os.path.join(full_path, zipName)
+            import zipfile
+            f = zipfile.ZipFile(full_path, 'w', zipfile.ZIP_DEFLATED)
+
+            for s in selection:
+                zip_path = os.path.join(downloadPath, s['path'])
+                if os.path.exists(zip_path):
                     hasFile = True
-                    full_path = os.path.join(downloadPath, zips[0])
-            else:
-                zipName = str(uuid.uuid1()) + ".zip"
-                full_path = os.path.join(downloadPath, zipName)
-                import zipfile
-                f = zipfile.ZipFile(full_path, 'w', zipfile.ZIP_DEFLATED)
-
-                for zip in zips:
-                    zip_path = os.path.join(downloadPath, zip)
-                    if os.path.exists(zip_path):
-                        hasFile = True
-                        f.write(zip_path,os.path.basename(zip_path))
-                f.close()
-
+                    fname = s['name'] + "-(" + str(s['id']) + ").zip"
+                    print fname
+                    f.write(zip_path,fname)
+                    # f.write(zip_path,os.path.basename(zip_path))
+            f.close()
         if full_path is not None and os.path.exists(full_path) and hasFile:
             splits = full_path.split("/")
-            fileName = splits[len(splits) - 1]
-            response = StreamingHttpResponse(file_iterator(full_path))
-            response['Content-Type'] = 'application/octet-stream'
-            response['Content-Disposition'] = 'attachment;filename="{0}"'.format(fileName)
-            return response
+            if len(selection) == 1:
+                real_path = selection[0]['path']
+                fileName = selection[0]['name']+"-("+str(selection[0]['id'])+").zip"
+                isMult = False
+            else:
+                fileName = real_path = splits[len(splits) - 1]
+                isMult = True
+            return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok',{"path":real_path,"fileName":fileName,"isMult":isMult})
+            # response = FileResponse(open(full_path, 'rb'))
+            # response['Content-Type'] = 'application/octet-stream'
+            # response['Content-Disposition'] = 'attachment;filename="{0}"'.format(fileName)
+            # response['fileName'] = fileName
+            # return response
+        # if full_path is not None and os.path.exists(full_path) and hasFile:
+        #     splits = full_path.split("/")
+        #     fileName = splits[len(splits) - 1]
+        #     response = StreamingHttpResponse(file_iterator(full_path))
+        #     response['Content-Type'] = 'application/octet-stream'
+        #     response['Content-Disposition'] = 'attachment;filename="{0}"'.format(fileName)
+        #     return response
     except Exception as e:
         logger.error(str(e))
     return HttpResponse('can not found this files')
 
-
-
-
-
+@login_required
+def downloadReal(req):
+    path = req.GET.get('path')
+    fileName = req.GET.get('fileName')
+    isMult = req.GET.get('isMult')
     downloadPath = settings.uploadPath
-
-
-
-
-
-
-    if req.method == 'GET':
-        if req.user.role == Contants.ROLE_ADMIN:
-            tasks = taskModels.Task.objects.order_by('-time').all()
-        else:
-            tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
-
-        if downloadPath[-1] != '/': downloadPath = downloadPath + '/'
-
-        temp = tempfile.TemporaryFile()
-        archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
-        flag = False
-        for task in tasks:
-            path = downloadPath + task.path
-            if os.path.exists(path):
-                flag = True
-                filename = os.path.basename(path)
-                archive.write(path, filename)
-        archive.close()
-
-        if not flag:
-            return HttpResponse(status=404, content='not found')
-        wrapper = FileWrapper(temp)
-
-        size = temp.tell()
-        temp.seek(0)
-        response = HttpResponse(wrapper, content_type='application/octet-stream')
-        response['Content-Disposition'] = 'attachment;filename="{0}"'.format('{}.zip'.format(req.user))
-        response['Content-Length'] = size
-        return response
-        # return HttpResponse(status=200)
+    if isMult:
+        full_path = os.path.join(downloadPath,TEMPFOLDER,path)
     else:
-        return HttpResponse(status=403)
+        full_path = os.path.join(downloadPath,path)
+
+    response = StreamingHttpResponse(file_iterator(full_path))
+    response['Content-Type'] = 'application/octet-stream'
+    response['Content-Disposition'] = 'attachment;filename="{0}"'.format(fileName)
+    # response['fileName'] = fileName
+    return response
+
+
+    #
+    #
+    # downloadPath = settings.uploadPath
+    #
+    #
+    #
+    #
+    #
+    #
+    # if req.method == 'GET':
+    #     if req.user.role == Contants.ROLE_ADMIN:
+    #         tasks = taskModels.Task.objects.order_by('-time').all()
+    #     else:
+    #         tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
+    #
+    #     if downloadPath[-1] != '/': downloadPath = downloadPath + '/'
+    #
+    #     temp = tempfile.TemporaryFile()
+    #     archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
+    #     flag = False
+    #     for task in tasks:
+    #         path = downloadPath + task.path
+    #         if os.path.exists(path):
+    #             flag = True
+    #             filename = os.path.basename(path)
+    #             archive.write(path, filename)
+    #     archive.close()
+    #
+    #     if not flag:
+    #         return HttpResponse(status=404, content='not found')
+    #     wrapper = FileWrapper(temp)
+    #
+    #     size = temp.tell()
+    #     temp.seek(0)
+    #     response = HttpResponse(wrapper, content_type='application/octet-stream')
+    #     response['Content-Disposition'] = 'attachment;filename="{0}"'.format('{}.zip'.format(req.user))
+    #     response['Content-Length'] = size
+    #     return response
+    #     # return HttpResponse(status=200)
+    # else:
+    #     return HttpResponse(status=403)
 
 
 def parseTableCols(model):

@@ -22,12 +22,10 @@ from .sso import REMOTE_SSO_LOGIN_URL, REMOTE_SSO_CHANGEPWD_URL, REMOTE_SSO_LOGO
 from sso.authbackend import SSOAuthBackend
 from sso.utility import form_redirect
 from .permission import login_required
-import traceback
+from shared import Contants
 from shared.crypto import *
 from django.shortcuts import HttpResponse, redirect
 
-USER_ADMIN = 0  # 管理员
-USER_CUSTOM = 1  # 普通用户
 
 
 def main(request):
@@ -104,27 +102,6 @@ def getuserinfo(req):
 
     # return HttpResponse(status=200)
     return render(req, "userinfo.html", {'isShowBack': True})
-
-
-@login_required
-def setuserinfo(req):
-    try:
-        data = json.loads(req.body)
-        username = data['username']
-        phone = None
-        mail = None
-        if data.has_key('phone'):
-            phone = data['phone']
-            UserProfile.objects.filter(username=username).update(telphone=phone)
-        else:
-            mail = data['mail']
-            UserProfile.objects.filter(username=username).update(email=mail)
-
-    except Exception as e:
-        logger.debug(traceback.format_exc())
-        return Response.CustomJsonResponse(Response.CODE_FAILED, 'fail')
-    return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok')
-
 
 @login_required
 def save(req):
@@ -206,9 +183,9 @@ def auth_callback(request):
     error, user, user_info = SSOAuthBackend.authenticate(auth_token)
     if not error:
         if not user:  # 这种情况表明用户在其他site注册，并且首次登陆本site
-            role = USER_CUSTOM
+            role = Contants.ROLE_USER
             if user_info is not None and user_info['admin'] == "CaliperServer":
-                role = USER_ADMIN
+                role = Contants.ROLE_ADMIN
             user = UserProfile(username=user_info['username'], email=user_info['email'], role=role)
             user.save()
         auth.login(request, user)  # create session, write cookies
