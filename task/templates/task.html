@@ -275,6 +275,13 @@
 
         },
         methods: {
+            getIds:function (selections) {
+                var ids=[];
+              for(var index in selections){
+                  ids.push(selections[index]['id'])
+              }
+              return ids;
+            },
             selectChange: function (selection) {
                 vm.selection = selection;
                 console.log(selection);
@@ -282,11 +289,11 @@
             view: function () {
                 console.log(vm.selection);
                 if (vm.selection.length == 1) {
-                    $.cookie('selection', JSON.stringify(vm.selection), {path: "/"});
+                    $.cookie('selection', JSON.stringify(vm.getIds(vm.selection)), {path: "/"});
                     window.location.href = "single";
                 } else if (vm.selection.length > 1 && vm.selection.length <= 20) {
                     {#                    $.cookie('selection', '',{path:"/"});#}
-                    $.cookie('selection', JSON.stringify(vm.selection), {path: "/"});
+                    $.cookie('selection', JSON.stringify(vm.getIds(vm.selection)), {path: "/"});
                     {# 必须要加 路径path #}
 
                     window.location.href = "compare";
