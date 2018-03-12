@@ -626,19 +626,29 @@
                         zips.push(z['path'])
                     }
 
+                    var tempwindow=window.open();
                     axios.post('download', vm.selection).then(function (response) {
                         if(response.data.code===0) {
-                            const elink = document.createElement('a');
-                            elink.href = "download/real?path=" + response.data.data.path +
+                            url = "download/real?path=" + response.data.data.path +
                                 "&fileName=" + response.data.data.fileName + "&isMult=" + response.data.data.isMult;
-                            document.body.appendChild(elink);
-                            elink.click();
-                            document.body.removeChild(elink)
+                            window.setTimeout(function(){
+                                tempwindow.close();
+                            }, 1000);
+                            tempwindow.location=url;
+{#                            const elink = document.createElement('a');#}
+{#                            elink.href = "download/real?path=" + response.data.data.path +#}
+{#                                "&fileName=" + response.data.data.fileName + "&isMult=" + response.data.data.isMult;#}
+{#                            elink.target='_blank';#}
+{#                            document.body.appendChild(elink);#}
+{#                            elink.click();#}
+{#                            document.body.removeChild(elink)#}
                         }else{
+                            tempwindow.close();
                             vm.$Message.error("file not found!")
                         }
                     }).catch(function (error) {
                         console.log(error);
+                        tempwindow.close();
                         vm.$Message.error("file not found!")
                     });
                 }

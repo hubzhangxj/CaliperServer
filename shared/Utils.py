@@ -244,5 +244,17 @@ def setTarPwd(filePath, pwd):
     print  subprocess.call("cd /home/qiuqiaohua/Downloads/ && zip -rP 123 111.zip test/",shell=True)
     subprocess.call("cd /home/qiuqiaohua/Downloads/ && unzip -P 123 111.zip -d test111/", shell=True)
 
+
+def isTrue(value):
+    '''
+    判断普通的js的boolean 和Python的boolean
+    :param value:
+    :return:
+    '''
+    if isinstance(value,bool):
+        return value
+    else:
+        return value == 'true'
+
 if __name__ == '__main__':
-    setTarPwd('', '')
+   print isTrue('true')

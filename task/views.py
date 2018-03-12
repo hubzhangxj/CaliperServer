@@ -1232,7 +1232,11 @@ def downloadFile(req):
             else:
                 fileName = real_path = splits[len(splits) - 1]
                 isMult = True
-            return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok',{"path":real_path,"fileName":fileName,"isMult":isMult})
+            if os.path.exists(full_path):
+                return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok',
+                                                   {"path": real_path, "fileName": fileName, "isMult": isMult})
+            else:
+                return Response.CustomJsonResponse(Response.CODE_FAILED, 'fail')
             # response = FileResponse(open(full_path, 'rb'))
             # response['Content-Type'] = 'application/octet-stream'
             # response['Content-Disposition'] = 'attachment;filename="{0}"'.format(fileName)
@@ -1247,7 +1251,7 @@ def downloadFile(req):
         #     return response
     except Exception as e:
         logger.error(str(e))
-    return HttpResponse('can not found this files')
+    return Response.CustomJsonResponse(Response.CODE_FAILED, 'fail')
 
 @login_required
 def downloadReal(req):
