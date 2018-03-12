@@ -1255,11 +1255,13 @@ def downloadReal(req):
     fileName = req.GET.get('fileName')
     isMult = req.GET.get('isMult')
     downloadPath = settings.uploadPath
-    if isMult:
+    logger.debug("isMult:%s", str(isMult))
+    active = isMult == 'true'
+    if active:
         full_path = os.path.join(downloadPath,TEMPFOLDER,path)
     else:
         full_path = os.path.join(downloadPath,path)
-
+    logger.debug("fullPath:%s",full_path)
     response = StreamingHttpResponse(file_iterator(full_path))
     response['Content-Type'] = 'application/octet-stream'
     response['Content-Disposition'] = 'attachment;filename="{0}"'.format(fileName)
