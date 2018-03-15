@@ -1374,7 +1374,9 @@ def singleTask(req):
     sys = taskModels.Config.objects.get(id=task.config.id).sys
     caches = taskModels.Cache.objects.filter(config_id=task.config.id)
     memorys = taskModels.Memory.objects.filter(config_id=task.config.id)
-    nets = taskModels.Net.objects.filter(config_id=task.config.id)
+    nets = taskModels.Net.objects.filter(config_id=task.config.id).\
+        exclude(address__isnull=True,netmask__isnull=True).\
+        exclude(address__exact='',netmask__exact='') #Network information中没有IP&NERMASK的网口不进行展示
     storages = taskModels.Storage.objects.filter(config_id=task.config.id)
     storages = json.loads(serialize(storages))
     partitions = []
