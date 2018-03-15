@@ -184,7 +184,7 @@ def auth_callback(request):
     if not error:
         if not user:  # 这种情况表明用户在其他site注册，并且首次登陆本site
             role = Contants.ROLE_USER
-            if user_info is not None and user_info['admin'] is not None and request.get_host() in user_info['admin']:
+            if user_info is not None and user_info['admin'] is not None and request.get_host().lower() in user_info['admin'].lower():
                 role = Contants.ROLE_ADMIN
             user = UserProfile(username=user_info['username'], email=user_info['email'], role=role)
             user.save()
