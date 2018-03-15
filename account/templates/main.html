@@ -88,9 +88,9 @@
                     <icon type="arrow-down-b"></icon>
                 </a>
                 <Dropdown-Menu slot="list">
-                    <Dropdown-Item :name="v.version" v-for="(v,index) in versions"><a
+                    <Dropdown-Item :name="v.version" v-for="(v,index) in versions"><div
                             style="color: #495060;font-size: 12px!important"
-                            :href="'user/download?version=' + v.version ">${index ==0 ? 'Lastest Version':v.version}</a>
+                            >${index ==0 ? 'Lastest Version':v.version}</div>
                     </Dropdown-Item>
                     {#                    <Dropdown-Item ><a style="color: #495060;font-size: 12px!important" href="">dddd</a></Dropdown-Item>#}
                 </Dropdown-Menu>
@@ -129,6 +129,7 @@
                 const url = 'user/download?version=' + name;
                 const link = document.createElement('a');
                 link.href = url;
+                link.target='_blank';
                 document.body.appendChild(link);
                 link.click();
 
