@@ -27,8 +27,8 @@
                 <Modal
                         v-model="modal1"
                         title="Delete confirmation"
-                        ok-text="close"
-                        cancel-text="cancel"
+                        ok-text="Submit"
+                        cancel-text="Cancle"
                         @on-ok="okDelete"
                         @on-cancel="cancel">
                     <p>Are you sure you want to delete this record?</p>
@@ -479,10 +479,16 @@
                 axios.post('list/addusersubmit', JSON.stringify(data)).then(function (response) {
                     if (response.data.code == 0) {
                         vm.$Message.success('add user success');
-                    } else{
-                        if(response.data.msg = 'miss'){
+                    } else {
+                        if (response.data.msg === 'miss') {
                             vm.$Message.warning('username not null');
-                        }else {
+                        }else if(response.data.msg === 'self'){
+                             vm.$Message.warning('self in share usernames');
+                        }else if (response.data.msg === 'no') {
+                            vm.$Message.warning('username not exist or has admin user');
+                        } else if (response.data.msg === 'hasno') {
+                            vm.$Message.warning('username has some not exist or has admin user');
+                        } else {
                             vm.$Message.warning('add share user failed');
                         }
                     }
