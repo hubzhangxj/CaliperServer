@@ -13,7 +13,7 @@
 <div id="app">
     <div style="padding-bottom: 40px;padding-right: 40px;padding-left: 40px">
         {#        @on-select-all="selectAll" @on-select="select"  @on-select-cancel="selectCancle"  @on-selection-change="change"#}
-        <i-table border :columns="columns" :data="data" @on-select-all="selectAll" @on-selection-change="selectChange"
+        <i-table border :columns="columns" :data="data"  @on-selection-change="selectChange"
         ></i-table>
 
         <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
@@ -39,13 +39,10 @@
                 <Modal
                         v-model="modal2"
                         title="Member list"
-                        ok-text="close"
-                        cancel-text="cancel"
-                        @on-ok="userListSubmit"
-                        @on-cancel="cancel">
+                        >
                     <div style="display: flex;flex-direction: row;">
-                        <div style="font-size: 20px">machinary code:</div>
-                        <div style="color: #e20400;font-size: 22px">${machinaryCode}</div>
+                        <div style="font-size: 20px">HostName:</div>
+                        <div style="color: #e20400;font-size: 22px;margin-left: 5px">${taskName}</div>
                     </div>
                     <div style="display: flex;flex-direction: row; margin-top: 10px">
                         <div>
@@ -66,21 +63,24 @@
                               @on-change="pageChange1"
                               :page-size-opts="[1,10, 20, 30, 40]"></Page>
                     </div>
+                     <div slot="footer">
+                <i-button type="info" @click="sumbitShareUser">Sure</i-button>
+            </div>
                 </Modal>
 
 
                 <Modal
                         v-model="modal3"
                         title="Add members"
-                        ok-text="close"
-                        cancel-text="cancel"
+                        ok-text="Submit"
+                        cancel-text="Cancle"
                         @on-ok="addUserSubmit"
                         @on-cancel="cancel">
                     <div style="margin-top: 10px">
                         Please enter the user name, multiple user names please, separated
                     </div>
                     <div style="margin-top: 10px">
-                        <i-input v-model="tenandID" type="textarea" :rows="4"
+                        <i-input v-model="usernames" type="textarea" :rows="4"
                                  placeholder="E.g:zhangsan,lisi,wange"></i-input>
                     </div>
 
@@ -128,9 +128,9 @@
             modal1: false,
             modal2: false,
             modal3: false,
-            machinaryCode: '',
+            taskName: '',
             usercounts: '',
-            tenandID: '',
+            usernames: '',
             columns: [
                 {
                     type: 'selection',
@@ -228,25 +228,20 @@
             selection: [], {#  选中的table 列 #}
             columns1: [
                 {
-                    title: 'user name',
+                    title: 'username',
                     key: 'userName',
+                    align: 'center',
                     render: (h, params) => {
-                        return h('div', [
-                            h('Icon', {
-                                props: {
-                                    type: 'person'
-                                }
-                            }),
-                            h('strong', params.row.name)
-                        ]);
+                        return h('strong', params.row.userName);
                     }
                 },
                 {
-                    title: 'user ID',
-                    key: 'userID'
+                    title: 'userId',
+                    key: 'userID',
+                    align: 'center',
                 },
                 {
-                    title: 'remove',
+                    title: 'operation',
                     key: 'remove',
                     width: 150,
                     align: 'center',
@@ -275,6 +270,10 @@
 
         },
         methods: {
+            sumbitShareUser: function () {
+                vm.$Message.info('You have chosen to cancel the operation ');
+                vm.modal2 = false;
+            },
             getIds:function (selections) {
                 var ids=[];
               for(var index in selections){
@@ -284,35 +283,16 @@
             },
             selectChange: function (selection) {
                 vm.selection = selection;
+                $.cookie('selection', JSON.stringify(vm.getIds(vm.selection)), {path: "/"});    {# 必须要加 路径path #}
                 console.log(selection);
             },
             view: function () {
                 console.log(vm.selection);
                 if (vm.selection.length == 1) {
-                    $.cookie('selection', JSON.stringify(vm.getIds(vm.selection)), {path: "/"});
+
                     window.location.href = "single";
                 } else if (vm.selection.length > 1 && vm.selection.length <= 20) {
-                    {#                    $.cookie('selection', '',{path:"/"});#}
-                    $.cookie('selection', JSON.stringify(vm.getIds(vm.selection)), {path: "/"});
-                    {# 必须要加 路径path #}
-
                     window.location.href = "compare";
-                    {#                    submitData('compare', JSON.stringify(vm.selection));#}
-                    {#                    axios.post('compare', )#}
-                    {#                        .then(function (response) {#}
-                    {#                            if (response.data.code == 0) {#}
-                    {#                                vm.$Message.success("成功");#}
-                    {#                                vm.data = JSON.parse(response.data.data.tasks);#}
-                    {#                                vm.reChecked(JSON.parse(response.data.data.tasks));#}
-                    {#                                vm.page = response.data.data.page;#}
-                    {#                                vm.total = response.data.data.total;#}
-                    {#                            } else {#}
-                    {#                                vm.$Message.warning(response.data.msg);#}
-                    {#                            }#}
-                    {#                        })#}
-                    {#                        .catch(function (error) {#}
-                    {#                            console.log(error);#}
-                    {#                        });#}
                 } else if (vm.selection.length > 20) {
                     vm.$Message.error('Sorry,Select 20 items at most!')
                 } else {
@@ -430,46 +410,7 @@
                     .catch(function (error) {
                         console.log(error);
                     });
-            }
-            ,
-            select: function (selection, row) {
-                vm.selection.push(row);
-
-                console.log(vm.selection);
-            }
-            ,
-            selectCancle: function (selection, row) {
-                var removeId = -1;
-                for (i in vm.selection) {
-                    item = vm.selection[i];
-                    if (row.id == item.id) {
-                        removeId = i;
-                    }
-                }
-                if (removeId != -1) {
-                    vm.selection.splice(removeId, 1)
-                }
-                console.log(vm.selection);
-            }
-            ,
-            selectAll: function (selection, removeObjs) {
-                for (i in selection) {
-                    item = selection[i];
-                    vm.selection.push(item);
-                }
-
-                vm.selection.forEach(function (item, index, array) {
-                    for (r in removeObjs) {
-                        rItem = removeObjs[r];
-                        if (rItem.id === item.id) {
-                            array.splice(index, 1)
-                        }
-                    }
-                });
-
-                console.log(vm.selection);
-            }
-            ,
+            },
 
             reChecked: function (datas) {
                 if (vm.selection.length != 0) {
@@ -488,19 +429,16 @@
             ,
             userlist: function () {
 
-                {#                var params = new URLSearchParams();#}
-                {#                params.append('searchState', JSON.stringify(vm.selection));#}
                 axios.post('list/userlist/').then(function (response) {
                     if (response.status == 200) {
                         var resData = response.data.data
                         vm.data1 = resData.data1;
-                        vm.machinaryCode = resData.machinaryCode
-                        vm.usercounts = resData.usercounts
+                        vm.taskName = resData.taskName;
+                        vm.usercounts = resData.usercounts;
                         vm.total1 = resData.total;
                         vm.page1 = resData.page;
                         vm.pageSize = resData.pageSize;
 
-                        // console.log(resData)
                     } else {
                         vm.$Message.warning(response.data.msg);
                     }
@@ -535,32 +473,21 @@
                 vm.modal3 = true
             }
             ,
-
-
-            userListSubmit: function () {
-
-
-            }
-            ,
             addUserSubmit: function () {
-                var params = new URLSearchParams();
-                params.append('tenandID', JSON.stringify(vm.tenandID));
-                params.append('searchState', JSON.stringify(vm.selection));
-                vm.tenandID = ''
-                axios.post('list/addusersubmit', params).then(function (response) {
-                    if (response.status == 200) {
-                        var resData = response.data.data.fail
-                        console.log(resData.length)
-                        if (resData.length != 0) {
-                            vm.$Message.error('user name:' + resData.toString() + ' not found');
-
+                var data = {'usernames':vm.usernames,'selection':vm.selection};
+                vm.usernames = '';
+                axios.post('list/addusersubmit', JSON.stringify(data)).then(function (response) {
+                    if (response.data.code == 0) {
+                        vm.$Message.success('add user success');
+                    } else{
+                        if(response.data.msg = 'miss'){
+                            vm.$Message.warning('username not null');
+                        }else {
+                            vm.$Message.warning('add share user failed');
                         }
-
-                    } else {
-                        vm.$Message.warning(response.data.msg);
                     }
                 }).catch(function (error) {
-
+                    vm.$Message.warning('add share user failed');
                 });
                 vm.modal2 = false
 

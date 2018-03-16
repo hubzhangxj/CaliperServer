@@ -1588,7 +1588,7 @@ def userList(req):
 
         data = {
             'usercounts': paginator.count,
-            'machinaryCode': taskIds[0],
+            'taskName': task.config.hostname + "(" +str(task.id) + ")",
             'data1': share_data,
             'page': page,
             'pageSize': pageSize,
@@ -1601,42 +1601,64 @@ def userList(req):
 
 @login_required
 def addUserSubmit(req):
-    if req.method == 'POST':
-        data = req.POST
-        tenandID = data.get('tenandID')
-        searchState = data.get('searchState')
-        if tenandID == None or searchState == None:
-            return HttpResponse(status=403)
-        selection = json.loads(searchState)
-        tenandID = [x.strip() for x in json.loads(tenandID).split(',')]
-        failAdd = []
-        users = []
-
-        for i in range(len(tenandID)):
-
-            try:
-                user = taskModels.UserProfile.objects.get(name=tenandID[i])
-                users.append(user)
-
-            except:
-                logger.error("user is not found")
-                failAdd.append(tenandID[i])
-
-        for task in selection:
-            try:
+    try:
+        data = req.body
+        data = json.loads(data)
+        usernames = data['usernames']
+        selection = data['selection']
+        if usernames == None or selection == None:
+            return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'miss',)
+        usernames = [x.strip() for x in usernames.split(',')]
+        users = taskModels.UserProfile.objects.filter(username__in=usernames)
+        for user in users:
+            for task in selection:
                 taskModel = taskModels.Task.objects.get(id=task['id'])
-                for user in users:
+                exist = taskModel.shareusers.filter(id=user.id).exists()
+                if not exist:
                     taskModel.shareusers.add(user)
                     taskModel.save()
-            except:
-                logger.error('task is not found')
+
+        # if len(failUsers) > 0:
+        #     failMsg =''
+        #     for index,failUser in failUsers:
+        #         if index == len(failUsers)-1:
+        #             failMsg = failMsg + failUser
+        #         else:
+        #             failMsg = failMsg+failUser+","
+        #     return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'exist',failMsg)
+        # for task in selection:
+        #     taskModel = taskModels.Task.objects.get(id=task['id'])
+        #     for user in users:
+        #         taskModel.shareusers.add(user)
+        #         taskModel.save()
+        return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok')
+
+        # for i in range(len(usernames)):
+        #
+        #     try:
+        #         user = taskModels.UserProfile.objects.get(username=usernames[i])
+        #         users.append(user)
+        #
+        #     except:
+        #         logger.error("user is not found")
+        #         failAdd.append(usernames[i])
+
+        # for task in selection:
+        #     try:
+        #         taskModel = taskModels.Task.objects.get(id=task['id'])
+        #         taskModel.shareusers
+        #         for user in users:
+        #             taskModel.shareusers.add(user)
+        #             taskModel.save()
+        #     except:
+        #         logger.error('task is not found')
         # return HttpResponse(status=200)
         # print failAdd
-        print users
-        return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'ok', {"fail": failAdd})
+        # print users
 
-    else:
-        return HttpResponse(status=403)
+    except Exception as e:
+        logger.debug(str(e))
+        return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'fail')
 
 
 @login_required
