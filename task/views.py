@@ -1621,7 +1621,13 @@ def addUserSubmit(req):
         if usernames == None or selection == None:
             return Response.CustomJsonResponse(Response.CODE_SUCCESS, 'miss',)
         usernames = [x.strip() for x in usernames.split(',')]
-        users = taskModels.UserProfile.objects.filter(username__in=usernames)
+        if req.user.username in usernames:
+            return Response.CustomJsonResponse(Response.CODE_FAILED, 'self')
+        users = taskModels.UserProfile.objects.filter(username__in=usernames,role=Contants.ROLE_USER)
+        if users is None or users.count() == 0:
+            return Response.CustomJsonResponse(Response.CODE_FAILED, 'no')
+        elif users.count() < len(usernames):
+            return Response.CustomJsonResponse(Response.CODE_FAILED, 'hasno') #多个用户时,有部分不存在
         for user in users:
             for task in selection:
                 taskModel = taskModels.Task.objects.get(id=task['id'])
