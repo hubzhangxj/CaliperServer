@@ -43,7 +43,7 @@
         <i-table border :columns="columns" :data="data"  @on-select-all="selectAll" @on-select="select" @on-select-cancel="selectCancle"></i-table>
         <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
             <div style="display: flex;flex-direction: row;align-items: center">
-                <i-button type="primary" @click="modal2 = true" style="margin-left: 5%">Restore</i-button>
+                <i-button type="primary" @click="onRestore" style="margin-left: 5%">Restore</i-button>
                 <Modal
                         v-model="modal2"
                         title="恢复确认"
@@ -154,6 +154,14 @@
                     align: 'center',
                     render: (h, params) => {
                         return h('div', params.row.time);
+                    }
+                },
+                 {
+                    title: 'Status',
+                    key: 'delete',
+                    align: 'center',
+                    render: (h, params) => {
+                        return h('div', params.row.delete ? 'deleted' :'undeleted');
                     }
                 },
                 {
@@ -386,9 +394,27 @@
             cancel: function () {
                 this.$Message.info('您选择了取消操作');
             },
+            onRestore: function () {
+                if (vm.selection.length <= 0) {
+                    vm.$Message.warning("Please select tasks!");
+                } else {
+                    var hasUnDel = false;
+                    {# 是否选中了没有被删除的任务 #}
+                    for (var i = 0; i < vm.selection.length; i++) {
+                        task = vm.selection[i];
+                        if (!task.delete) {
+                            hasUnDel = true
+                        }
+                    }
+                    if (hasUnDel) {
+                        vm.$Message.warning("The selected task contains undeleted items.");
+                    } else {
+                        vm.modal2 = true;
+                    }
+                }
+            },
             okRestore: function () {
-                vm.restore();
-                //this.$Message.info('Clicked ok');
+                  vm.restore();
             },
 
 

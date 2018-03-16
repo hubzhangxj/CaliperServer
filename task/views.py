@@ -766,7 +766,7 @@ def isSame(taskIds):
 
     return isSame
 
-
+@login_required
 def boardInfo(req):
     oss = taskModels.Config.objects.raw('select id,os from config GROUP by os')
     kernels = taskModels.Config.objects.raw('select id,kernel from config GROUP by kernel')
@@ -801,7 +801,8 @@ def boardInfo(req):
         tasks = taskModels.Task.objects.order_by('-time').all()
     else:
         # tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
-        return HttpResponse(status=403, content='不是管理员权限,访问受限')
+        # return HttpResponse(status=403, content='不是管理员权限,访问受限')
+        return HttpResponse(status=403, content='Not administrator privileges, limited access')
 
     obJson = req.body
     # params = json.loads(obJson)
@@ -1075,25 +1076,22 @@ def rowdelete(req):
 
 @login_required
 def rowRestore(req):
-    if not req.POST:
-        return HttpResponse(status=403)
-    data = req.POST
-    searchState = data.get('searchState')
-    searchState = json.loads(searchState)
-
-    # print searchState
-    if req.user.role == Contants.ROLE_ADMIN:
-        tasks = taskModels.Task.objects.order_by('-time').all()
-    else:
-        tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
-
-    for i in range(len(searchState)):
-        tasks.filter(config_id=searchState[i]['id']).update(delete=0)
-
-    tasks = tasks.filter(delete=1)
     try:
-        if not tasks:
-            return HttpResponse(status=404)
+        data = req.POST
+        searchState = data.get('searchState')
+        searchState = json.loads(searchState)
+
+        # print searchState
+        if req.user.role == Contants.ROLE_ADMIN:
+            tasks = taskModels.Task.objects.order_by('-time').all()
+        else:
+            return HttpResponse(status=403, content='Not administrator privileges, limited access')
+
+        # for i in range(len(searchState)):
+        for selectTask in searchState:
+            tasks.filter(id=selectTask['id']).update(delete=False)
+
+    # tasks = tasks.filter(delete=1)
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
         try:
@@ -1121,28 +1119,42 @@ def rowRestore(req):
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok", data)
 
 
+def delFiles(task):
+    full_path = ''
+    try:
+        path = task['path']
+        downloadPath = settings.uploadPath
+        full_path = os.path.join(downloadPath, path) #压缩包路径
+
+        base = os.path.basename(full_path)
+        fileName,ext = os.path.splitext(base)
+        parent_path = os.path.dirname(full_path)
+        folder_path = os.path.join(parent_path,fileName)
+        os.remove(full_path)
+        import shutil
+        shutil.rmtree(folder_path)
+    except Exception as e:
+        logger.debug("delete files exception:%s path is%s" % (str(e), full_path))
+
+
+
 @login_required
 def permanentDelete(req):
-    if not req.POST:
-        return HttpResponse(status=403)
-    data = req.POST
-    searchState = data.get('searchState')
-    searchState = json.loads(searchState)
-
-    # print searchState
-    if req.user.role == Contants.ROLE_ADMIN:
-        tasks = taskModels.Task.objects.order_by('-time').all()
-    else:
-        return HttpResponse(status=403)
-
-    for i in range(len(searchState)):
-        # tasks.filter(config_id=searchState[i]['id']).update(delete=1)
-        tasks.filter(config_id=searchState[i]['id']).delete()
-
-    tasks = tasks.filter(delete=0)
     try:
-        if not tasks:
-            return HttpResponse(status=404)
+        data = req.POST
+        searchState = data.get('searchState')
+        searchState = json.loads(searchState)
+
+        # print searchState
+        if req.user.role == Contants.ROLE_ADMIN:
+            tasks = taskModels.Task.objects.order_by('-time').all()
+        else:
+            return HttpResponse(status=403, content='Not administrator privileges, limited access')
+
+        for selectTask in searchState:
+            tasks.filter(id=selectTask['id']).delete()
+            delFiles(selectTask)
+
         pageSize = Contants.PAGE_SIZE
         paginator = Paginator(tasks, pageSize)
         try:
