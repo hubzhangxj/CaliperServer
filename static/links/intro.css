@@ -3,9 +3,14 @@
     font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;
     color: #676a6c;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .content {
+    flex: 1;
     background-color: #FEFEFE;
     margin-left: 40px;
     margin-top: 20px;

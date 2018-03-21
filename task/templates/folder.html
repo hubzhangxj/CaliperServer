@@ -56,6 +56,9 @@
             height: 100%;
             padding: 60px 0 0;
             box-sizing: border-box;
+              display: flex;
+            flex-direction: column;
+            flex: 1;
         }
 
         #top {
@@ -88,6 +91,7 @@
         </div>
     </div>
 </div>
+{% include "footer.html" %}
 <script>
     var vm = new Vue({
         el: '#app',
