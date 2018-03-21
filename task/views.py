@@ -1069,7 +1069,7 @@ def rowdelete(req):
         tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
 
     for task in selection:
-        tasks.filter(config_id=task['id']).update(delete=1)
+        tasks.filter(id=task['id']).update(delete=1)
 
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok")
 

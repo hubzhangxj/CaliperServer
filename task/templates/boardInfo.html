@@ -46,18 +46,22 @@
                 <i-button type="primary" @click="onRestore" style="margin-left: 5%">Restore</i-button>
                 <Modal
                         v-model="modal2"
-                        title="恢复确认"
+                        title="Restore"
+                        ok-text="OK"
+                        cancel-text="Cancel"
                         @on-ok="okRestore"
                         @on-cancel="cancel">
-                    <p>你确定要恢复此条记录吗？</p>
+                    <p>Are you sure you want to restore this record?</p>
                 </Modal>
                 <i-button type="primary" @click="modal1 = true" style="margin-left: 10%">Delete</i-button>
                 <Modal
                         v-model="modal1"
-                        title="删除确认"
+                        title="Delete"
+                        ok-text="OK"
+                        cancel-text="Cancel"
                         @on-ok="okDelete"
                         @on-cancel="cancel">
-                    <p>你确定要删除此条记录吗？</p>
+                    <p>Are you sure you want to delete this record?</p>
                 </Modal>
             </div>
 
@@ -81,15 +85,15 @@
             selectList: [
                 {
                     value: 'allRow',
-                    label: '全部'
+                    label: 'All'
                 },
                 {
                     value: 'delRow',
-                    label: '删除'
+                    label: 'Deleted'
                 },
                 {
                     value: 'normal',
-                    label: '正常'
+                    label: 'Normal'
                 },
             ],
             modelSelect: '',
@@ -164,30 +168,6 @@
                         return h('div', params.row.delete ? 'deleted' :'undeleted');
                     }
                 },
-                {
-                    title: 'Test Profile',
-                    key: 'pName',
-                    align: 'center',
-                    render: (h, params) => {
-                        return h('div', [
-                            h('Button', {
-                                props: {
-                                    type: 'text',
-                                    size: 'small',
-                                    icon: 'document',
-                                },
-                                style: {
-                                    marginRight: '5px'
-                                },
-                                on: {
-                                    click: () => {
-                                        this.show(params.index)
-                                    }
-                                }
-                            }, 'View'),
-                        ]);
-                    }
-                },
             ],
             data: {{ tasks|safe }},
             page: {{ page|safe }},
@@ -209,16 +189,15 @@
                         vm.reChecked(JSON.parse(response.data.data.tasks));
                         vm.page = response.data.data.page;
                         vm.total = response.data.data.total;
+                        vm.selection=[];
+                        vm.modelSelect= "allRow";
                     } else {
-                        vm.data=[];
-                        vm.total=0;
-                        vm.page=1;
+                        vm.$Message.error("restore task failed");
+
                     }
                 })
                     .catch(function (error) {
-                        vm.data=[];
-                        vm.total=0;
-                        vm.page=1;
+                        vm.$Message.error("restore task failed");
                     });
             },
 
@@ -227,7 +206,7 @@
                 var params = new URLSearchParams();
                 console.log(vm.selection)
                 params.append('searchState', JSON.stringify(vm.selection));
-                vm.selection=[]
+                vm.selection=[];
                 axios.post('boardInfo/permanentDelete/', params).then(function (response) {
                     if (response.data.code == 0) {
                         {# vm.$Message.success("成功");#}
@@ -235,18 +214,14 @@
                         vm.reChecked(JSON.parse(response.data.data.tasks));
                         vm.page = response.data.data.page;
                         vm.total = response.data.data.total;
-                        vm.selection=[]
+                        vm.selection=[];
+                        vm.modelSelect= "allRow"
                     } else {
-                        vm.data=[];
-                        vm.total=0;
-                        vm.page=1;
-                        vm.selection=[]
+                      vm.$Message.error("delete task failed");
                     }
                 })
                     .catch(function (error) {
-                        vm.data=[];
-                        vm.total=0;
-                        vm.page=1;
+                       vm.$Message.error("delete task failed");
                     });
 
 
@@ -270,16 +245,12 @@
                             vm.total = response.data.data.total;
                         } else {
 
-                            vm.data=[];
-                            vm.total=0;
-                            vm.page=1;
+                            vm.$Message.error("search  failed");
                             //vm.$Message.warning(response.data.msg);
                         }
                     })
                     .catch(function (error) {
-                        vm.data=[];
-                        vm.total=0;
-                        vm.page=1;
+                        vm.$Message.error("search  failed");
                     });
 
 
@@ -392,7 +363,7 @@
                 //this.$Message.info('Clicked ok');
             },
             cancel: function () {
-                this.$Message.info('您选择了取消操作');
+                this.$Message.info('You chose to cancel the operation.');
             },
             onRestore: function () {
                 if (vm.selection.length <= 0) {

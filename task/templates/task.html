@@ -511,12 +511,13 @@
                                     vm.reChecked(JSON.parse(response.data.data.tasks));
                                     vm.page = response.data.data.page;
                                     vm.total = response.data.data.total;
+                                     vm.$Message.success('delete task success!');
                                 } else {
-                                    vm.$Message.warning(response.data.msg);
+                                    vm.$Message.error('delete task failed!');
                                 }
                             })
                             .catch(function (error) {
-                                console.log(error);
+                               vm.$Message.error('delete task failed!');
                             });
                     } else {
 
@@ -592,8 +593,8 @@
                 var data = {'userId': userId, "taskId": taskId};
                 axios.post('list/delete', data).then(function (response) {
                     if (response.data.code == 0) {
-
-                        vm.userlist()
+                        vm.$Message.success("delete task success!");
+                        vm.userlist();
 
                     } else {
                         vm.$Message.warning(response.data.msg);
