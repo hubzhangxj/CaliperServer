@@ -25,6 +25,7 @@ from .permission import login_required
 from shared import Contants
 from shared.crypto import *
 from django.shortcuts import HttpResponse, redirect
+from django.utils.html import escape
 
 
 
@@ -33,9 +34,22 @@ def main(request):
     versions = []
     for path in os.listdir(downloadPath):
         if path.endswith('.zip'):
+            shotName,ext = os.path.splitext(path)
+            version_txt_path = os.path.join(downloadPath, shotName+'.txt')
+            version_msg = []
+            if os.path.exists(version_txt_path):
+                try:
+                    f = open(version_txt_path)
+                    for line in f:
+                        version_msg.append(line.strip())
+                    f.close()
+                    # with open(version_txt_path) as f:
+                    #     version_msg = escape(f.readline)
+                except:
+                    pass
             version = re.search('v(\S+)\.', path)
             if version is not None:
-                obj = {'version': version.group(1), 'path': os.path.join(downloadPath, path)}
+                obj = {'version': version.group(1), 'path': os.path.join(downloadPath, path),'msg':version_msg}
                 versions.append(obj)
     versions.sort(key=operator.itemgetter('version'), reverse=True)
     logger.debug(versions)

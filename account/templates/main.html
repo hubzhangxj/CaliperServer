@@ -94,9 +94,16 @@
                     <icon type="arrow-down-b"></icon>
                 </a>
                 <Dropdown-Menu slot="list">
-                    <Dropdown-Item :name="v.version" v-for="(v,index) in versions"><div
-                            style="color: #495060;font-size: 12px!important"
-                            >${index ==0 ? 'Lastest Version':v.version}</div>
+                    <Dropdown-Item :name="v.version" v-for="(v,index) in versions">
+                        <tooltip :disabled="v.msg.length == 0" style="width: 100%;height:100%;">
+                            <div
+                                    style="color: #495060;font-size: 12px!important"
+                            >${index ==0 ? 'Lastest Version':v.version}
+                            </div>
+                            <div slot="content" v-for="(msg,i) in v.msg">
+                                <div v-html="msg"></div>
+                            </div>
+                        </tooltip>
                     </Dropdown-Item>
                     {#                    <Dropdown-Item ><a style="color: #495060;font-size: 12px!important" href="">dddd</a></Dropdown-Item>#}
                 </Dropdown-Menu>

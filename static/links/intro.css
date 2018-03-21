@@ -8,7 +8,12 @@
     flex-direction: column;
     flex: 1;
 }
+#footer {
+        text-align: center;
+        margin-bottom: 20px;
+        margin-top: 20px;
 
+    }
 .content {
     flex: 1;
     background-color: #FEFEFE;
