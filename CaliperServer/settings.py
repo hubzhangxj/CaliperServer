@@ -219,8 +219,8 @@ LOGGING = {
 
 # sso相关 begin
 SSO_API_AUTH_SETTING = {
-    "apikey": "fa19d893",
-    "seckey": "74643558ab664359b0830386ef5fe940",
+    "apikey": "ff205290",
+    "seckey": "ceb59112354f4599bd2af9b4bf5ab70a",
     # "url": "http://106.12.27.16:9000",
     "url": "http://ssoserver.com:7000",
 }
