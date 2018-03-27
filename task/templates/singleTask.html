@@ -153,9 +153,9 @@
 
                     <div style="margin-top: 40px"></div>
                     {% for dim_tool in dim_tools %}
-                        <a name="{{ dim_tool.dimName }}" class="point">
+                        <a name="{{ dim_tool.dimName|upper }}" class="point">
                         <h1>
-                            <small>{{ dim_tool.dimName }}</small>
+                            <small>{{ dim_tool.dimName|upper }}</small>
                         </h1>
                         </a>
 

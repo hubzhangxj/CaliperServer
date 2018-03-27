@@ -265,8 +265,8 @@ def fromToolToDimName(caseConfigPath,toolName):
     :return:
     '''
     try:
-        filePath = '/home/max/cases_config.json'
-        json_data = open(filePath, 'r')
+        # filePath = '/home/max/cases_config.json'
+        json_data = open(caseConfigPath, 'r')
         json_data = json_data.read()
         json_data = json.loads(json_data)
 
