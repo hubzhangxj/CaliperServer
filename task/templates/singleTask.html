@@ -153,16 +153,16 @@
 
                     <div style="margin-top: 40px"></div>
                     {% for dim_tool in dim_tools %}
-                        <a name="{{ dim_tool.dim.name }}" class="point">
+                        <a name="{{ dim_tool.dimName }}" class="point">
                         <h1>
-                            <small>{{ dim_tool.dim.name }}</small>
+                            <small>{{ dim_tool.dimName }}</small>
                         </h1>
                         </a>
 
                         <p>
 
                         {% for tool in dim_tool.tools %}
-                            {% if "cachebench"  in tool.name %}
+                            {% if "cachebench"  in tool.toolName %}
                                 {% if not cachebench %}
                                     <a href="single/Cachebench">
                                 {% else %}
@@ -171,7 +171,7 @@
                                 performance of the memory hierarchy.<br>
                                 Test cases executed by this tool: bandwidth<br><br>
                             {% endif %}
-                            {% if "compile"|lower  in tool.name %}
+                            {% if "compile"|lower  in tool.toolName %}
                                 {% if not compile %}
                                     <a href="single/Compile">
                                 {% else %}
@@ -186,7 +186,7 @@
                                 <br>
                                 Test cases executed by this tool: kernel-dev_# <br><br>
                             {% endif %}
-                            {% if "coremark"|lower  in tool.name %}
+                            {% if "coremark"|lower  in tool.toolName %}
                                 {% if not coremark %}
                                     <a href="single/Coremark">
                                 {% else %}
@@ -196,7 +196,7 @@
                                 of
                                 central processing units (CPU) used in embedded systems<br><br>
                             {% endif %}
-                            {% if "dhrystone"|lower  in tool.name %}
+                            {% if "dhrystone"|lower  in tool.toolName %}
                                 {% if not dhrystone %}
                                     <a href="single/Dhrystone">
                                 {% else %}
@@ -208,7 +208,7 @@
                                 <br>
                                 <br>
                             {% endif %}
-                            {% if "fio"|lower  in tool.name %}
+                            {% if "fio"|lower  in tool.toolName %}
                                 {% if not fio %}
                                     <a href="single/Fio">
                                 {% else %}
@@ -220,7 +220,7 @@
                                 very flexible to create various io workloads and to execute them. <br>
                                 Test cases executed by this tool: bandwidth and iops<br><br>
                             {% endif %}
-                            {% if "hadoop"|lower  in tool.name %}
+                            {% if "hadoop"|lower  in tool.toolName %}
                                 {% if not hadoop %}
                                     <a href="single/Hadoop">
                                 {% else %}
@@ -232,7 +232,7 @@
                                     HadoopWordcount, HadoopBayes, HadoopKmeans, HadoopSort, HadoopDfsioe</b> etc. <br>
 {#                                <pre style="background-color: transparent">{{ hadoop }}</pre> <br>#}
                             {% endif %}
-                            {% if "iozone"|lower  in tool.name %}
+                            {% if "iozone"|lower  in tool.toolName %}
                                 {% if not iozone %}
                                     <a href="single/Iozone">
                                 {% else %}
@@ -244,7 +244,7 @@
                                     strided, fread, fwrite, random read/write etc </b> <br>
                                 Test cases executed by this tool:Iozone-Cached and Iozone-DirectIO<br><br>
                             {% endif %}
-                            {% if "linpack"|lower  in tool.name %}
+                            {% if "linpack"|lower  in tool.toolName %}
                                 {% if not linpack %}
                                     <a href="single/Linpack">
                                 {% else %}
@@ -254,7 +254,7 @@
                                 solve
                                 linear equations and linear least-squares problems.<br><br>
                             {% endif %}
-                            {% if "lmbench"|lower  in tool.name %}
+                            {% if "lmbench"|lower  in tool.toolName %}
                                 {% if not lmbench %}
                                     <a href="single/Lmbench">
                                 {% else %}
@@ -267,7 +267,7 @@
                                 lb_bw_local_#_core,
                                 lb_lat_cross_#_core, lb_lat_local_#_core<br><br>
                             {% endif %}
-                            {% if "nbench"|lower  in tool.name %}
+                            {% if "nbench"|lower  in tool.toolName %}
                                 {% if not nbench %}
                                     <a href="single/Nbench">
                                 {% else %}
@@ -278,7 +278,7 @@
                                 the
                                 mid-1990s, intended to measure a computer's CPU, FPU, and Memory System speed.<br><br>
                             {% endif %}
-                            {% if "openblas"|lower  in tool.name %}
+                            {% if "openblas"|lower  in tool.toolName %}
                                 {% if not openblas %}
                                     <a href="single/Openblas">
                                 {% else %}
@@ -294,7 +294,7 @@
                                 <br>
                             {% endif %}
 
-                            {% if "openssl"|lower  in tool.name %}
+                            {% if "openssl"|lower  in tool.toolName %}
                                 {% if not openssl %}
                                     <a href="single/Openssl">
                                 {% else %}
@@ -311,14 +311,14 @@
                                 <br>
                                 <br>
                             {% endif %}
-                            {% if "scimark"|lower  == tool.name %}
+                            {% if "scimark"|lower  == tool.toolName %}
                                 {% if not scimark %}
                                     <a href="single/Scimark">
                                 {% else %}
                                     <a href="#">
                                 {% endif %}<b>Scimark</b></a>: Measure sthe CPU performance.<br><br>
                             {% endif %}
-                            {% if "scimarkjava"|lower  == tool.name|lower %}
+                            {% if "scimarkjava"|lower  == tool.toolName|lower %}
                                 {% if not scimarkjava %}
                                     <a href="single/ScimarkJava">
                                 {% else %}
@@ -335,7 +335,7 @@
                                 approximate <b>Mflops (Millions of floating point operations per second)</b>.<br><br>
                             {% endif %}
 
-                            {% if "stressng"|lower  in tool.name %}
+                            {% if "stressng"|lower  in tool.toolName %}
                                 {% if not stressng %}
                                     <a href="single/stressng">
                                 {% else %}
@@ -344,7 +344,7 @@
                                 intensive
                                 routines.<br><br>
                             {% endif %}
-                            {% if "sysbench"|lower  in tool.name %}
+                            {% if "sysbench"|lower  in tool.toolName %}
                                 {% if not sysbench %}
                                     <a href="single/Sysbench">
                                 {% else %}
@@ -353,7 +353,7 @@
                                 performance.<br>
                                 Test cases executed by this tool: max, avg, min and percentile<br><br>
                             {% endif %}
-                            {% if "tinymembench"|lower  in tool.name %}
+                            {% if "tinymembench"|lower  in tool.toolName %}
                                 {% if not tinymembench %}
                                     <a href="single/Tinymembench">
                                 {% else %}
@@ -367,7 +367,7 @@
                                 Test cases executed by this tool: Tiny latency and Tiny bandwidth
                                 <br><br>
                             {% endif %}
-                            {% if "unixbench"|lower  in tool.name %}
+                            {% if "unixbench"|lower  in tool.toolName %}
                                 {% if not unixbench %}
                                     <a href="single/Unixbench">
                                 {% else %}
@@ -378,7 +378,7 @@
                                 <br>
                                 Test cases executed by this tool:multicore_unixbench<br><br>
                             {% endif %}
-                            {% if "unzip"|lower  in tool.name %}
+                            {% if "unzip"|lower  in tool.toolName %}
                                 {% if not unzip %}
                                     <a href="single/Unzip">
                                 {% else %}
@@ -387,7 +387,7 @@
                                 tar.gz
                                 file.<br><br>
                             {% endif %}
-                            {% if "nginx"|lower  in tool.name %}
+                            {% if "nginx"|lower  in tool.toolName %}
                                 {% if not nginx %}
                                     <a href="single/Nginx">
                                 {% else %}
@@ -398,7 +398,7 @@
                                 Test cases executed by this tool: nginx_32_core_local_wrps, nginx_32_core_cross_wrps and
                                 nginx_64_core_wrps<br><br>
                             {% endif %}
-                            {% if "redis"|lower  in tool.name %}
+                            {% if "redis"|lower  in tool.toolName %}
                                 {% if not redis %}
                                     <a href="single/Redis">
                                 {% else %}
@@ -410,7 +410,7 @@
                                 in-memory dataset.<br>
                                 Test cases executed by this tool: redis_Instance_#<br><br>
                             {% endif %}
-                            {% if "netperf"|lower  in tool.name %}
+                            {% if "netperf"|lower  in tool.toolName %}
                                 {% if not netperf %}
                                     <a href="single/Netperf">
                                 {% else %}
@@ -424,7 +424,7 @@
                                 <br>
                                 <br>
                             {% endif %}
-                            {% if "iperf"|lower  in tool.name %}
+                            {% if "iperf"|lower  in tool.toolName %}
 
                                 {% if not iperf %}
                                     <a href="single/Iperf">
@@ -435,7 +435,7 @@
                                 Transmission Control Protocol (TCP) and User Datagram Protocol (UDP). <br>
                                 Test cases executed by this tool: TCP_s#_RX and TCP_s#_TX<br><br>
                             {% endif %}
-                            {% if "qperf"|lower  in tool.name %}
+                            {% if "qperf"|lower  in tool.toolName %}
 
                                 {% if not qperf %}
                                     <a href="single/Qperf">

@@ -16,6 +16,10 @@
             background-color: white;
 
         }
+       .table > tbody > tr > td, .table > tbody > tr > th, .table > tfoot > tr > td, .table > tfoot > tr > th, .table > thead > tr > td, .table > thead > tr > th {
+           padding: 4px;
+       }
+
     </style>
 </head>
 <body class="gray-bg">
@@ -34,14 +38,14 @@
                             {% if forloop.first %}
                                 <tr class="titleCell">
                                     {% else %}
-                                <tr class="contentCell">
+                                <tr >
                             {% endif %}
 
                         {% for td in tr %}
                             {% if forloop.parentloop.first %}
-                                <th>{{ td }}</th>
+                                <th class="contentCell">{{ td }}</th>
                             {% else %}
-                                <td>{{ td }}</td>
+                                <td class="contentCell">{{ td }}</td>
                             {% endif %}
                         {% endfor %}
 
@@ -55,12 +59,12 @@
                 {% if table.i_table %}
                     <pre style="background-color: transparent;border: none">{{ table.centerTop }}</pre>
 
-                    <table class="table" cellspacing="0" width="100%">
+                    <table class="table" cellspacing="0"  width="100%">
                         {% for tr in table.i_table %}
-                            <tr class="contentCell">
+                            <tr >
 
                                 {% for td in tr %}
-                                    <td>{{ td }}</td>
+                                    <td class="contentCell"><div>{{ td }}</div></td>
                                 {% endfor %}
 
                             </tr>

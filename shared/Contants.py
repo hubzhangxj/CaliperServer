@@ -11,3 +11,5 @@ ROLE_USER = 1 #普通用户
 PAGE_SIZE = 20
 
 TEMPFOLDER = 'temp'
+
+CASE_CONFIG_FILENAME = "cases_config.json"

@@ -256,5 +256,29 @@ def isTrue(value):
     else:
         return value == 'true'
 
+
+def fromToolToDimName(caseConfigPath,toolName):
+    '''
+    从caseconfig 内读取工具属于的维度
+    :param caseConfigPath:
+    :param toolName:
+    :return:
+    '''
+    try:
+        filePath = '/home/max/cases_config.json'
+        json_data = open(filePath, 'r')
+        json_data = json_data.read()
+        json_data = json.loads(json_data)
+
+        for k in json_data.keys():  # 所有的维度值（排除common，hardwareinfo）
+            tools = json_data[k]
+            if k != 'common':
+                for tool in tools:
+                    for tn in tool.keys():
+                        if toolName == tn:
+                            return k
+    except:
+        return ''
+
 if __name__ == '__main__':
    print isTrue('true')

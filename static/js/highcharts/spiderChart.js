@@ -14,12 +14,13 @@ $(function () {
         xAxis: {
             categories:vm.categories,
             tickmarkPlacement: 'on',
-            lineWidth: 0
+            lineWidth: 0,
         },
         yAxis: {
             gridLineInterpolation: 'polygon',
             lineWidth: 0,
-            min: 0
+            min: 0,
+            max:100
         },
         tooltip: {
             shared: true,

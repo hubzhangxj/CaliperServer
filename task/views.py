@@ -1407,36 +1407,65 @@ def singleTask(req):
     #
     # logs = serialize(logs)
 
-    cursor = connection.cursor()
+    # cursor = connection.cursor()
+    # datas=[]
+    # try:
+    #     sql = "select a.id,e.name as dimName,b.name as toolName,a.content from log as a " \
+    #           "INNER JOIN testTool as b on a.tool_id = b.id " \
+    #           "INNER JOIN testCase as c on b.id = c.tool_id " \
+    #           "INNER JOIN scenario as d on d.id = c.scenario_id " \
+    #           "INNER JOIN dimension as e on e.id= d.dim_id " \
+    #           "where a.task_id= %s " \
+    #           "GROUP BY a.id";
+    #     print  sql
+    #     cursor.execute(sql, [task.id])
+    #     datas = dictfetchall(cursor)
+    #
+    # finally:
+    #     cursor.close()
 
-    try:
-        sql = "SELECT a.name as dimName, d.name as toolName, e.content FROM dimResult as dim " \
-              "LEFT JOIN  dimension AS a on  dim.dim_id = a.id " \
-              "LEFT JOIN scenario AS b ON a.id = b.dim_id " \
-              "LEFT JOIN testCase AS c ON b.id = c.scenario_id " \
-              "LEFT JOIN testTool AS d ON c.tool_id = d.id " \
-              "LEFT JOIN log AS e ON d.id = e.tool_id and e.task_id = %s " \
-              "where dim.task_id= %s " \
-              "GROUP BY a.`name`,d.name";
-        print  sql
-        cursor.execute(sql, [task.id, task.id])
-        datas = dictfetchall(cursor)
+    logs = taskModels.Log.objects.filter(task_id=task.id)
+    fileName, ext = os.path.splitext(task.path)
+    logDicts = []
+    caseconfig_path = os.path.join(settings.uploadPath, fileName, 'config', Contants.CASE_CONFIG_FILENAME)
+    for log in logs:
+        dim_name = Utils.fromToolToDimName(caseconfig_path, log.tool.name)
+        logDict = {}
+        logDict['logId'] = log.id
+        logDict['toolName'] = log.tool.name
+        logDict['dimName'] = dim_name
+        logDicts.append(logDict)
 
-    finally:
-        cursor.close()
-    dimResults = taskModels.DimResult.objects.filter(task_id=task.id)
-    dimResults = json.loads(serialize(dimResults))
-    for dimResult in dimResults:
-        tools = []
-        for data in datas:
-            if dimResult['dim']['name'] == data['dimName']:
-                tool = {
-                    "name": data['toolName'],
-                    "content": data['content']
-                }
-                tools.append(tool)
-        dimResult['dim']['name'] = str(dimResult['dim']['name']).upper()
-        dimResult['tools'] = tools
+
+    from operator import itemgetter
+    from itertools import groupby
+    logDicts.sort(key=itemgetter('dimName'))
+    dim_tools = []
+    for dimName, items in groupby(logDicts, key=itemgetter('dimName')):
+        dim={}
+        dim['dimName'] = dimName
+        dim['tools']=list(items)
+        dim_tools.append(dim)
+
+
+
+    print dim_tools
+    # dimResults = taskModels.DimResult.objects.filter(task_id=task.id)
+    # dimResults = json.loads(serialize(dimResults))
+    # for dimResult in dimResults:
+    #     tools = []
+    #     for data in datas:
+    #         logger.debug("dim name:%s" % str(dimResult['dim']['name']))
+    #         logger.debug("data dim name:%s" % str(data['dimName']))
+    #         if dimResult['dim']['name'] == data['dimName']:
+    #             tool = {
+    #                 "name": data['toolName'],
+    #                 "content": data['content']
+    #             }
+    #             tools.append(tool)
+    #     dimResult['dim']['name'] = str(dimResult['dim']['name']).upper()
+    #     dimResult['tools'] = tools
+    # logger.debug("dimResult: %s" % str(dimResults))
     data = {
         'dims': dimObjs,
         'cpu_cols': json.dumps(parseTableCols(taskModels.Cpu)),
@@ -1455,7 +1484,7 @@ def singleTask(req):
         'storages': json.dumps(storages),
         'partition_cols': json.dumps(parseTableCols_partitions()),
         'partitions': json.dumps(partitions),
-        'dim_tools': dimResults,
+        'dim_tools': dim_tools,
         'isShowBack': True,
         'remark': task.remark
     }
