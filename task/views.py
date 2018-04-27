@@ -1068,8 +1068,18 @@ def rowdelete(req):
     else:
         tasks = taskModels.Task.objects.order_by('-time').filter(owner_id=req.user.id)
 
+    hasShareUser = False
     for task in selection:
-        tasks.filter(id=task['id']).update(delete=1)
+        tks = tasks.filter(id=task['id'])
+        tk = tks.first()
+        if tk.shareusers.all().count() > 0:
+            hasShareUser = True
+
+    if hasShareUser:
+        return Response.CustomJsonResponse(Response.CODE_FAILED, "has shared user")
+    else:
+        for task in selection:
+            tasks.filter(id=task['id']).update(delete=1)
 
     return Response.CustomJsonResponse(Response.CODE_SUCCESS, "ok")
 

@@ -13,7 +13,7 @@
 <div id="app">
     <div style="padding-bottom: 40px;padding-right: 40px;padding-left: 40px;height: 100%">
         {#        @on-select-all="selectAll" @on-select="select"  @on-select-cancel="selectCancle"  @on-selection-change="change"#}
-        <i-table border :columns="columns" :data="data"  @on-selection-change="selectChange"
+        <i-table border :columns="columns" :data="data" @on-selection-change="selectChange"
         ></i-table>
 
         <div style="display: flex;flex-direction: row;justify-content: space-between;margin-top: 20px">
@@ -39,7 +39,7 @@
                 <Modal
                         v-model="modal2"
                         title="Member list"
-                        >
+                >
                     <div style="display: flex;flex-direction: row;">
                         <div style="font-size: 20px">HostName:</div>
                         <div style="color: #e20400;font-size: 22px;margin-left: 5px">${taskName}</div>
@@ -63,9 +63,9 @@
                               @on-change="pageChange1"
                               :page-size-opts="[1,10, 20, 30, 40]"></Page>
                     </div>
-                     <div slot="footer">
-                <i-button type="info" @click="sumbitShareUser">Sure</i-button>
-            </div>
+                    <div slot="footer">
+                        <i-button type="info" @click="sumbitShareUser">Sure</i-button>
+                    </div>
                 </Modal>
 
 
@@ -93,7 +93,7 @@
         </div>
     </div>
 </div>
-    {% include "footer.html" %}
+{% include "footer.html" %}
 <script>
 
     {#    var standardPost = function (url, args) {#}
@@ -275,16 +275,17 @@
                 vm.$Message.info('You have chosen to cancel the operation ');
                 vm.modal2 = false;
             },
-            getIds:function (selections) {
-                var ids=[];
-              for(var index in selections){
-                  ids.push(selections[index]['id'])
-              }
-              return ids;
+            getIds: function (selections) {
+                var ids = [];
+                for (var index in selections) {
+                    ids.push(selections[index]['id'])
+                }
+                return ids;
             },
             selectChange: function (selection) {
                 vm.selection = selection;
-                $.cookie('selection', JSON.stringify(vm.getIds(vm.selection)), {path: "/"});    {# 必须要加 路径path #}
+                $.cookie('selection', JSON.stringify(vm.getIds(vm.selection)), {path: "/"});
+                {# 必须要加 路径path #}
                 console.log(selection);
             },
             view: function () {
@@ -475,7 +476,7 @@
             }
             ,
             addUserSubmit: function () {
-                var data = {'usernames':vm.usernames,'selection':vm.selection};
+                var data = {'usernames': vm.usernames, 'selection': vm.selection};
                 vm.usernames = '';
                 axios.post('list/addusersubmit', JSON.stringify(data)).then(function (response) {
                     if (response.data.code == 0) {
@@ -483,9 +484,9 @@
                     } else {
                         if (response.data.msg === 'miss') {
                             vm.$Message.warning('username not null');
-                        }else if(response.data.msg === 'self'){
-                             vm.$Message.warning('self in share usernames');
-                        }else if (response.data.msg === 'no') {
+                        } else if (response.data.msg === 'self') {
+                            vm.$Message.warning('self in share usernames');
+                        } else if (response.data.msg === 'no') {
                             vm.$Message.warning('username not exist or has admin user');
                         } else if (response.data.msg === 'hasno') {
                             vm.$Message.warning('username has some not exist or has admin user');
@@ -512,16 +513,20 @@
                                     vm.reChecked(JSON.parse(response.data.data.tasks));
                                     vm.page = response.data.data.page;
                                     vm.total = response.data.data.total;
-                                     vm.$Message.success('delete task success!');
+                                    vm.$Message.success('delete task success!');
                                 } else {
                                     vm.$Message.error('delete task failed!');
                                 }
                             })
                             .catch(function (error) {
-                               vm.$Message.error('delete task failed!');
+                                vm.$Message.error('delete task failed!');
                             });
                     } else {
-
+                        if (response.data.msg == 'has shared user') {
+                            vm.$Message.warning('The task you selected contains the Shared tasks, please delete the Shared and try again!');
+                        } else {
+                            vm.$Message.error('delete task failed!');
+                        }
                     }
                 }).catch(function (error) {
                     console.log(error);
@@ -561,23 +566,23 @@
                         zips.push(z['path'])
                     }
 
-                    var tempwindow=window.open();
+                    var tempwindow = window.open();
                     axios.post('download', vm.selection).then(function (response) {
-                        if(response.data.code===0) {
+                        if (response.data.code === 0) {
                             url = "download/real?path=" + response.data.data.path +
                                 "&fileName=" + response.data.data.fileName + "&isMult=" + response.data.data.isMult;
-                            window.setTimeout(function(){
+                            window.setTimeout(function () {
                                 tempwindow.close();
                             }, 1000);
-                            tempwindow.location=url;
-{#                            const elink = document.createElement('a');#}
-{#                            elink.href = "download/real?path=" + response.data.data.path +#}
-{#                                "&fileName=" + response.data.data.fileName + "&isMult=" + response.data.data.isMult;#}
-{#                            elink.target='_blank';#}
-{#                            document.body.appendChild(elink);#}
-{#                            elink.click();#}
-{#                            document.body.removeChild(elink)#}
-                        }else{
+                            tempwindow.location = url;
+                            {#                            const elink = document.createElement('a');#}
+                            {#                            elink.href = "download/real?path=" + response.data.data.path +#}
+                            {#                                "&fileName=" + response.data.data.fileName + "&isMult=" + response.data.data.isMult;#}
+                            {#                            elink.target='_blank';#}
+                            {#                            document.body.appendChild(elink);#}
+                            {#                            elink.click();#}
+                            {#                            document.body.removeChild(elink)#}
+                        } else {
                             tempwindow.close();
                             vm.$Message.error("file not found!")
                         }
